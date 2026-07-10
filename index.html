@@ -418,6 +418,28 @@
     background: var(--fill); color: var(--ink2); border-radius: 999px; padding: 4px 9px; font-size: 11.5px; font-weight: 600; }
 
   .listnote { text-align: center; font-size: 12px; color: var(--ink2); padding: 10px 0 4px; }
+
+  /* Onboarding-modal */
+  #onboard { position: fixed; inset: 0; z-index: 5000; display: none; align-items: center; justify-content: center;
+    background: rgba(10,10,14,.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 18px; }
+  #onboard.open { display: flex; }
+  .ob-card { width: min(430px, 100%); max-height: 86dvh; overflow-y: auto; border-radius: 26px;
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); box-shadow: var(--shadow), var(--glass-inset); padding: 22px 22px 18px; }
+  .ob-card h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.3px; }
+  .ob-card .ob-sub { font-size: 13px; color: var(--ink2); margin-bottom: 14px; }
+  .ob-step { display: flex; gap: 13px; align-items: center; background: var(--card); border: .5px solid var(--glass-border);
+    border-radius: 15px; padding: 11px 13px; margin-bottom: 9px; }
+  .ob-step .ob-ico { flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; background: rgba(10,132,255,.12); }
+  .ob-step .ob-ico svg { width: 26px; height: 26px; stroke: var(--blue); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ob-step b { font-size: 13.5px; display: block; }
+  .ob-step span { font-size: 12.5px; color: var(--ink2); line-height: 1.4; }
+  .ob-dots { display: flex; gap: 6px; justify-content: center; margin: 12px 0 10px; }
+  .ob-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--fill2); }
+  .ob-dots i.on { background: var(--blue); }
+  .ob-nav { display: flex; gap: 8px; }
+  .ob-nav .btn { flex: 1; padding: 11px; }
   .emptystate { text-align: center; color: var(--ink2); padding: 46px 20px; font-size: 14px; }
   .emptystate .big { font-size: 40px; margin-bottom: 10px; }
 </style>
@@ -480,6 +502,17 @@
 
 <div class="legend" id="legend"></div>
 <div id="toasts"></div>
+
+<div id="onboard">
+  <div class="ob-card">
+    <div id="obSlides"></div>
+    <div class="ob-dots" id="obDots"></div>
+    <div class="ob-nav">
+      <button class="btn sec" id="obSkip">Hopp over</button>
+      <button class="btn" id="obNext">Neste</button>
+    </div>
+  </div>
+</div>
 
 <div id="viewer">
   <div id="viewerBar">
@@ -1004,7 +1037,7 @@ function renderKonto() {
       → <b>«Legg til på Hjem-skjerm»</b>. Åpne appen derfra og aktiver push under Min konto.</p>
     </div>`;
   }
-  html += `<div class="listnote"><a href="personvern.html" style="color:var(--blue)">Personvern og skjerming</a></div>`;
+  html += `<div class="listnote"><a href="#" onclick="showOnboarding(true);return false" style="color:var(--blue)">Vis introduksjonen</a> · <a href="personvern.html" style="color:var(--blue)">Personvern og skjerming</a></div>`;
   openPanel("Min konto", sess ? "Innstillinger, varsling og personvern" : "Logg inn eller opprett konto", html);
   wireEmailBox();
   const ex = document.getElementById("gdprExport");
@@ -1237,6 +1270,7 @@ function wireEmailBox() {
         renderAccountState();
         await pullAccount();
         renderKonto();
+        showOnboarding();
       } catch (e) { setMsg("Feil: " + e.message, "err"); }
     };
     pwLoginBtn.onclick = doLogin;
@@ -1828,6 +1862,61 @@ function highlightCase(c) {
   ]).addTo(map);
 }
 
+/* ---------------- Onboarding (første innlogging) ---------------- */
+const OB_SLIDES = [
+  {
+    title: "Få varsler rett på mobilen 📲",
+    sub: "Tre steg – så plinger det når noe skjer der du bryr deg:",
+    steps: [
+      ['<svg viewBox="0 0 24 24"><rect x="5" y="9" width="14" height="12" rx="2.5"/><path d="M12 3v10M8.5 6.5 12 3l3.5 3.5"/></svg>',
+       "1. Trykk Del-knappen i Safari", "Firkanten med pil opp, nederst på skjermen."],
+      ['<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 9v6M9 12h6"/></svg>',
+       "2. «Legg til på Hjem-skjerm»", "Appen får eget ikon – åpne den derfra."],
+      ['<svg viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2.5H4.5L6 16z"/><path d="M10 20.5a2 2 0 0 0 4 0"/><circle cx="17.5" cy="6.5" r="3" fill="#ff453a" stroke="none"/></svg>',
+       "3. Aktiver push i appen", "👤 Min konto → «Push-varsler på denne enheten»."],
+    ],
+  },
+  {
+    title: "Følg det som betyr noe ⭐",
+    sub: "Alt du følger gir varsler i appen – og på e-post/push:",
+    steps: [
+      ['<svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5 6 .6-4.5 4 1.3 5.9L12 16l-5.3 3 1.3-5.9-4.5-4 6-.6z"/></svg>',
+       "En sak", "Trykk ☆ på et sakskort – du varsles om nye dokumenter og vedtak."],
+      ['<svg viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16M4 21h16M9 7h2M9 11h2M9 15h2M13 7h2M13 11h2"/><path d="M16 13h4v8h-4z"/></svg>',
+       "Et firma", "Trykk 🏢-merket i et sakskort – følg f.eks. utbyggeren i nabolaget."],
+      ['<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>',
+       "En saksbehandler", "Trykk 👤-merket – se og følg alle sakene deres."],
+      ['<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/></svg>',
+       "Et område med radius", "👤 Min konto → «Områdevarsling»: sett et punkt og en radius – alt som skjer innenfor, varsles."],
+      ['<svg viewBox="0 0 24 24"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>',
+       "En adresse", "Åpne en adresse i kartet og trykk ☆ øverst i panelet."],
+    ],
+  },
+];
+let obIdx = 0;
+function showOnboarding(force) {
+  if (!force && localStorage.getItem("bsOnboarded")) return;
+  obIdx = 0;
+  drawObSlide();
+  document.getElementById("onboard").classList.add("open");
+}
+function drawObSlide() {
+  const s = OB_SLIDES[obIdx];
+  document.getElementById("obSlides").innerHTML = `<h2>${s.title}</h2><div class="ob-sub">${s.sub}</div>` +
+    s.steps.map(([svg, t, d]) => `<div class="ob-step"><div class="ob-ico">${svg}</div><div><b>${t}</b><span>${d}</span></div></div>`).join("");
+  document.getElementById("obDots").innerHTML = OB_SLIDES.map((_, i) => `<i class="${i === obIdx ? "on" : ""}"></i>`).join("");
+  document.getElementById("obNext").textContent = obIdx < OB_SLIDES.length - 1 ? "Neste" : "Ferdig – ta meg til kartet";
+}
+function closeOnboarding() {
+  localStorage.setItem("bsOnboarded", "1");
+  document.getElementById("onboard").classList.remove("open");
+}
+document.getElementById("obSkip").onclick = closeOnboarding;
+document.getElementById("obNext").onclick = () => {
+  if (obIdx < OB_SLIDES.length - 1) { obIdx++; drawObSlide(); }
+  else closeOnboarding();
+};
+
 /* ---------------- Deling (dyplenker) ---------------- */
 function miniToast(txt) {
   const t = document.createElement("div");
@@ -2220,6 +2309,7 @@ if ("serviceWorker" in navigator && IS_HTTP) {
     renderAccountState();
     await pullAccount();
     openKonto();
+    showOnboarding();
     const box = document.getElementById("toasts");
     const el = document.createElement("div");
     el.className = "toast";
