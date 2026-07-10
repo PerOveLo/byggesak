@@ -35,7 +35,12 @@ PJ_BASE = "https://kristiansand.pj.360online.com"
 # 18 Byggesak, 19 Byggesaksbehandling, 72 Plan og bygg, 74 Plan og bygg stab, 83 Tilsyn og ulovlighetsoppfølgning
 PJ_DEPTS = "18,19,72,74,83"
 KARTVERKET = "https://ws.geonorge.no/adresser/v1/sok"
-POSTNUMMER = "4625"          # Flekkerøy
+# Områder som dekkes: postnummer -> områdenavn. Nye områder legges til her;
+# skriptet oppdager endringen og kjører automatisk full gatesveip neste gang.
+POSTNUMRE = {
+    "4625": "Flekkerøy",
+    "4637": "Søm",
+}
 KOMMUNENUMMER = "4204"       # Kristiansand
 
 CASE_TYPES = {
@@ -49,10 +54,11 @@ DATA_DIR = os.path.join(ROOT, "data")
 CASES_JSON = os.path.join(DATA_DIR, "cases.json")
 CASES_JS = os.path.join(DATA_DIR, "cases.js")
 SUMMARIES_JSON = os.path.join(DATA_DIR, "summaries.json")
-ADDR_CACHE = os.path.join(DATA_DIR, "adresser_4625.json")
+ADDR_CACHE = os.path.join(DATA_DIR, f"adresser_{'_'.join(sorted(POSTNUMRE))}.json")
 
 REQUEST_DELAY = 0.2
-MAX_WORKERS = 3
+JOURNAL_DELAY = 0.6   # journalen struper parallell trafikk – vær skånsom
+MAX_WORKERS = 3       # gjelder OpenGov; journalen hentes alltid sekvensielt
 SWEEP_INTERVAL_DAYS = 7
 HEADERS = {"User-Agent": "FlekkeroyByggesakskart/2.0 (privat innsynsverktoy; kontakt: konto@vizbo.no)"}
 
@@ -93,46 +99,47 @@ def fetch(url, retries=3):
 # Kartverket: adresser på Flekkerøy
 # ---------------------------------------------------------------------------
 
-def load_flekkeroy_addresses(force=False):
+def load_area_addresses(force=False):
     if not force and os.path.exists(ADDR_CACHE):
         age_days = (time.time() - os.path.getmtime(ADDR_CACHE)) / 86400
         if age_days < 30:
             with open(ADDR_CACHE, encoding="utf-8") as f:
                 return json.load(f)
 
-    log("Henter adresser for 4625 Flekkerøy fra Kartverket ...")
-    adresser = []
-    side = 0
-    while True:
-        url = (f"{KARTVERKET}?postnummer={POSTNUMMER}&kommunenummer={KOMMUNENUMMER}"
-               f"&treffPerSide=1000&side={side}&asciiKompatibel=false")
-        raw = fetch(url)
-        if raw is None:
-            break
-        payload = json.loads(raw)
-        batch = payload.get("adresser", [])
-        adresser.extend(batch)
-        total = payload.get("metadata", {}).get("totaltAntallTreff", 0)
-        if len(adresser) >= total or not batch:
-            break
-        side += 1
-        time.sleep(REQUEST_DELAY)
-
     slim = []
-    for a in adresser:
-        pt = a.get("representasjonspunkt") or {}
-        slim.append({
-            "adressetekst": a.get("adressetekst", ""),
-            "adressenavn": a.get("adressenavn", ""),
-            "gnr": a.get("gardsnummer"),
-            "bnr": a.get("bruksnummer"),
-            "lat": pt.get("lat"),
-            "lon": pt.get("lon"),
-        })
+    for postnr, navn in POSTNUMRE.items():
+        log(f"Henter adresser for {postnr} {navn} fra Kartverket ...")
+        adresser = []
+        side = 0
+        while True:
+            url = (f"{KARTVERKET}?postnummer={postnr}&kommunenummer={KOMMUNENUMMER}"
+                   f"&treffPerSide=1000&side={side}&asciiKompatibel=false")
+            raw = fetch(url)
+            if raw is None:
+                break
+            payload = json.loads(raw)
+            batch = payload.get("adresser", [])
+            adresser.extend(batch)
+            total = payload.get("metadata", {}).get("totaltAntallTreff", 0)
+            if len(adresser) >= total or not batch:
+                break
+            side += 1
+            time.sleep(REQUEST_DELAY)
+        for a in adresser:
+            pt = a.get("representasjonspunkt") or {}
+            slim.append({
+                "adressetekst": a.get("adressetekst", ""),
+                "adressenavn": a.get("adressenavn", ""),
+                "gnr": a.get("gardsnummer"),
+                "bnr": a.get("bruksnummer"),
+                "lat": pt.get("lat"),
+                "lon": pt.get("lon"),
+                "omrade": navn,
+            })
+        log(f"  {len(adresser)} adresser i {navn}.")
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(ADDR_CACHE, "w", encoding="utf-8") as f:
         json.dump(slim, f, ensure_ascii=False)
-    log(f"  {len(slim)} adresser hentet.")
     return slim
 
 
@@ -321,7 +328,7 @@ def fetch_journal_case(year, seq, docnum, max_pages=30):
         if len(rows) < 10:
             break
         offset += 10
-        time.sleep(REQUEST_DELAY)
+        time.sleep(JOURNAL_DELAY)
     return out
 
 
@@ -345,7 +352,7 @@ def discover_journal_key(case):
         tried += 1
         url = f"{PJ_BASE}/Journal/SearchSimple?searchstring={urllib.parse.quote(q[:120])}"
         rows = parse_journal_rows(fetch(url))
-        time.sleep(REQUEST_DELAY)
+        time.sleep(JOURNAL_DELAY)
         for r in rows:
             if r["ntitle"] in my_titles:
                 return (r["year"], r["seq"], r["docnum"])
@@ -401,7 +408,7 @@ def journal_change_feed(days):
         if len(rows) < 10:
             break
         offset += 10
-        time.sleep(REQUEST_DELAY)
+        time.sleep(JOURNAL_DELAY)
     return out
 
 
@@ -631,16 +638,27 @@ def repair_dates():
         out = json.load(f)
     todo = [c for c in out["cases"] if c["documents"] and not c.get("journalKey")]
     log(f"Reparasjon: {len(todo)} saker mangler journaldatoer.")
+
+    def save():
+        out["cases"].sort(key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True)
+        with open(CASES_JSON, "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False, indent=1)
+        with open(CASES_JS, "w", encoding="utf-8") as f:
+            f.write("window.BYGGESAK_DATA = ")
+            json.dump(out, f, ensure_ascii=False)
+            f.write(";\n")
+
     for i, c in enumerate(todo, 1):
         try:
             if enrich_case_dates(c):
                 c["summary"] = generate_summary(c)
         except Exception as e:  # noqa: BLE001
             log(f"  feil {c['casenr']}: {e}")
-        if i % 20 == 0:
+        if i % 25 == 0:
             fixed = sum(1 for x in todo[:i] if x.get("journalKey"))
-            log(f"  {i}/{len(todo)} ({fixed} reparert)")
-        time.sleep(REQUEST_DELAY)
+            log(f"  {i}/{len(todo)} ({fixed} reparert) – lagrer")
+            save()
+        time.sleep(JOURNAL_DELAY)
     out["cases"].sort(key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True)
     with open(CASES_JSON, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
@@ -657,9 +675,10 @@ def main():
         repair_dates()
         return
     force_full = "--full" in sys.argv
+    force_sweep = "--sweep" in sys.argv
     os.makedirs(DATA_DIR, exist_ok=True)
 
-    addresses = load_flekkeroy_addresses()
+    addresses = load_area_addresses()
     by_addr, by_gnrbnr, gnrbnr_addr, street_centroids, street_names, gnr_set = build_lookups(addresses)
     street_names_lower = [s.lower() for s in street_names]
     lookups = (by_addr, by_gnrbnr, gnrbnr_addr, street_centroids, street_names_lower)
@@ -669,7 +688,10 @@ def main():
         with open(CASES_JSON, encoding="utf-8") as f:
             old = json.load(f)
         old_cases = {c["id"]: c for c in old.get("cases", [])}
-        old_meta = {k: old.get(k) for k in ("updated", "lastSweep")}
+        old_meta = {k: old.get(k) for k in ("updated", "lastSweep", "postnumre")}
+        if old_meta.get("postnumre") != sorted(POSTNUMRE):
+            force_sweep = True
+            log(f"Områdelisten er endret ({old_meta.get('postnumre')} -> {sorted(POSTNUMRE)}) – tvinger gatesveip.")
         log(f"Inkrementell oppdatering ({len(old_cases)} kjente saker).")
 
     candidates = {}
@@ -732,7 +754,7 @@ def main():
                 last_sweep = datetime.strptime(old_meta["lastSweep"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
             except ValueError:
                 pass
-        if last_sweep is None or (now - last_sweep).days >= SWEEP_INTERVAL_DAYS:
+        if force_sweep or last_sweep is None or (now - last_sweep).days >= SWEEP_INTERVAL_DAYS:
             swept = sweep_streets(street_names, street_names_lower, gnr_set)
             for cid, item in swept.items():
                 candidates.setdefault(cid, item)
@@ -773,7 +795,7 @@ def main():
             continue
         if det["addresses"]:
             postals = re.findall(r',\s*(\d{4})\s+\S', " | ".join(det["addresses"]))
-            if postals and POSTNUMMER not in postals:
+            if postals and not any(p in POSTNUMRE for p in postals):
                 dropped += 1
                 rebuilt_ids.add(cid)  # utenfor Flekkerøy: ikke gjenbruk gammel versjon
                 continue
@@ -796,11 +818,12 @@ def main():
             log(f"  journal-feil {case['casenr']}: {e}")
         return case
 
-    if need_dates:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-            for i, _ in enumerate(ex.map(enrich_one, need_dates), 1):
-                if i % 50 == 0:
-                    log(f"  {i}/{len(need_dates)} saker datert")
+    for i, case in enumerate(need_dates, 1):
+        enrich_one(case)
+        if i % 25 == 0:
+            dated_n = sum(1 for c in need_dates[:i] if c.get('journalKey'))
+            log(f"  {i}/{len(need_dates)} saker behandlet ({dated_n} datert)")
+        time.sleep(JOURNAL_DELAY)
 
     for c in cases:
         c["summary"] = generate_summary(c)
@@ -830,6 +853,7 @@ def main():
         "updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "updatedLocal": datetime.now().strftime("%d.%m.%Y %H:%M"),
         "lastSweep": (last_sweep or now).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "postnumre": sorted(POSTNUMRE),
         "source": SITE,
         "poiSummaries": summaries.get("pois", {}),
         "cases": sorted(cases, key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True),
