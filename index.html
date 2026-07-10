@@ -1154,8 +1154,11 @@ function renderEntity(kind, name) {
     <div style="flex:1"><b>${ico} ${esc(name)}</b><div style="font-size:12px;color:var(--ink2)">${cs.length} sak(er) som ${label}</div></div>
     <button class="btn ${followed ? "sec" : ""}" id="entFollowBtn">${followed ? "★ Følger" : "☆ Følg"}</button>
   </div>`;
-  html += cs.map(caseCard).join("");
-  openPanel(name, `Alle saker der ${esc(name)} er ${label}`, html);
+  html += `<div id="caseList"></div><div class="listnote"><button class="btn sec" id="moreBtn">Vis flere</button></div>`;
+  openPanel(name, `${cs.length} sak(er) der ${esc(name)} er ${label}`, html);
+  LIST_CTX = { cases: cs, shown: 0 };
+  document.getElementById("moreBtn").onclick = listShowMore;
+  listShowMore();
   markSeenEnt(kind, name);
   document.getElementById("entFollowBtn").onclick = () => {
     toggleFollowEnt(kind, name);
@@ -1315,8 +1318,15 @@ function startRadiusPick() {
 }
 
 /* ---------------- Sakskort (hode fra indeks, innhold lastes ved åpning) ---------------- */
+let _updCache = null;
+function caseUpdSet() {
+  if (!_updCache || Date.now() - _updCache.t > 1500) {
+    _updCache = { t: Date.now(), s: new Set(followUpdates().filter(u => u.kind === "case").map(u => u.c.casenr)) };
+  }
+  return _updCache.s;
+}
 function caseCard(c) {
-  const caseUpd = new Set(followUpdates().filter(u => u.kind === "case").map(u => u.c.casenr));
+  const caseUpd = caseUpdSet();
   const range = c.firstDate
     ? (fmtMonth(c.firstDate) === fmtMonth(c.lastDate) ? fmtMonth(c.firstDate) : `${fmtMonth(c.firstDate)} – ${fmtMonth(c.lastDate)}`)
     : (caseYear(c) || "");
