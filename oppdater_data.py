@@ -408,6 +408,40 @@ def case_soker(case):
     return r or fallback
 
 
+# Taksonomi v1 (tiltakstype, regelbasert – LLM-forfining kommer i plattformfasen).
+# Rekkefølgen er signifikant: mest spesifikke først. Maks 3 kategorier per sak.
+TILTAK_REGLER = [
+    ("basseng", r'basseng'),
+    ("brygge/sjøbod", r'brygge|sjøbod|båthus|molo|skibbu|naust'),
+    ("garasje/carport", r'garasje|carport'),
+    ("bod/uthus", r'\bbod\b|\bboder\b|uthus|anneks|drivhus|redskapshus'),
+    ("tilbygg/påbygg", r'tilbygg|påbygg|takopplett|\bkvist\b|takoppløft'),
+    ("fritidsbolig", r'fritidsbolig|hytte\b'),
+    ("bolig (nybygg)", r'enebolig|tomannsbolig|rekkehus|boligbygg|leilighetsbygg|firemannsbolig|nytt bygg.*bolig'),
+    ("bruksendring", r'bruksendring'),
+    ("fasadeendring", r'fasadeendring|fasade-|vindu(er)? og dør'),
+    ("terrasse/veranda", r'terrasse|platting|veranda|balkong|altan'),
+    ("mur/gjerde/levegg", r'støttemur|forstøtningsmur|\bmur\b|gjerde|levegg|innhegning'),
+    ("riving", r'riving|\brive\b|rivning'),
+    ("vei/avkjørsel/parkering", r'avkjørsel|adkomstvei|parkeringsplass|\bvei\b|veianlegg'),
+    ("VA-anlegg", r'\bva\b|va-anlegg|avløps|vann- og avløp|vannledning|septik|slamavskiller'),
+    ("terrenginngrep", r'terrenginngrep|sprengning|utgraving|planering|(opp)?fylling|masseuttak'),
+    ("skilt/reklame", r'skilt|reklame'),
+    ("solenergi", r'solcell|solfanger'),
+    ("pipe/ildsted", r'\bpipe\b|ildsted|skorstein'),
+    ("deling/seksjonering", r'fradeling|deling av|seksjonering|grensejustering|arealoverføring'),
+    ("dispensasjon", r'dispensasjon'),
+]
+_TILTAK_COMPILED = [(navn, re.compile(pat, re.I)) for navn, pat in TILTAK_REGLER]
+
+
+def klassifiser(case):
+    """Regelbasert tiltakstype-klassifisering fra tittel + dokumenttitler."""
+    hay = case.get("title", "") + " " + " ".join(d["title"] for d in (case.get("documents") or [])[:6])
+    kats = [navn for navn, rx in _TILTAK_COMPILED if rx.search(hay)]
+    return kats[:3]
+
+
 def fmt_no_date(iso):
     if not iso:
         return ""
@@ -531,6 +565,7 @@ def build_case(cid, det, lookups, old_case=None, announce_new=False):
             case["firstDate"], case["lastDate"] = min(dates), max(dates)
     case["status"] = infer_status(case["documents"])
     case["soker"] = case_soker(case)
+    case["kategorier"] = klassifiser(case)
 
     today = datetime.now().strftime("%Y-%m-%d")
     endringer = list((old_case or {}).get("endringer") or [])
@@ -570,6 +605,8 @@ def thin(case):
                      ("soker", "so"), ("journalKey", "jk"), ("matrikkel", "m")):
         if case.get(src):
             e[dst] = case[src]
+    if case.get("kategorier"):
+        e["k"] = case["kategorier"]
     if case.get("aiSummary"):
         e["ai"] = 1
     if case.get("endringer"):
@@ -918,9 +955,12 @@ def main():
     elif "--journal-match" in sys.argv:
         journal_match(chunks)
     elif "--reindex" in sys.argv:
+        for c in all_cases(chunks):
+            if not c.get("kategorier"):
+                c["kategorier"] = klassifiser(c)
         save_store(chunks)
         generate_ics(chunks)
-        log("Reindeksert.")
+        log("Reindeksert (med klassifisering).")
     else:
         incremental(chunks, lookups)
 

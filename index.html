@@ -418,6 +418,7 @@ function inflate(e) {
     latlon: e.ll || null, firstDate: e.f || null, lastDate: e.l || null,
     saksbehandler: e.sb || "", soker: e.so || null, journalKey: e.jk || null,
     matrikkel: e.m || "", hasAi: !!e.ai, nyDato: e.ny || null, description: e.d || "",
+    kategorier: e.k || [],
     url: "https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/" + e.i,
   };
 }
@@ -720,7 +721,7 @@ function caseVisible(c) {
     if (y && y < new Date().getFullYear() - state.years + 1) return false;
   }
   if (state.q) {
-    const hay = (c.title + " " + c.casenr + " " + (c.displayAddress || "") + " " + (c.status || "")).toLowerCase();
+    const hay = ((c.title || "") + " " + c.casenr + " " + (c.displayAddress || "") + " " + (c.status || "") + " " + (c.description || "") + " " + (c.kategorier || []).join(" ")).toLowerCase();
     if (!hay.includes(state.q)) return false;
   }
   return true;
@@ -768,7 +769,7 @@ function renderSeg(counts) {
 function renderLegend(counts) {
   document.getElementById("legend").innerHTML =
     TYPES.map(t => `<div><span class="dot" style="background:${COLORS[t]}"></span>${t} <b>${counts[t]}</b></div>`).join("") +
-    `<div class="updated-tag">Oppdatert ${esc(DATA.updatedLocal || "")}${NOGEO.length ? ` · <a href="#" onclick="openNogeo();return false" style="color:var(--blue)">${NOGEO.length} uten kartfeste</a>` : ""}</div>`;
+    `<div class="updated-tag">Oppdatert ${esc(DATA.updatedLocal || "")}${NOGEO.length ? ` · <a href="#" onclick="openNogeo();return false" style="color:var(--blue)">${NOGEO.length} uten kartfeste</a>` : ""} · <a href="personvern.html" style="color:var(--blue)">Personvern</a></div>`;
   document.getElementById("updatedTag").textContent = `${DATA.cases.length} saker · oppdatert ${DATA.updatedLocal || "?"}`;
 }
 function caseAppeared(c) {
@@ -891,6 +892,7 @@ function openFollowList() {
   html += followedCases.length ? followedCases.map(caseCard).join("")
     : `<div class="listnote">Ingen fulgte saker. Trykk ☆ på en sak.</div>`;
 
+  html += `<div class="listnote"><a href="personvern.html" style="color:var(--blue)">Personvern og skjerming</a></div>`;
   openPanel("Følger og varsling", "Varsles i appen – og på e-post om aktivert", html);
   document.querySelectorAll("#panelBody .addrrow").forEach(r => {
     r.addEventListener("click", e => {
@@ -1310,6 +1312,9 @@ function openStats() {
   for (const c of cs) statusCount[c.status || "?"] = (statusCount[c.status || "?"] || 0) + 1;
   const topStatus = Object.entries(statusCount).sort((a, b) => b[1] - a[1]).slice(0, 7)
     .map(([k, v]) => ({ k, v }));
+  const katCount = {};
+  for (const c of cs) for (const k of (c.kategorier || [])) katCount[k] = (katCount[k] || 0) + 1;
+  const topKat = Object.entries(katCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => ({ k, v }));
   const firmCount = {}, sbCount = {};
   for (const c of cs) {
     const f = caseSoker(c);
@@ -1328,6 +1333,7 @@ function openStats() {
     </div>
     <div class="sectionlabel">Saker per år</div>${barList(perYear, "#0a84ff")}
     <div class="sectionlabel">Sakstyper (alle år)</div>${barList(perType)}
+    <div class="sectionlabel">Tiltakstyper (alle år)</div>${topKat.length ? barList(topKat, "#ff9f0a") : '<div class="listnote">Klassifisering kjøres etter datainnhentingen.</div>'}
     <div class="sectionlabel">Mest aktive gater siste 12 mnd</div>${topStreets.length ? barList(topStreets, "#0a84ff") : '<div class="listnote">Ingen data ennå.</div>'}
     <div class="sectionlabel">Mest aktive søkerfirma <span style="font-weight:400;text-transform:none">(klikk for saker)</span></div>
     <div data-entlist="firma">${topFirms.length ? barList(topFirms, "#bf5af2") : '<div class="listnote">Ingen firmadata funnet.</div>'}</div>
