@@ -1202,11 +1202,23 @@ function renderEntity(kind, name) {
     <div style="flex:1"><b>${ico} ${esc(name)}</b><div style="font-size:12px;color:var(--ink2)">${cs.length} sak(er) som ${label}</div></div>
     <button class="btn ${followed ? "sec" : ""}" id="entFollowBtn">${followed ? "★ Følger" : "☆ Følg"}</button>
   </div>`;
+  html += `<div class="seg" id="entSort" style="margin:0 0 12px">
+    <button data-s="ny" class="on">Nyeste først</button>
+    <button data-s="gammel">Eldste først</button>
+  </div>`;
   html += `<div id="caseList"></div><div class="listnote"><button class="btn sec" id="moreBtn">Vis flere</button></div>`;
   openPanel(name, `${cs.length} sak(er) der ${esc(name)} er ${label}`, html);
-  LIST_CTX = { cases: cs, shown: 0 };
   document.getElementById("moreBtn").onclick = listShowMore;
-  listShowMore();
+  const drawSorted = dir => {
+    const sorted = dir === "gammel" ? [...cs].reverse() : cs;
+    LIST_CTX = { cases: sorted, shown: 0 };
+    document.getElementById("caseList").innerHTML = "";
+    listShowMore();
+    document.querySelectorAll("#entSort button").forEach(b => b.classList.toggle("on", b.dataset.s === dir));
+    document.getElementById("panelBody").scrollTop = 0;
+  };
+  document.querySelectorAll("#entSort button").forEach(b => b.addEventListener("click", () => drawSorted(b.dataset.s)));
+  drawSorted("ny");
   markSeenEnt(kind, name);
   document.getElementById("entFollowBtn").onclick = () => {
     toggleFollowEnt(kind, name);
