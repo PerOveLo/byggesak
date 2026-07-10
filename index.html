@@ -824,7 +824,7 @@ function caseVisible(c) {
     if (y && y < new Date().getFullYear() - state.years + 1) return false;
   }
   if (state.q) {
-    const hay = ((c.title || "") + " " + c.casenr + " " + (c.displayAddress || "") + " " + (c.status || "") + " " + (c.description || "") + " " + (c.kategorier || []).join(" ")).toLowerCase();
+    const hay = ((c.title || "") + " " + c.casenr + " " + (c.displayAddress || "") + " " + (c.status || "") + " " + (c.description || "") + " " + (c.soker || "") + " " + (c.saksbehandler || "") + " " + (c.kategorier || []).join(" ")).toLowerCase();
     if (!hay.includes(state.q)) return false;
   }
   return true;
@@ -1914,11 +1914,30 @@ function searchMatches(q) {
     const l = p.label.toLowerCase();
     if (l.startsWith(q) || l.includes(" " + q)) out.push({ p, score: l.startsWith(q) ? 0 : 1 });
   }
-  const nr = DATA.cases.find(c => c.casenr.toLowerCase().includes(q) && c.latlon);
   out.sort((a, b) => a.score - b.score || a.p.label.localeCompare(b.p.label));
-  const res = out.slice(0, 6).map(o => ({ type: "addr", p: o.p, label: o.p.label, sub: `${o.p.cases.length} sak(er)` }));
+  const res = out.slice(0, 5).map(o => ({ type: "addr", p: o.p, label: "📍 " + o.p.label, raw: o.p.label, sub: `${o.p.cases.length} sak(er)` }));
+
+  // Firmaer og saksbehandlere
+  const ents = new Map();
+  for (const c of DATA.cases) {
+    if (c.soker && c.soker.toLowerCase().includes(q)) {
+      const k = "firma|" + c.soker;
+      ents.set(k, (ents.get(k) || 0) + 1);
+    }
+    if (c.saksbehandler && c.saksbehandler.toLowerCase().includes(q)) {
+      const k = "sb|" + c.saksbehandler;
+      ents.set(k, (ents.get(k) || 0) + 1);
+    }
+  }
+  [...ents.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).forEach(([k, n]) => {
+    const [kind, name] = [k.slice(0, k.indexOf("|")), k.slice(k.indexOf("|") + 1)];
+    res.push({ type: "ent", kind, name, label: (kind === "firma" ? "🏢 " : "👤 ") + name,
+               sub: `${n} sak(er) som ${kind === "firma" ? "søker" : "saksbehandler"}` });
+  });
+
+  const nr = DATA.cases.find(c => c.casenr.toLowerCase().includes(q) && c.latlon);
   if (nr) res.unshift({ type: "case", c: nr, label: nr.casenr, sub: nr.displayAddress || "" });
-  return res.slice(0, 6);
+  return res.slice(0, 8);
 }
 function drawSuggest(items) {
   selIdx = -1;
@@ -1931,10 +1950,11 @@ function drawSuggest(items) {
 }
 function pickSuggest(it) {
   suggest.style.display = "none";
-  document.getElementById("q").value = it.label;
+  document.getElementById("q").value = it.raw || it.name || it.label;
   state.q = "";
   render();
   if (it.type === "addr") flyToPoi(it.p);
+  else if (it.type === "ent") openEntity(it.kind, it.name);
   else focusCase(it.c);
 }
 const qInput = document.getElementById("q");
