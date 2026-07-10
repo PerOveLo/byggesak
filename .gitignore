@@ -1,4 +1,6 @@
 __pycache__/
 *.pyc
 data/forrige_cases.json
+data/journal_bulk.jsonl
+data/journal_watermark.json
 .claude/

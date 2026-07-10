@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin – Byggesaker Kristiansand</title>
+<link rel="icon" href="ikon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a;
+    --bg-solid: #eef1f6; --card: rgba(255,255,255,.72);
+    --ink: #1c1c1e; --ink2: #55555c; --ink3: #9a9aa2;
+    --line: rgba(60,60,67,.12); --fill: rgba(120,120,128,.14);
+    --glass: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,.28) 55%, rgba(255,255,255,.38));
+    --glass-strong: linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,.42));
+    --glass-border: rgba(255,255,255,.65);
+    --glass-inset: inset 0 1px 0 rgba(255,255,255,.75), inset 0 -1px 1px rgba(255,255,255,.15);
+    --shadow: 0 16px 50px rgba(15,20,40,.22), 0 2px 8px rgba(15,20,40,.08);
+    --blur: saturate(1.9) blur(26px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-solid: #101014; --card: rgba(46,46,52,.6);
+      --ink: #f5f5f7; --ink2: #a8a8b0; --ink3: #6c6c74;
+      --line: rgba(255,255,255,.09); --fill: rgba(120,120,128,.24);
+      --glass: linear-gradient(135deg, rgba(52,52,60,.62), rgba(28,28,34,.48) 55%, rgba(44,44,52,.55));
+      --glass-strong: linear-gradient(135deg, rgba(64,64,72,.72), rgba(36,36,42,.6));
+      --glass-border: rgba(255,255,255,.16);
+      --glass-inset: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 1px rgba(255,255,255,.05);
+      --shadow: 0 16px 50px rgba(0,0,0,.6), 0 2px 8px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg-solid); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+  header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 24px; box-shadow: var(--shadow), var(--glass-inset);
+    padding: 14px 20px; margin-bottom: 18px; }
+  header h1 { font-size: 18px; margin: 0; }
+  header .sub { font-size: 12px; color: var(--ink2); }
+  header img { height: 22px; margin-left: auto; }
+  @media (prefers-color-scheme: dark) { header img { filter: invert(1); } }
+  .seg { display: flex; background: var(--fill); border-radius: 999px; padding: 3px; gap: 2px; margin-bottom: 16px; width: fit-content; }
+  .seg button { border: none; background: none; cursor: pointer; padding: 7px 16px; border-radius: 999px;
+    font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink2); }
+  .seg button.on { background: var(--glass-strong); color: var(--ink); box-shadow: 0 2px 10px rgba(0,0,0,.16); border: .5px solid var(--glass-border); }
+  .card { background: var(--card); border: .5px solid var(--glass-border); border-radius: 18px; padding: 16px 18px;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(15,20,40,.08), inset 0 1px 0 rgba(255,255,255,.5); margin-bottom: 14px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .kpi .v { font-size: 26px; font-weight: 750; }
+  .kpi .l { font-size: 12px; color: var(--ink2); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: .5px solid var(--line); vertical-align: top; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--ink2); }
+  tr:hover td { background: var(--fill); }
+  input, select { font: inherit; padding: 8px 12px; border: .5px solid var(--glass-border); border-radius: 10px;
+    background: var(--fill); color: var(--ink); outline: none; }
+  .btn { font: inherit; border: none; cursor: pointer; background: linear-gradient(180deg, #2f97ff, #0a84ff);
+    color: #fff; border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 650;
+    box-shadow: 0 4px 14px rgba(10,132,255,.4), inset 0 1px 0 rgba(255,255,255,.4); }
+  .btn.sec { background: var(--glass-strong); color: var(--ink); border: 1px solid var(--glass-border); box-shadow: var(--glass-inset); }
+  .btn.danger { background: linear-gradient(180deg, #ff6157, #ff453a); box-shadow: 0 4px 14px rgba(255,69,58,.4); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .msg { font-size: 13px; margin: 8px 0; }
+  .msg.err { color: var(--red); } .msg.ok { color: var(--green); }
+  .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--fill); font-weight: 600; }
+  .pill.admin { background: rgba(255,69,58,.15); color: var(--red); }
+  #loginCard { max-width: 420px; margin: 8vh auto; }
+  .tablewrap { overflow-x: auto; }
+  .mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Admin – Byggesaker Kristiansand</h1>
+      <div class="sub" id="who">Ikke innlogget</div>
+    </div>
+    <img src="vizbo-logo.png" alt="Vizbo">
+  </header>
+
+  <div id="loginView">
+    <div class="card" id="loginCard">
+      <h3 style="margin-top:0">Logg inn</h3>
+      <p style="font-size:13px;color:var(--ink2)">Adminsiden krever innlogging med en konto som har admin-rolle
+        (styres av <code>ADMIN_EPOST</code> i workeren). Du får en magisk lenke på e-post.</p>
+      <div class="row">
+        <input id="email" type="email" placeholder="din@epost.no" style="flex:1">
+        <button class="btn" id="loginBtn">Send lenke</button>
+      </div>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </div>
+
+  <div id="adminView" style="display:none">
+    <div class="seg" id="tabs">
+      <button data-tab="oversikt" class="on">Oversikt</button>
+      <button data-tab="brukere">Brukere</button>
+      <button data-tab="sporing">Sporing</button>
+      <button data-tab="pipeline">Pipeline</button>
+    </div>
+
+    <div id="tab-oversikt">
+      <div class="card"><div class="kpis" id="kpis">Laster …</div></div>
+      <div class="card" id="tierCard"></div>
+    </div>
+
+    <div id="tab-brukere" style="display:none">
+      <div class="card">
+        <div class="row">
+          <input id="userQ" placeholder="Søk e-post …" style="flex:1">
+          <button class="btn sec" id="userSearch">Søk</button>
+        </div>
+        <div class="tablewrap"><table id="userTable">
+          <thead><tr><th>E-post</th><th>Rolle</th><th>Tier</th><th>Følger</th><th>Notater</th><th>Sist innlogget</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <div class="msg" id="userMsg"></div>
+      </div>
+    </div>
+
+    <div id="tab-sporing" style="display:none">
+      <div class="card">
+        <div class="row">
+          <input id="audBruker" placeholder="Bruker (e-post)" style="width:180px">
+          <select id="audHandling">
+            <option value="">Alle handlinger</option>
+            <option>innlogging</option><option>login_lenke_sendt</option><option>profil_oppdatert</option>
+            <option>push_aktivert</option><option>gdpr_eksport</option><option>gdpr_sletting</option>
+            <option>admin_stats</option><option>admin_brukersok</option><option>admin_bruker_endret</option>
+            <option>admin_bruker_slettet</option><option>abonnement_v1</option>
+          </select>
+          <input id="audFra" type="date"><input id="audTil" type="date">
+          <button class="btn sec" id="audSearch">Filtrer</button>
+        </div>
+        <p style="font-size:12px;color:var(--ink2)">Revisjonsloggen er append-only (databasetriggere blokkerer endring
+          og sletting) og logger alle innlogginger, profilendringer, GDPR-hendelser og admin-handlinger med tid, IP og user-agent.</p>
+        <div class="tablewrap"><table id="audTable">
+          <thead><tr><th>Tid</th><th>Bruker</th><th>Handling</th><th>Objekt</th><th>Detaljer</th><th>IP</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div id="tab-pipeline" style="display:none">
+      <div class="card" id="pipeCard">Laster …</div>
+    </div>
+
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn sec" id="logoutBtn">Logg ut</button>
+    </div>
+  </div>
+</div>
+
+<script>window.BYGGESAK_CONFIG = window.BYGGESAK_CONFIG || {};</script>
+<script src="config.js"></script>
+<script>
+"use strict";
+const CFG = window.BYGGESAK_CONFIG || {};
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem("bsSession") || "null"); } catch { return null; } },
+  set(v) { v ? localStorage.setItem("bsSession", JSON.stringify(v)) : localStorage.removeItem("bsSession"); },
+};
+async function api(path, opts = {}) {
+  if (!CFG.apiBase) throw new Error("config.js mangler apiBase – deploy workeren først (se worker/wrangler.toml)");
+  const sess = store.get();
+  const r = await fetch(CFG.apiBase.replace(/\/$/, "") + path, {
+    headers: { "Content-Type": "application/json", ...(sess ? { Authorization: "Bearer " + sess.token } : {}) },
+    ...opts,
+  });
+  if (!r.ok) throw new Error((await r.text().catch(() => "")) || "HTTP " + r.status);
+  return r.json();
+}
+const fmt = iso => iso ? iso.replace("T", " ").slice(0, 16) : "–";
+
+function show(loggedIn, email) {
+  document.getElementById("loginView").style.display = loggedIn ? "none" : "";
+  document.getElementById("adminView").style.display = loggedIn ? "" : "none";
+  document.getElementById("who").textContent = loggedIn ? `Innlogget som ${email} (admin)` : "Ikke innlogget";
+}
+
+document.getElementById("loginBtn").onclick = async () => {
+  const msg = document.getElementById("loginMsg");
+  try {
+    await api("/login", { method: "POST", body: JSON.stringify({ email: document.getElementById("email").value.trim() }) });
+    msg.textContent = "Lenke sendt – sjekk e-posten din. Lenken åpner kartet; kom deretter tilbake hit.";
+    msg.className = "msg ok";
+  } catch (e) { msg.textContent = "Feil: " + e.message; msg.className = "msg err"; }
+};
+document.getElementById("logoutBtn").onclick = () => { store.set(null); show(false); };
+
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  for (const t of ["oversikt", "brukere", "sporing", "pipeline"])
+    document.getElementById("tab-" + t).style.display = b.dataset.tab === t ? "" : "none";
+  if (b.dataset.tab === "sporing") loadAudit();
+  if (b.dataset.tab === "pipeline") loadPipeline();
+  if (b.dataset.tab === "brukere") loadUsers();
+});
+
+async function loadStats() {
+  try {
+    const s = await api("/admin/stats");
+    document.getElementById("kpis").innerHTML = [
+      [s.brukere, "brukere totalt"], [s.innloggetSiste7d, "aktive siste 7 dager"],
+      [s.folger, "følge-oppføringer"], [s.notater, "notater"], [s.push, "push-enheter"],
+      [s.auditRader, "rader i revisjonslogg"],
+    ].map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+    document.getElementById("tierCard").innerHTML = "<b>Abonnement:</b> " +
+      (s.perTier || []).map(t => `${esc(t.tier)}: ${t.n}`).join(" · ");
+  } catch (e) { document.getElementById("kpis").textContent = "Feil: " + e.message; }
+}
+
+async function loadUsers() {
+  const msg = document.getElementById("userMsg");
+  try {
+    const rows = await api("/admin/users?q=" + encodeURIComponent(document.getElementById("userQ").value.trim()));
+    document.querySelector("#userTable tbody").innerHTML = rows.map(u => `
+      <tr data-id="${u.id}">
+        <td>${esc(u.epost)}</td>
+        <td><span class="pill ${u.rolle === "admin" ? "admin" : ""}">${esc(u.rolle)}</span></td>
+        <td><select class="tierSel">
+          ${["gratis", "privat", "bedrift"].map(t => `<option ${t === u.tier ? "selected" : ""}>${t}</option>`).join("")}
+        </select></td>
+        <td>${u.folger}</td><td>${u.notater}</td><td>${fmt(u.sist_innlogget)}</td>
+        <td><button class="btn danger delBtn" style="padding:5px 12px;font-size:12px">Slett</button></td>
+      </tr>`).join("");
+    msg.textContent = rows.length + " bruker(e)";
+    msg.className = "msg";
+    document.querySelectorAll(".tierSel").forEach(s => s.onchange = async () => {
+      await api("/admin/user", { method: "PUT", body: JSON.stringify({ id: +s.closest("tr").dataset.id, tier: s.value }) });
+      msg.textContent = "Tier oppdatert."; msg.className = "msg ok";
+    });
+    document.querySelectorAll(".delBtn").forEach(b => b.onclick = async () => {
+      const tr = b.closest("tr");
+      if (!confirm("Slette brukeren og alle dataene (GDPR-sletting)?")) return;
+      await api("/admin/user/delete", { method: "POST", body: JSON.stringify({ id: +tr.dataset.id }) });
+      loadUsers();
+    });
+  } catch (e) { msg.textContent = "Feil: " + e.message; msg.className = "msg err"; }
+}
+document.getElementById("userSearch").onclick = loadUsers;
+
+async function loadAudit() {
+  const p = new URLSearchParams();
+  const b = document.getElementById("audBruker").value.trim(); if (b) p.set("bruker", b);
+  const h = document.getElementById("audHandling").value; if (h) p.set("handling", h);
+  const f = document.getElementById("audFra").value; if (f) p.set("fra", f);
+  const t = document.getElementById("audTil").value; if (t) p.set("til", t + "T23:59:59");
+  try {
+    const rows = await api("/admin/audit?" + p);
+    document.querySelector("#audTable tbody").innerHTML = rows.map(r => `
+      <tr><td class="mono">${fmt(r.ts)}</td><td>${esc(r.bruker)}</td><td><span class="pill">${esc(r.handling)}</span></td>
+      <td>${esc(r.objekt)}</td><td>${esc(r.detaljer)}</td><td class="mono">${esc(r.ip)}</td></tr>`).join("")
+      || '<tr><td colspan="6">Ingen treff.</td></tr>';
+  } catch (e) {
+    document.querySelector("#audTable tbody").innerHTML = `<tr><td colspan="6">Feil: ${esc(e.message)}</td></tr>`;
+  }
+}
+document.getElementById("audSearch").onclick = loadAudit;
+
+async function loadPipeline() {
+  const el = document.getElementById("pipeCard");
+  try {
+    const idx = await fetch("data/index.json", { cache: "no-store" }).then(r => r.json());
+    const counts = { B: 0, H: 0, U: 0 };
+    let dated = 0;
+    for (const c of idx.cases) { counts[c.t] = (counts[c.t] || 0) + 1; if (c.l) dated++; }
+    let actions = "";
+    try {
+      const runs = await fetch("https://api.github.com/repos/PerOveLo/byggesak/actions/runs?per_page=3")
+        .then(r => r.json());
+      actions = (runs.workflow_runs || []).map(r =>
+        `<li>${esc(r.name)}: <b>${esc(r.conclusion || r.status)}</b> (${fmt(r.updated_at)})</li>`).join("");
+    } catch { actions = "<li>Kunne ikke hente GitHub Actions-status.</li>"; }
+    el.innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><div class="v">${idx.cases.length}</div><div class="l">saker i indeksen</div></div>
+        <div class="kpi"><div class="v">${counts.B}</div><div class="l">byggesaker</div></div>
+        <div class="kpi"><div class="v">${counts.H}</div><div class="l">henvendelser</div></div>
+        <div class="kpi"><div class="v">${counts.U}</div><div class="l">ulovlighetssaker</div></div>
+        <div class="kpi"><div class="v">${Math.round(dated / Math.max(idx.cases.length, 1) * 100)} %</div><div class="l">med journaldato</div></div>
+      </div>
+      <p style="font-size:13px">Data sist oppdatert: <b>${esc(idx.updatedLocal)}</b></p>
+      <p style="font-size:13px"><b>Siste GitHub Actions-kjøringer:</b></p><ul style="font-size:13px">${actions}</ul>`;
+  } catch (e) { el.textContent = "Feil: " + e.message; }
+}
+
+(async function boot() {
+  // gjenbruk sesjon fra kartet (samme localStorage-nøkkel); verifiser rollen mot /me
+  const sess = store.get();
+  if (!sess) return show(false);
+  try {
+    const me = await api("/me");
+    if (me.rolle !== "admin") {
+      show(false);
+      const msg = document.getElementById("loginMsg");
+      msg.textContent = `Kontoen ${me.email} har ikke admin-rolle.`;
+      msg.className = "msg err";
+      return;
+    }
+    show(true, me.email);
+    loadStats();
+  } catch { show(false); }
+})();
+</script>
+</body>
+</html>

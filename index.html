@@ -405,10 +405,38 @@
 <script src="config.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="data/cases.js"></script>
 <script>
 "use strict";
-let DATA = window.BYGGESAK_DATA || { cases: [], updatedLocal: "ingen data", poiSummaries: {} };
+/* Datalag v3: tynn indeks (data/index.json) + fulle saker per postnummer-chunk
+   (data/chunks/<postnr>.json) som lastes ved behov. */
+let DATA = { cases: [], updatedLocal: "laster …", poiSummaries: {} };
+const TYPE_FULL = { B: "Byggesak", H: "Henvendelse", U: "Ulovlighetssak" };
+function inflate(e) {
+  return {
+    id: e.i, casenr: e.c, type: TYPE_FULL[e.t] || e.t, status: e.s,
+    displayAddress: e.a || "", postnr: e.p || "0000", nDocs: e.n || 0,
+    latlon: e.ll || null, firstDate: e.f || null, lastDate: e.l || null,
+    saksbehandler: e.sb || "", soker: e.so || null, journalKey: e.jk || null,
+    matrikkel: e.m || "", hasAi: !!e.ai, nyDato: e.ny || null, description: e.d || "",
+    url: "https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/" + e.i,
+  };
+}
+const CHUNKS = {};
+function getChunk(p) {
+  if (!CHUNKS[p]) {
+    CHUNKS[p] = fetch(`data/chunks/${p}.json`, { cache: "no-cache" })
+      .then(r => { if (!r.ok) throw new Error("chunk " + p); return r.json(); })
+      .then(d => Object.fromEntries(d.cases.map(x => [x.id, x])))
+      .catch(() => ({}));
+  }
+  return CHUNKS[p];
+}
+async function loadFull(c) {
+  if (c._full) return c._full;
+  const chunk = await getChunk(c.postnr);
+  c._full = chunk[c.id] || null;
+  return c._full;
+}
 const CFG = window.BYGGESAK_CONFIG || {};           // { apiBase: "https://...workers.dev", pdfProxy: "https://.../pdfproxy" }
 const TYPES = ["Byggesak", "Henvendelse", "Ulovlighetssak"];
 const TYPE_LABEL = { Byggesak: "Bygg", Henvendelse: "Henv.", Ulovlighetssak: "Ulovlig" };
@@ -455,27 +483,12 @@ function caseDesc(c) {
 }
 const addrKey = a => (a || "").toLowerCase().trim();
 const docSeqJs = t => { const m = /^[A-ZÆØÅ]+-\d{2}\/\d+-(\d+)/.exec(t || ""); return m ? +m[1] : 0; };
-const INTERNAL_RE = /byggesak|plan og bygg|oppmåling|eiendom|kristiansand kommune|tilsyn|byantikvar|statsforvalter|parkvesen|by- og stedsutvikling|innbygger|stab/i;
-function caseSoker(c) {
-  if (c._soker !== undefined) return c._soker;
-  let r = null, fallback = null;
-  const docs = [...(c.documents || [])].sort((a, b) => docSeqJs(a.title) - docSeqJs(b.title));
-  for (const d of docs) {
-    const f = (d.from || "").trim();
-    if (!f || INTERNAL_RE.test(f)) continue;
-    if ((d.type || "").trim() === "Søknad") r = f;
-    else if (/dokument inn/i.test(d.type || "") && /søknad om/i.test(d.title) &&
-             !/kommentar|merknad|uttalelse|tilsvar|svar på|nabo|klage/i.test(d.title)) fallback = fallback || f;
-  }
-  c._soker = r || fallback;
-  return c._soker;
-}
+const caseSoker = c => c.soker || null;
 function displayAddr(c) {
   if (c.displayAddress) return c.displayAddress;
-  const m = /^[-–\s]*(.+?)\s+\d{1,3}\s*\//.exec(c.title || "");
-  if (m && m[1].trim().length > 2) return m[1].trim();
   return c.matrikkel ? "gnr/bnr " + c.matrikkel : "Ukjent adresse";
 }
+const caseDocs = c => c.nDocs != null ? c.nDocs : (c.documents || []).length;
 
 /* ---------------- Følge-lagring (saker + adresser) ---------------- */
 const store = {
@@ -610,7 +623,7 @@ function isFollowedAddr(label) { return !!store.addrs.read()[addrKey(label)]; }
 function toggleFollowCase(c) {
   const f = store.cases.read();
   if (f[c.casenr]) delete f[c.casenr];
-  else f[c.casenr] = { docs: (c.documents || []).length, lastDate: c.lastDate || null, addr: c.displayAddress };
+  else f[c.casenr] = { docs: caseDocs(c), lastDate: c.lastDate || null, addr: c.displayAddress };
   store.cases.write(f);
   refreshBadges();
 }
@@ -626,7 +639,7 @@ function toggleFollowAddr(p) {
 function markSeenCase(c) {
   const f = store.cases.read();
   if (f[c.casenr]) {
-    f[c.casenr].docs = (c.documents || []).length;
+    f[c.casenr].docs = caseDocs(c);
     f[c.casenr].lastDate = c.lastDate || null;
     store.cases.write(f);
     refreshBadges();
@@ -643,7 +656,7 @@ function followUpdates() {
   for (const c of DATA.cases) {
     const e = fc[c.casenr];
     if (!e) continue;
-    const nDocs = (c.documents || []).length;
+    const nDocs = caseDocs(c);
     if (nDocs > (e.docs || 0) || (c.lastDate && e.lastDate && c.lastDate > e.lastDate)) {
       out.push({ kind: "case", c, label: c.displayAddress || c.casenr, newDocs: Math.max(nDocs - (e.docs || 0), 0) });
     }
@@ -667,7 +680,7 @@ function followUpdates() {
 }
 
 /* ---------------- Kart ---------------- */
-const map = L.map("map", { zoomControl: false }).setView([58.068, 8.005], 13);
+const map = L.map("map", { zoomControl: false }).setView([58.115, 7.995], 11);
 L.control.zoom({ position: "bottomright" }).addTo(map);
 const topo = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", { maxZoom: 19, attribution: "© Kartverket" });
 const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" });
@@ -677,7 +690,7 @@ L.control.layers({ "Kart": topo, "OpenStreetMap": osm, "Flyfoto": foto }, null, 
 new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById("map"));
 
 const cluster = L.markerClusterGroup({
-  maxClusterRadius: 34, disableClusteringAtZoom: 16, showCoverageOnHover: false,
+  maxClusterRadius: 44, disableClusteringAtZoom: 17, showCoverageOnHover: false, chunkedLoading: true,
   iconCreateFunction: cl => L.divIcon({ className: "", iconSize: [34, 34],
     html: `<div class="cluster" style="width:34px;height:34px">${cl.getChildCount()}</div>` }),
 });
@@ -759,13 +772,10 @@ function renderLegend(counts) {
   document.getElementById("updatedTag").textContent = `${DATA.cases.length} saker · oppdatert ${DATA.updatedLocal || "?"}`;
 }
 function caseAppeared(c) {
-  if (c.firstDate) return c.firstDate;
-  const e = (c.endringer || []).find(x => /dukket opp/i.test(x.tekst || ""));
-  return e ? e.dato : null;
+  return c.firstDate || c.nyDato || null;
 }
 function caseLastActivity(c) {
-  const e = c.endringer && c.endringer.length ? c.endringer[c.endringer.length - 1].dato : null;
-  return [c.lastDate, e].filter(Boolean).sort().pop() || null;
+  return [c.lastDate, c.nyDato].filter(Boolean).sort().pop() || null;
 }
 function newsCases(days) {
   const cutoff = isoDaysAgo(days);
@@ -928,13 +938,13 @@ function openNews() {
   refreshBadges();
   const day = newsCases(1), week = newsCases(7);
   const seg = (id, label, n) => `<button data-days="${id}">${label} (${n})</button>`;
-  const withDocs = DATA.cases.filter(c => (c.documents || []).length).length;
+  const withDocs = DATA.cases.filter(c => caseDocs(c)).length;
   const dated = DATA.cases.filter(c => c.lastDate).length;
   const hint = withDocs && dated / withDocs < 0.7
     ? `<div class="listnote">⏳ Journaldatoer hentes fortsatt inn (${dated} av ${withDocs} saker datert) – nyeste saker dateres først, og listene under fylles etter hvert som dataene oppdateres.</div>`
     : "";
   let html = hint + `<div class="seg" id="newsSeg" style="margin:6px 0 12px">${seg(1, "Siste døgn", day.fresh.length)}${seg(7, "Siste uke", week.fresh.length)}${seg(30, "Siste 30 dager", newsCases(30).fresh.length)}</div><div id="newsBody"></div>`;
-  openPanel("Nye saker", "Nye saker og ny aktivitet på Flekkerøy", html);
+  openPanel("Nye saker", "Nye saker og ny aktivitet i Kristiansand", html);
   const body = document.getElementById("newsBody");
   const draw = days => {
     const { fresh, active } = newsCases(days);
@@ -1092,20 +1102,10 @@ function startRadiusPick() {
   });
 }
 
-/* ---------------- Sakskort ---------------- */
+/* ---------------- Sakskort (hode fra indeks, innhold lastes ved åpning) ---------------- */
 function caseCard(c) {
   const caseUpd = new Set(followUpdates().filter(u => u.kind === "case").map(u => u.c.casenr));
   const range = c.firstDate ? (fmtMonth(c.firstDate) === fmtMonth(c.lastDate) ? fmtMonth(c.firstDate) : `${fmtMonth(c.firstDate)} – ${fmtMonth(c.lastDate)}`) : "";
-  const docs = (c.documents || []).map(d => {
-    const files = (d.files || []).map(f =>
-      `<a class="filechip" href="${esc(f.url)}" data-name="${esc(f.name)}" onclick="return openFile(this)">📄 ${esc(f.name)}</a>`).join("");
-    return `<div class="doc ${d.date ? "dated" : ""}">
-      ${d.date ? `<div class="d-date">${fmtDate(d.date)}</div>` : ""}
-      <div class="d-title">${esc(cleanDocTitle(d.title, c))}</div>
-      <div class="d-meta">${esc(d.type)}${d.from ? " · fra " + esc(d.from) : ""}${d.to ? " · til " + esc(d.to) : ""}</div>
-      ${files}</div>`;
-  }).join("");
-  const summary = c.aiSummary ? (c.aiSummary.text || c.aiSummary) : c.summary;
   return `<div class="case" data-nr="${esc(c.casenr)}">
     <div class="case-head">
       <div class="case-top">
@@ -1116,22 +1116,48 @@ function caseCard(c) {
         <span class="case-date">${range}</span>
         <button class="followbtn ${isFollowedCase(c.casenr) ? "on" : ""}" data-follow="${esc(c.casenr)}" title="Følg saken">${isFollowedCase(c.casenr) ? "★" : "☆"}</button>
       </div>
-      <div class="case-desc">${esc(caseDesc(c))}</div>
+      <div class="case-desc">${esc(c.description || displayAddr(c))}</div>
       <div class="case-addr">${esc(displayAddr(c))} · ${esc(c.casenr)}</div>
     </div>
-    <div class="case-body">
-      <div class="summary">${c.aiSummary ? "🧠 " : ""}${esc(summary)}</div>
-      <div class="meta">
-        ${entChip("firma", caseSoker(c))}${entChip("sb", c.saksbehandler)}
-        <div style="margin-top:4px">${(c.documents || []).length} dokument(er)${c.matrikkel ? " · gnr/bnr " + esc(c.matrikkel) : ""}</div>
-      </div>
-      ${fileGallery(c)}
-      ${docs ? `<div class="tl">${docs}</div>` : '<div class="listnote">Ingen offentlig tilgjengelige dokumenter.</div>'}
-      ${endringerHtml(c)}
-      ${notesHtml(c)}
-      <a class="extlink" href="${esc(c.url)}" target="_blank" rel="noopener">Åpne i kommunens innsynsløsning ↗</a>
-    </div>
+    <div class="case-body"><div class="listnote">Laster saksdetaljer …</div></div>
   </div>`;
+}
+
+async function fillCaseBody(card, c) {
+  if (card.dataset.filled) return;
+  card.dataset.filled = "1";
+  const body = card.querySelector(".case-body");
+  const full = await loadFull(c);
+  if (!full) {
+    body.innerHTML = `<div class="listnote">Kunne ikke laste detaljer.</div>
+      <a class="extlink" href="${esc(c.url)}" target="_blank" rel="noopener">Åpne i kommunens innsynsløsning ↗</a>`;
+    return;
+  }
+  if (!card.querySelector(".case-desc").textContent.trim() || !c.description) {
+    card.querySelector(".case-desc").textContent = caseDesc(full);
+  }
+  const docs = (full.documents || []).map(d => {
+    const files = (d.files || []).map(f =>
+      `<a class="filechip" href="${esc(f.url)}" data-name="${esc(f.name)}" onclick="return openFile(this)">📄 ${esc(f.name)}</a>`).join("");
+    return `<div class="doc ${d.date ? "dated" : ""}">
+      ${d.date ? `<div class="d-date">${fmtDate(d.date)}</div>` : ""}
+      <div class="d-title">${esc(cleanDocTitle(d.title, c))}</div>
+      <div class="d-meta">${esc(d.type)}${d.from ? " · fra " + esc(d.from) : ""}${d.to ? " · til " + esc(d.to) : ""}</div>
+      ${files}</div>`;
+  }).join("");
+  const summary = full.aiSummary ? (full.aiSummary.text || full.aiSummary) : full.summary;
+  body.innerHTML = `
+    <div class="summary">${full.aiSummary ? "🧠 " : ""}${esc(summary)}</div>
+    <div class="meta">
+      ${entChip("firma", c.soker)}${entChip("sb", c.saksbehandler)}
+      <div style="margin-top:4px">${(full.documents || []).length} dokument(er)${c.matrikkel ? " · gnr/bnr " + esc(c.matrikkel) : ""}</div>
+    </div>
+    ${fileGallery(full)}
+    ${docs ? `<div class="tl">${docs}</div>` : '<div class="listnote">Ingen offentlig tilgjengelige dokumenter.</div>'}
+    ${endringerHtml(full)}
+    ${notesHtml(c)}
+    <a class="extlink" href="${esc(c.url)}" target="_blank" rel="noopener">Åpne i kommunens innsynsløsning ↗</a>`;
+  wireCards();
 }
 function entChip(kind, name) {
   if (!name) return "";
@@ -1178,6 +1204,7 @@ function wireCards() {
         const c = DATA.cases.find(x => x.casenr === card.dataset.nr);
         if (c) {
           markSeenCase(c);
+          fillCaseBody(card, c);
           if (c.latlon) {  // zoom alltid inn på saken når den åpnes
             const d = map.getCenter().distanceTo(L.latLng(c.latlon));
             if (d > 60 || map.getZoom() < 16) map.flyTo(c.latlon, Math.max(map.getZoom(), 16), { duration: 0.7 });
@@ -1308,7 +1335,7 @@ function openStats() {
     <div data-entlist="sb">${topSb.length ? barList(topSb, "#30d158") : '<div class="listnote">Ingen data.</div>'}</div>
     <div class="sectionlabel">Statusfordeling</div>${barList(topStatus, "#8e8e93")}
     <div class="listnote">Basert på ${cs.length} saker fra kommunens innsynsløsning. Datoer = journalført dato.</div>`;
-  openPanel("Statistikk", "Alle saker i kartet (Flekkerøy og Søm)", html);
+  openPanel("Statistikk", "Alle saker i kartet – Kristiansand", html);
   document.querySelectorAll('#panelBody [data-entlist]').forEach(box => {
     const kind = box.dataset.entlist;
     box.querySelectorAll(".barrow").forEach(r => {
@@ -1518,17 +1545,22 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(
 async function refreshData() {
   if (!IS_HTTP) return;
   try {
-    const r = await fetch("data/cases.json", { cache: "no-store" });
+    const r = await fetch("data/index.json", { cache: "no-store" });
     if (!r.ok) return;
     const fresh = await r.json();
     if (fresh.updated !== DATA.updated) {
-      DATA = fresh;
-      POIS = buildPois();
-      NOGEO = DATA.cases.filter(c => !c.latlon);
+      applyIndex(fresh);
       render();
       showToasts();
     }
   } catch { /* offline er greit */ }
+}
+function applyIndex(idx) {
+  DATA = { updated: idx.updated, updatedLocal: idx.updatedLocal,
+           poiSummaries: idx.poiSummaries || {}, cases: (idx.cases || []).map(inflate) };
+  for (const k of Object.keys(CHUNKS)) delete CHUNKS[k];
+  POIS = buildPois();
+  NOGEO = DATA.cases.filter(c => !c.latlon);
 }
 setInterval(refreshData, 5 * 60 * 1000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshData(); });
@@ -1569,11 +1601,19 @@ if ("serviceWorker" in navigator && IS_HTTP) {
   }
 })();
 
-render();
-showToasts();
 renderAccountState();
 drawRadius();
-if (loggedIn()) pullAccount();
+(async function bootData() {
+  try {
+    const idx = await fetch("data/index.json", { cache: "no-store" }).then(r => r.json());
+    applyIndex(idx);
+  } catch (e) {
+    document.getElementById("updatedTag").textContent = "Klarte ikke laste data (" + e.message + ")";
+  }
+  render();
+  showToasts();
+  if (loggedIn()) pullAccount();
+})();
 </script>
 </body>
 </html>

@@ -35,7 +35,18 @@ VAPID_CLAIM = os.environ.get("VAPID_CLAIM_EMAIL", "")
 PREV_PATH = os.environ.get("PREV_CASES", "/tmp/forrige_cases.json")
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-CASES = os.path.join(ROOT, "data", "cases.json")
+CHUNK_DIR = os.path.join(ROOT, "data", "chunks")
+
+
+def load_all_cases():
+    out = {}
+    if os.path.isdir(CHUNK_DIR):
+        for fn in os.listdir(CHUNK_DIR):
+            if fn.endswith(".json"):
+                with open(os.path.join(CHUNK_DIR, fn), encoding="utf-8") as f:
+                    for c in json.load(f).get("cases", []):
+                        out[c["id"]] = c
+    return out
 
 VEDTAK_MARKERS = ("vedtak", "tillatelse", "avslag", "pålegg", "stoppordre", "tvangsmulkt",
                   "overtredelsesgebyr", "ferdigattest", "dispensasjon")
@@ -92,33 +103,32 @@ def is_vedtak_change(texts):
     return any(m in joined for m in VEDTAK_MARKERS)
 
 
-def collect_changes(new, prev):
-    """-> {addrkey: {label, latlon, isNew, isUlovlighet, isVedtak, items[]}}"""
+def collect_changes(cases):
+    """Endringer = 'endringer'-oppføringer datert i dag (skrives av dagens synk-kjøring).
+    -> {addrkey: {label, latlon, isNew, isUlovlighet, isVedtak, items[]}}"""
+    today = datetime.now().strftime("%Y-%m-%d")
     changes = {}
-    for cid, c in new.items():
+    for c in cases.values():
+        todays = [e for e in (c.get("endringer") or []) if e.get("dato") == today]
+        if not todays:
+            continue
         label = c.get("displayAddress") or c.get("casenr")
-        key = addr_key(label)
-        old = prev.get(cid)
-        entry = None
-        if old is None:
-            entry = changes.setdefault(key, {"label": label, "latlon": c.get("latlon"),
-                                             "isNew": False, "isUlovlighet": False, "isVedtak": False, "items": []})
-            entry["isNew"] = True
-            entry["items"].append(f"Ny sak: {c['casenr']} – {c.get('description') or c['title']} (status: {c.get('status', '?')})")
-        else:
-            n_new, n_old = len(c.get("documents") or []), len(old.get("documents") or [])
-            if n_new > n_old:
-                titles = [d["title"].split(" - ", 1)[-1] for d in (c.get("documents") or [])[:n_new - n_old]]
-                entry = changes.setdefault(key, {"label": label, "latlon": c.get("latlon"),
-                                                 "isNew": False, "isUlovlighet": False, "isVedtak": False, "items": []})
-                entry["items"].append(f"{c['casenr']}: {n_new - n_old} nye dokument(er) – " + "; ".join(titles[:3]))
-                if is_vedtak_change(titles):
+        entry = changes.setdefault(addr_key(label), {"label": label, "latlon": c.get("latlon"),
+                                                     "isNew": False, "isUlovlighet": False,
+                                                     "isVedtak": False, "items": []})
+        for e in todays:
+            tekst = e.get("tekst", "")
+            if "dukket opp" in tekst:
+                entry["isNew"] = True
+                entry["items"].append(f"Ny sak: {c['casenr']} – {c.get('description') or c['title']} (status: {c.get('status', '?')})")
+            else:
+                entry["items"].append(f"{c['casenr']}: {tekst}")
+                if is_vedtak_change([tekst]):
                     entry["isVedtak"] = True
-        if entry:
-            if c.get("type") == "Ulovlighetssak":
-                entry["isUlovlighet"] = True
-            entry["soker"] = (case_soker(c) or "").lower()
-            entry["sb"] = (c.get("saksbehandler") or "").lower().strip()
+        if c.get("type") == "Ulovlighetssak":
+            entry["isUlovlighet"] = True
+        entry["soker"] = (case_soker(c) or "").lower()
+        entry["sb"] = (c.get("saksbehandler") or "").lower().strip()
     return changes
 
 
@@ -225,18 +235,12 @@ def main():
         print("Varslings-secrets ikke satt – hopper over varsling.")
         return
 
-    with open(CASES, encoding="utf-8") as f:
-        new = {c["id"]: c for c in json.load(f)["cases"]}
-    prev = {}
-    if os.path.exists(PREV_PATH):
-        with open(PREV_PATH, encoding="utf-8") as f:
-            prev = {c["id"]: c for c in json.load(f)["cases"]}
-
+    new = load_all_cases()
     subs = http_json(f"{API_URL}/all", headers={"Authorization": f"Bearer {API_SECRET}"})
     sent = 0
 
-    if prev:
-        changes = collect_changes(new, prev)
+    if True:
+        changes = collect_changes(new)
         if changes:
             for email, user in subs.items():
                 hits = user_hits(user, changes)
@@ -250,8 +254,6 @@ def main():
                 except Exception as e:  # noqa: BLE001
                     print(f"Klarte ikke varsle {email}: {e}", file=sys.stderr)
         print(f"Aktivitetsvarsler: {sent} sendt ({len(changes)} adresser med endringer).")
-    else:
-        print("Ingen forrige datafil – hopper over aktivitetsvarsler.")
 
     # Ukessammendrag på fredager
     if datetime.now().weekday() == 4:

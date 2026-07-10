@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Oppdaterer byggesaksdata for Flekkerøy.
+Datapipeline v3 – Byggesaker Kristiansand (hele kommunen).
+
+Arkitektur (kompatibel med fremtidig Postgres-plattform):
+  data/index.json          tynn indeks over ALLE saker (kartet laster denne først)
+  data/chunks/<postnr>.json  fulle saksobjekter per postnummer (lastes ved behov)
+  data/adresser_4204.json  Kartverket-adressecache for hele kommunen
+  data/journal_bulk.jsonl  lokal journal-høsting (gitignored, kun backfill)
 
 Kilder:
-  * OpenGov (opengov.360online.com/Cases/KRSANDEBYGG): saker + dokumentlister + PDF-lenker
-  * Offentlig journal (kristiansand.pj.360online.com): journaldato per dokument
-  * Kartverket (ws.geonorge.no): adresser, koordinater, gnr/bnr for 4625 Flekkerøy
+  * OpenGov: sakene enumereres via sammenhengende kilde-ID-er (~200100 → nå).
+    ID-rommet er 1:1 med kommunens saksnummerserie fra 2020 – komplett dekning.
+  * Offentlig journal: journaldato per dokument. Backfill = månedsvis bulk-høsting;
+    daglig = endringsfeed. (Journalen struper parallell trafikk – alltid sekvensiell.)
+  * Kartverket: adresser/koordinater/gnr/bnr.
 
 Kjøring:
-  py -X utf8 oppdater_data.py            inkrementell (journal-endringsfeed + hovedlister;
-                                         full gatesveip automatisk hvis >7 dager siden sist)
-  py -X utf8 oppdater_data.py --full     hent alt på nytt (inkl. datoberikelse for alle saker)
+  py -X utf8 oppdater_data.py                 daglig inkrementell (nye ID-er + endringsfeed)
+  py -X utf8 oppdater_data.py --kristiansand  backfill av hele arkivet (~3-4 t)
+  py -X utf8 oppdater_data.py --journal-bulk  månedsvis journal-høsting (~6-8 t, resumerbar)
+  py -X utf8 oppdater_data.py --journal-match koble bulk-høstet journal til sakene (lokal, rask)
 
-Skriptet er ren Python (ingen AI/tokens). CPU/nettverk brukes kun på nye/endrede saker
-ved inkrementell kjøring.
+Ren Python, ingen AI/tokens.
 """
 
 import concurrent.futures
@@ -26,49 +34,36 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 BASE = "https://opengov.360online.com"
 SITE = f"{BASE}/Cases/KRSANDEBYGG"
 PJ_BASE = "https://kristiansand.pj.360online.com"
-# Avdelinger i offentlig journal som dekker plan/bygg/tilsyn:
-# 18 Byggesak, 19 Byggesaksbehandling, 72 Plan og bygg, 74 Plan og bygg stab, 83 Tilsyn og ulovlighetsoppfølgning
-PJ_DEPTS = "18,19,72,74,83"
+PJ_DEPTS = "18,19,72,74,83"   # Byggesak, Byggesaksbehandling, Plan og bygg, PoB stab, Tilsyn/ulovlighet
 KARTVERKET = "https://ws.geonorge.no/adresser/v1/sok"
-# Områder som dekkes: postnummer -> områdenavn. Nye områder legges til her;
-# skriptet oppdager endringen og kjører automatisk full gatesveip neste gang.
-POSTNUMRE = {
-    "4625": "Flekkerøy",
-    "4637": "Søm",
-}
-KOMMUNENUMMER = "4204"       # Kristiansand
+KOMMUNENUMMER = "4204"
 
-CASE_TYPES = {
-    "Byggesak": "99001",
-    "Henvendelse": "99005",
-    "Ulovlighetssak": "99004",
-}
+TYPE_BY_PREFIX = {"BYGG": "Byggesak", "HENV": "Henvendelse", "ULOV": "Ulovlighetssak"}
+ID_START = 200100            # første sak i arkivet ligger like over (sak 20/00001 ≈ 200157)
+EMPTY_RUN_STOP_BACKFILL = 300
+EMPTY_RUN_STOP_DAILY = 30
+JOURNAL_START = (2020, 1)
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(ROOT, "data")
-CASES_JSON = os.path.join(DATA_DIR, "cases.json")
-CASES_JS = os.path.join(DATA_DIR, "cases.js")
+CHUNK_DIR = os.path.join(DATA_DIR, "chunks")
+INDEX_JSON = os.path.join(DATA_DIR, "index.json")
+LEGACY_CASES = os.path.join(DATA_DIR, "cases.json")
 SUMMARIES_JSON = os.path.join(DATA_DIR, "summaries.json")
-ADDR_CACHE = os.path.join(DATA_DIR, f"adresser_{'_'.join(sorted(POSTNUMRE))}.json")
+ADDR_CACHE = os.path.join(DATA_DIR, f"adresser_{KOMMUNENUMMER}.json")
+JB_PATH = os.path.join(DATA_DIR, "journal_bulk.jsonl")
+JB_WM = os.path.join(DATA_DIR, "journal_watermark.json")
 
-REQUEST_DELAY = 0.2
-JOURNAL_DELAY = 0.6   # journalen struper parallell trafikk – vær skånsom
-MAX_WORKERS = 3       # gjelder OpenGov; journalen hentes alltid sekvensielt
-SWEEP_INTERVAL_DAYS = 7
-HEADERS = {"User-Agent": "FlekkeroyByggesakskart/2.0 (privat innsynsverktoy; kontakt: konto@vizbo.no)"}
-
-FINAL_STATUSES = {
-    "Avsluttet – ferdigattest gitt",
-    "Avsluttet",
-    "Søknad trukket",
-    "Avvist",
-    "Avslag",
-}
+REQUEST_DELAY = 0.15
+JOURNAL_DELAY = 0.5
+MAX_WORKERS = 3
+HEADERS = {"User-Agent": "ByggesakerKristiansand/3.0 (innsynsverktoy; kontakt: konto@vizbo.no)"}
 
 
 def log(msg):
@@ -85,34 +80,32 @@ def fetch(url, retries=3):
                 return resp.read().decode("utf-8", errors="replace")
         except urllib.error.HTTPError as e:
             if e.code == 500:
-                return ""  # 360online svarer 500 når et søk har null treff
+                return ""  # 360online: 500 = tomt søk
             last_err = e
             time.sleep(1.5 * (attempt + 1))
         except Exception as e:  # noqa: BLE001
             last_err = e
             time.sleep(1.5 * (attempt + 1))
-    log(f"  FEIL ved henting av {url}: {last_err}")
+    log(f"  FEIL: {url}: {last_err}")
     return None
 
 
 # ---------------------------------------------------------------------------
-# Kartverket: adresser på Flekkerøy
+# Kartverket: alle adresser i kommunen
 # ---------------------------------------------------------------------------
 
-def load_area_addresses(force=False):
+def load_addresses(force=False):
     if not force and os.path.exists(ADDR_CACHE):
-        age_days = (time.time() - os.path.getmtime(ADDR_CACHE)) / 86400
-        if age_days < 30:
+        if (time.time() - os.path.getmtime(ADDR_CACHE)) / 86400 < 30:
             with open(ADDR_CACHE, encoding="utf-8") as f:
                 return json.load(f)
-
-    slim = []
-    for postnr, navn in POSTNUMRE.items():
-        log(f"Henter adresser for {postnr} {navn} fra Kartverket ...")
-        adresser = []
+    log(f"Henter alle adresser i kommune {KOMMUNENUMMER} fra Kartverket ...")
+    # API-et er begrenset til 10 000 treff per søk – hent per postnummer (46xx).
+    adresser = []
+    for pnr in range(4600, 4700):
         side = 0
         while True:
-            url = (f"{KARTVERKET}?postnummer={postnr}&kommunenummer={KOMMUNENUMMER}"
+            url = (f"{KARTVERKET}?kommunenummer={KOMMUNENUMMER}&postnummer={pnr:04d}"
                    f"&treffPerSide=1000&side={side}&asciiKompatibel=false")
             raw = fetch(url)
             if raw is None:
@@ -121,139 +114,78 @@ def load_area_addresses(force=False):
             batch = payload.get("adresser", [])
             adresser.extend(batch)
             total = payload.get("metadata", {}).get("totaltAntallTreff", 0)
-            if len(adresser) >= total or not batch:
+            if not batch or (side + 1) * 1000 >= total:
                 break
             side += 1
             time.sleep(REQUEST_DELAY)
-        for a in adresser:
-            pt = a.get("representasjonspunkt") or {}
-            slim.append({
-                "adressetekst": a.get("adressetekst", ""),
-                "adressenavn": a.get("adressenavn", ""),
-                "gnr": a.get("gardsnummer"),
-                "bnr": a.get("bruksnummer"),
-                "lat": pt.get("lat"),
-                "lon": pt.get("lon"),
-                "omrade": navn,
-            })
-        log(f"  {len(adresser)} adresser i {navn}.")
+        time.sleep(0.05)
+    slim = []
+    for a in adresser:
+        pt = a.get("representasjonspunkt") or {}
+        slim.append({
+            "adressetekst": a.get("adressetekst", ""),
+            "adressenavn": a.get("adressenavn", ""),
+            "gnr": a.get("gardsnummer"), "bnr": a.get("bruksnummer"),
+            "lat": pt.get("lat"), "lon": pt.get("lon"),
+            "postnr": a.get("postnummer") or "",
+        })
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(ADDR_CACHE, "w", encoding="utf-8") as f:
         json.dump(slim, f, ensure_ascii=False)
+    log(f"  {len(slim)} adresser.")
     return slim
 
 
 def build_lookups(addresses):
-    by_addr = {}      # "skibbuveien 2b" -> (lat, lon)
-    by_gnrbnr = {}    # "2/122" -> (lat, lon)
-    gnrbnr_addr = {}  # "2/122" -> "Skibbuveien 2B"
-    streets = {}
-    gnr_set = set()
+    by_addr, by_gnrbnr, gnrbnr_addr, streets = {}, {}, {}, {}
     for a in addresses:
-        lat, lon = a["lat"], a["lon"]
+        lat, lon, pnr = a["lat"], a["lon"], a["postnr"]
         key = a["adressetekst"].strip().lower()
         if lat is not None and lon is not None:
-            by_addr[key] = (lat, lon)
+            by_addr[key] = (lat, lon, pnr)
             streets.setdefault(a["adressenavn"].strip().lower(), []).append((lat, lon))
         if a["gnr"] is not None and a["bnr"] is not None:
             gb = f"{a['gnr']}/{a['bnr']}"
             if lat is not None:
-                by_gnrbnr.setdefault(gb, (lat, lon))
+                by_gnrbnr.setdefault(gb, (lat, lon, pnr))
             gnrbnr_addr.setdefault(gb, a["adressetekst"].strip())
-            gnr_set.add(a["gnr"])
-    street_centroids = {
-        s: (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
-        for s, pts in streets.items()
-    }
-    street_names = sorted({a["adressenavn"].strip() for a in addresses if a["adressenavn"].strip()})
-    return by_addr, by_gnrbnr, gnrbnr_addr, street_centroids, street_names, gnr_set
+    street_centroids = {s: (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+                        for s, pts in streets.items()}
+    return by_addr, by_gnrbnr, gnrbnr_addr, street_centroids
 
 
 # ---------------------------------------------------------------------------
-# OpenGov: sakslister og detaljsider
+# OpenGov: detaljside-parsing (ID-enumerering trenger ikke søkesider)
 # ---------------------------------------------------------------------------
 
-ITEM_RE = re.compile(
-    r'<li class="_casefilter">.*?href="(/Cases/KRSANDEBYGG/Case/Details/(\d+))".*?'
-    r'<div class="caseName">\s*<span>(.*?)</span>.*?'
-    r'<div class="caseDate">\s*<span>(.*?)</span>\s*<span>(.*?)</span>',
-    re.S,
-)
-ADDR_P_RE = re.compile(r'<div class="serachCaseResult">\s*<p>(.*?)</p>', re.S)
-
-
-def parse_case_list(html):
-    items = []
-    for chunk in html.split('<li class="_casefilter">')[1:]:
-        chunk = '<li class="_casefilter">' + chunk
-        m = ITEM_RE.search(chunk)
-        if not m:
-            continue
-        url, cid, title, casenr, ctype = m.groups()
-        am = ADDR_P_RE.search(chunk)
-        list_addr = htmllib.unescape(am.group(1)).strip() if am else ""
-        if list_addr.lower() == "ingen adresse":
-            list_addr = ""
-        items.append({
-            "id": cid,
-            "url": BASE + url,
-            "title": htmllib.unescape(title).strip(),
-            "casenr": htmllib.unescape(casenr).strip(),
-            "type": htmllib.unescape(ctype).strip(),
-            "listAddress": list_addr,
-        })
-    return items
-
-
+H2_RE = re.compile(r'<h2>\s*([A-ZÆØÅ]+)-(\d{2}/\d+)\s*-\s*(.*?)\s*</h2>', re.S)
+SAKSBEH_RE = re.compile(r'<span>Saksbehandler</span>.*?<p>(.*?)</p>', re.S)
+ADDR_LI_RE = re.compile(r'<li>\s*\d+\.\s*(.*?)</li>', re.S)
+DOC_RE = re.compile(r'<div class="accordionTitle">\s*<h4>(.*?)</h4>.*?<div id="\d+" class="panel">(.*?)(?=</li>)', re.S)
+DOCFIELD_RE = re.compile(r"<div class='documentDetailHeader'><span>(.*?)</span></div>"
+                         r"<div class='documentDetailContent'><p>(.*?)</p></div>", re.S)
+FILE_RE = re.compile(r'href="(/Cases/KRSANDEBYGG/File/Details/[^"]+)"[^>]*>.*?<div class="fileNameDetail">(.*?)</div>', re.S)
 GNRBNR_RE = re.compile(r'\b(\d{1,3})\s*/\s*(\d{1,4})(?:\s*/\s*\d+)*\b')
 
 
-def extract_gnrbnr(text):
-    m = GNRBNR_RE.search(text)
-    return (int(m.group(1)), int(m.group(2))) if m else None
-
-
-def is_flekkeroy_candidate(item, street_names_lower, gnr_set):
-    addr = item["listAddress"].lower()
-    title = item["title"].lower().lstrip("-– ")
-    for s in street_names_lower:
-        if addr.startswith(s + " ") or addr == s or title.startswith(s + " ") or title.startswith(s + ","):
-            return True
-    gb = extract_gnrbnr(item["title"])
-    if gb and gb[0] in gnr_set:
-        return True
-    return False
-
-
-H2_RE = re.compile(r'<div class="pageTitleHeader">\s*<h2>\s*(.*?)</h2>', re.S)
-SAKSBEH_RE = re.compile(r'<span>Saksbehandler</span>.*?<p>(.*?)</p>', re.S)
-ADDR_LI_RE = re.compile(r'<li>\s*\d+\.\s*(.*?)</li>', re.S)
-DOC_RE = re.compile(
-    r'<div class="accordionTitle">\s*<h4>(.*?)</h4>.*?<div id="\d+" class="panel">(.*?)(?=</li>)',
-    re.S,
-)
-DOCFIELD_RE = re.compile(
-    r"<div class='documentDetailHeader'><span>(.*?)</span></div>"
-    r"<div class='documentDetailContent'><p>(.*?)</p></div>",
-    re.S,
-)
-FILE_RE = re.compile(r'href="(/Cases/KRSANDEBYGG/File/Details/[^"]+)"[^>]*>.*?'
-                     r'<div class="fileNameDetail">(.*?)</div>', re.S)
-
-
-def parse_detail(html):
-    d = {"saksbehandler": "", "addresses": [], "documents": []}
-    m = SAKSBEH_RE.search(html)
-    if m:
-        d["saksbehandler"] = htmllib.unescape(m.group(1)).strip()
+def parse_detail_page(html):
+    """Full parsing av en detaljside. Returnerer None hvis siden ikke er en sak."""
+    m = H2_RE.search(html or "")
+    if not m:
+        return None
+    prefix, nr, title = m.group(1), m.group(2), htmllib.unescape(m.group(3)).strip()
+    d = {"prefix": prefix, "casenr": f"{prefix}-{nr}", "title": title,
+         "saksbehandler": "", "addresses": [], "documents": []}
+    sm = SAKSBEH_RE.search(html)
+    if sm:
+        d["saksbehandler"] = htmllib.unescape(sm.group(1)).strip()
     aside = html.split("caseDetailsAside", 1)
     if len(aside) > 1:
         d["addresses"] = [htmllib.unescape(a).strip() for a in ADDR_LI_RE.findall(aside[1])]
-    for title, panel in DOC_RE.findall(html):
-        doc = {"title": htmllib.unescape(title).strip(), "type": "", "from": "", "to": "", "files": []}
+    for dt, panel in DOC_RE.findall(html):
+        doc = {"title": htmllib.unescape(dt).strip(), "type": "", "from": "", "to": "", "files": []}
         for k, v in DOCFIELD_RE.findall(panel):
-            k = htmllib.unescape(k).strip()
-            v = htmllib.unescape(v).strip()
+            k, v = htmllib.unescape(k).strip(), htmllib.unescape(v).strip()
             if k == "Dokumenttype":
                 doc["type"] = v
             elif k == "Avsender":
@@ -261,19 +193,23 @@ def parse_detail(html):
             elif k == "Mottaker":
                 doc["to"] = v
         for href, fname in FILE_RE.findall(panel):
-            doc["files"].append({"url": BASE + htmllib.unescape(href),
-                                 "name": htmllib.unescape(fname).strip()})
+            doc["files"].append({"url": BASE + htmllib.unescape(href), "name": htmllib.unescape(fname).strip()})
         d["documents"].append(doc)
     return d
 
 
-def doc_seq(doc_title):
-    m = re.match(r'[A-ZÆØÅ]+-\d{2}/\d+-(\d+)', doc_title)
+def doc_seq(t):
+    m = re.match(r'[A-ZÆØÅ]+-\d{2}/\d+-(\d+)', t or "")
     return int(m.group(1)) if m else 0
 
 
+def extract_gnrbnr(text):
+    m = GNRBNR_RE.search(text or "")
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
 # ---------------------------------------------------------------------------
-# Offentlig journal: datoberikelse
+# Offentlig journal
 # ---------------------------------------------------------------------------
 
 JROW_TITLE_RE = re.compile(r'document-card-title">\s*([^<]*)', re.S)
@@ -281,17 +217,14 @@ JROW_DATE_RE = re.compile(r'Journaldato</span></div>\s*<div[^>]*>\s*<p>(.*?)</p>
 
 
 def norm_title(t):
-    """Normaliser dokumenttittel for kobling OpenGov <-> journal."""
-    t = htmllib.unescape(t)
-    t = re.sub(r'^\s*\d{10}-\d+\s*', '', t)                      # journalens nummer-token
-    t = re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', t)        # OpenGov-prefiks
-    t = t.lower()
-    t = re.sub(r'[^a-z0-9æøå]+', ' ', t)
+    t = htmllib.unescape(t or "")
+    t = re.sub(r'^\s*\d{10}-\d+\s*', '', t)
+    t = re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', t)
+    t = re.sub(r'[^a-z0-9æøå]+', ' ', t.lower())
     return re.sub(r'\s+', ' ', t).strip()
 
 
 def parse_journal_rows(html):
-    """Returnerer [{year, seq, docnum, key, date(ISO), ntitle, rawtitle}]"""
     rows = []
     if not html:
         return rows
@@ -300,28 +233,24 @@ def parse_journal_rows(html):
         m = re.match(r'(\d{4})-(\d+)-(\d+)$', rid)
         if not m:
             continue
-        year, seq, docnum = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        tm = JROW_TITLE_RE.search(chunk)
-        dm = JROW_DATE_RE.search(chunk)
+        tm, dm = JROW_TITLE_RE.search(chunk), JROW_DATE_RE.search(chunk)
         date_iso = None
         if dm:
-            dm2 = re.match(r'(\d{2})\.(\d{2})\.(\d{4})', dm.group(1).strip())
-            if dm2:
-                date_iso = f"{dm2.group(3)}-{dm2.group(2)}-{dm2.group(1)}"
+            d2 = re.match(r'(\d{2})\.(\d{2})\.(\d{4})', dm.group(1).strip())
+            if d2:
+                date_iso = f"{d2.group(3)}-{d2.group(2)}-{d2.group(1)}"
         raw = htmllib.unescape(re.sub(r'\s+', ' ', tm.group(1))).strip() if tm else ""
-        rows.append({"year": year, "seq": seq, "docnum": docnum, "key": f"{year}-{seq}",
-                     "date": date_iso, "ntitle": norm_title(raw), "rawtitle": raw})
+        rows.append({"key": f"{m.group(1)}-{m.group(2)}", "docnum": int(m.group(3)),
+                     "date": date_iso, "ntitle": norm_title(raw)})
     return rows
 
 
-def fetch_journal_case(year, seq, docnum, max_pages=30):
-    """Alle journalførte dokumenter for en journalsak, med dato."""
-    out = []
-    offset = 0
+def fetch_journal_case(year, seq, docnum, max_pages=40):
+    out, offset = [], 0
     for _ in range(max_pages):
-        url = (f"{PJ_BASE}/Journal/SearchRelated?caseYear={year}&sequenceNumber={seq}"
-               f"&documentNumber={docnum}&offset={offset}")
-        rows = parse_journal_rows(fetch(url))
+        rows = parse_journal_rows(fetch(
+            f"{PJ_BASE}/Journal/SearchRelated?caseYear={year}&sequenceNumber={seq}"
+            f"&documentNumber={docnum}&offset={offset}"))
         if not rows:
             break
         out.extend(rows)
@@ -333,47 +262,32 @@ def fetch_journal_case(year, seq, docnum, max_pages=30):
 
 
 def discover_journal_key(case):
-    """Finn journalsakens (år, sekvensnr, et gyldig dokumentnr) via tittelsøk."""
-    my_titles = {norm_title(d["title"]) for d in case["documents"]}
-    my_titles.discard("")
+    my_titles = {norm_title(d["title"]) for d in case["documents"]} - {""}
     if not my_titles:
         return None
-    # Søk på de mest særpregede dokumenttitlene (nyeste først), deretter sakstittel
-    queries = []
+    queries, tried = [], 0
     for d in sorted(case["documents"], key=lambda x: doc_seq(x["title"]), reverse=True):
         t = re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', d["title"]).strip()
         if len(t) >= 12:
             queries.append(t)
     queries.append(case["title"])
-    tried = 0
     for q in queries:
         if tried >= 3:
             break
         tried += 1
-        url = f"{PJ_BASE}/Journal/SearchSimple?searchstring={urllib.parse.quote(q[:120])}"
-        rows = parse_journal_rows(fetch(url))
+        rows = parse_journal_rows(fetch(f"{PJ_BASE}/Journal/SearchSimple?searchstring={urllib.parse.quote(q[:120])}"))
         time.sleep(JOURNAL_DELAY)
         for r in rows:
             if r["ntitle"] in my_titles:
-                return (r["year"], r["seq"], r["docnum"])
+                y, s = r["key"].split("-")
+                return (int(y), int(s), r["docnum"])
     return None
 
 
-def enrich_case_dates(case, jinfo=None):
-    """Sett dato på dokumentene via offentlig journal. Returnerer True ved treff."""
-    if jinfo is None:
-        jinfo = discover_journal_key(case)
-    if jinfo is None:
-        case["journalKey"] = None
-        return False
-    year, seq, docnum = jinfo
-    jdocs = fetch_journal_case(year, seq, docnum)
-    if not jdocs:
-        case["journalKey"] = None
-        return False
-    # tittel -> datoer i journal-dokumentrekkefølge
+def apply_journal_entries(case, entries):
+    """Sett datoer på dokumentene fra journal-rader tilhørende sakens journalKey."""
     tmap = {}
-    for r in sorted(jdocs, key=lambda x: x["docnum"]):
+    for r in sorted(entries, key=lambda x: x["docnum"]):
         if r["date"]:
             tmap.setdefault(r["ntitle"], []).append(r["date"])
     hits = 0
@@ -387,21 +301,34 @@ def enrich_case_dates(case, jinfo=None):
     dates = [d["date"] for d in case["documents"] if d.get("date")]
     case["firstDate"] = min(dates) if dates else None
     case["lastDate"] = max(dates) if dates else None
+    return hits
+
+
+def enrich_case_dates(case, jinfo=None):
+    if jinfo is None:
+        jinfo = discover_journal_key(case)
+    if jinfo is None:
+        case["journalKey"] = None
+        return False
+    year, seq, docnum = jinfo
+    entries = fetch_journal_case(year, seq, docnum)
+    if not entries:
+        case["journalKey"] = None
+        return False
+    hits = apply_journal_entries(case, entries)
     case["journalKey"] = f"{year}-{seq}"
     case["journalDoc"] = docnum
     return hits > 0
 
 
 def journal_change_feed(days):
-    """Journalførte plan/bygg-dokumenter siste N dager (endringsfeed)."""
     tod = datetime.now().strftime("%d.%m.%Y")
     fromd = (datetime.now() - timedelta(days=days)).strftime("%d.%m.%Y")
-    out = []
-    offset = 0
-    while offset <= 3000:
-        url = (f"{PJ_BASE}/Journal/SearchSimple?searchstring=&daterange=custom"
-               f"&fromdate={fromd}&todate={tod}&selecteddepartments={PJ_DEPTS}&offset={offset}")
-        rows = parse_journal_rows(fetch(url))
+    out, offset = [], 0
+    while offset <= 5000:
+        rows = parse_journal_rows(fetch(
+            f"{PJ_BASE}/Journal/SearchSimple?searchstring=&daterange=custom"
+            f"&fromdate={fromd}&todate={tod}&selecteddepartments={PJ_DEPTS}&offset={offset}"))
         if not rows:
             break
         out.extend(rows)
@@ -413,7 +340,7 @@ def journal_change_feed(days):
 
 
 # ---------------------------------------------------------------------------
-# Status og oppsummering
+# Status, søker og oppsummering
 # ---------------------------------------------------------------------------
 
 STATUS_RULES = [
@@ -435,66 +362,50 @@ STATUS_RULES = [
     (r'mangel|etterspør dokumentasjon|mangler ved søknad|ber om flere opplysninger', True, "Venter på tilleggsdokumentasjon"),
     (r'foreløpig svar', True, "Under behandling"),
 ]
-
 OUTGOING_TYPES = ("dokument ut", "internt notat uten oppfølging", "internt notat",
                   "vedtaksbrev", "mangelbrev - send saken tilbake", "oversendelsesbrev")
+INTERNAL_RE = re.compile(r'byggesak|plan og bygg|oppmåling|eiendom|kristiansand kommune|tilsyn|'
+                         r'byantikvar|statsforvalter|parkvesen|by- og stedsutvikling|innbygger|stab', re.I)
 
 
 def classify_vedtaksbrev(title):
     t = title.lower()
-    if re.search(r'avslag|avslås', t):
-        return "Avslag"
-    if re.search(r'stoppordre', t):
-        return "Stoppordre gitt"
-    if re.search(r'avvis', t):
-        return "Avvist"
-    if re.search(r'ferdigattest', t):
-        return "Avsluttet – ferdigattest gitt"
-    if re.search(r'igangsetting', t):
-        return "Igangsettingstillatelse gitt"
-    if re.search(r'rammetillatelse', t):
-        return "Rammetillatelse gitt"
-    if re.search(r'godkjent|tillatelse|dispensasjon|innvilg', t):
-        return "Tillatelse gitt"
+    for pat, status in ((r'avslag|avslås', "Avslag"), (r'stoppordre', "Stoppordre gitt"),
+                        (r'avvis', "Avvist"), (r'ferdigattest', "Avsluttet – ferdigattest gitt"),
+                        (r'igangsetting', "Igangsettingstillatelse gitt"),
+                        (r'rammetillatelse', "Rammetillatelse gitt"),
+                        (r'godkjent|tillatelse|dispensasjon|innvilg', "Tillatelse gitt")):
+        if re.search(pat, t):
+            return status
     return "Vedtak fattet"
 
 
 def infer_status(documents):
-    docs = sorted(documents, key=lambda d: doc_seq(d["title"]), reverse=True)
-    for doc in docs:
-        t = doc["title"].lower()
-        dtype = doc["type"].lower()
+    for doc in sorted(documents, key=lambda d: doc_seq(d["title"]), reverse=True):
+        t, dtype = doc["title"].lower(), doc["type"].lower()
         if dtype == "vedtaksbrev":
             return classify_vedtaksbrev(doc["title"])
         outgoing = dtype in OUTGOING_TYPES
         for pattern, needs_out, status in STATUS_RULES:
             if re.search(pattern, t) and (not needs_out or outgoing):
                 return status
-    if documents:
-        return "Under behandling"
-    return "Ingen offentlige dokumenter"
+    return "Under behandling" if documents else "Ingen offentlige dokumenter"
 
 
-def generate_summary(case):
-    desc = case.get("description") or case["title"]
-    n = len(case["documents"])
-    parts = []
-    year = "20" + case["casenr"].split("-")[1][:2] if "-" in case["casenr"] else ""
-    parts.append(f"{case['type']} fra {year} som gjelder {desc.strip().rstrip('.')}." if year
-                 else f"{case['type']}: {desc}.")
-    if n == 0:
-        parts.append("Saken har ingen offentlig tilgjengelige dokumenter i innsynsløsningen.")
-    else:
-        parts.append(f"Saken har {n} offentlig{'e' if n != 1 else ''} journalført{'e' if n != 1 else ''} dokument{'er' if n != 1 else ''}.")
-        docs = sorted(case["documents"], key=lambda d: doc_seq(d["title"]))
-        def strip_nr(t):
-            return re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', t)
-        first, last = docs[0], docs[-1]
-        fd = f" ({fmt_no_date(first.get('date'))})" if first.get("date") else ""
-        ld = f" ({fmt_no_date(last.get('date'))})" if last.get("date") else ""
-        parts.append(f"Første dokument: «{strip_nr(first['title'])}»{fd}. Siste dokument: «{strip_nr(last['title'])}»{ld}.")
-    parts.append(f"Vurdert status: {case['status']}.")
-    return " ".join(parts)
+def case_soker(case):
+    r, fallback = None, None
+    for d in sorted(case.get("documents") or [], key=lambda x: doc_seq(x.get("title"))):
+        f = (d.get("from") or "").strip()
+        if not f or INTERNAL_RE.search(f):
+            continue
+        dtype = (d.get("type") or "").strip()
+        title = (d.get("title") or "").lower()
+        if dtype == "Søknad":
+            r = f
+        elif fallback is None and "dokument inn" in dtype.lower() and "søknad om" in title and \
+                not re.search(r'kommentar|merknad|uttalelse|tilsvar|svar på|nabo|klage', title):
+            fallback = f
+    return r or fallback
 
 
 def fmt_no_date(iso):
@@ -504,71 +415,28 @@ def fmt_no_date(iso):
     return f"{d}.{m}.{y}"
 
 
+def generate_summary(case):
+    desc = case.get("description") or case["title"]
+    n = len(case["documents"])
+    year = "20" + case["casenr"].split("-")[1][:2] if "-" in case["casenr"] else ""
+    parts = [f"{case['type']} fra {year} som gjelder {desc.strip().rstrip('.')}." if year
+             else f"{case['type']}: {desc}."]
+    if n == 0:
+        parts.append("Saken har ingen offentlig tilgjengelige dokumenter i innsynsløsningen.")
+    else:
+        parts.append(f"Saken har {n} offentlig{'e' if n != 1 else ''} journalført{'e' if n != 1 else ''} dokument{'er' if n != 1 else ''}.")
+        docs = sorted(case["documents"], key=lambda d: doc_seq(d["title"]))
+        strip_nr = lambda t: re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', t)  # noqa: E731
+        fd = f" ({fmt_no_date(docs[0].get('date'))})" if docs[0].get("date") else ""
+        ld = f" ({fmt_no_date(docs[-1].get('date'))})" if docs[-1].get("date") else ""
+        parts.append(f"Første dokument: «{strip_nr(docs[0]['title'])}»{fd}. Siste dokument: «{strip_nr(docs[-1]['title'])}»{ld}.")
+    parts.append(f"Vurdert status: {case['status']}.")
+    return " ".join(parts)
+
+
 # ---------------------------------------------------------------------------
-# Geokoding og adressevisning
+# Geokoding / adressevisning / saksbygging
 # ---------------------------------------------------------------------------
-
-def geocode(case, by_addr, by_gnrbnr, street_centroids):
-    candidates = []
-    for a in case.get("detailAddresses", []):
-        m = re.match(r'(?:\d+/\d+(?:/\d+)*\s+)?(.+?),\s*\d{4}', a)
-        if m:
-            candidates.append(m.group(1).strip().lower())
-    if case.get("listAddress"):
-        candidates.append(case["listAddress"].strip().lower())
-    tm = re.match(r'^(.*?)\s+\d{1,3}\s*/', case["title"])
-    if tm:
-        candidates.append(tm.group(1).strip().lower())
-
-    candidates = [re.sub(r'^[\s\-–,]+', '', c) for c in candidates]
-    for c in candidates:
-        if c in by_addr:
-            return by_addr[c], "adresse"
-    gb = extract_gnrbnr(case["title"]) or next(
-        (extract_gnrbnr(a) for a in case.get("detailAddresses", []) if extract_gnrbnr(a)), None)
-    if gb:
-        key = f"{gb[0]}/{gb[1]}"
-        if key in by_gnrbnr:
-            return by_gnrbnr[key], "gnr/bnr"
-    for c in candidates:
-        street = re.sub(r'\s+\d+[a-zæøå]?$', '', c).strip()
-        if street in street_centroids:
-            return street_centroids[street], "gate"
-    return None, None
-
-
-def display_address(case, street_names_lower, gnrbnr_addr):
-    """Adresse til visning – gnr/bnr oversettes til adresse der det er mulig."""
-    if case.get("listAddress"):
-        return case["listAddress"]
-    # fra detaljadresse: «2/122 Skibbuveien 2B, 4625 FLEKKERØY, Norge»
-    for a in case.get("detailAddresses", []):
-        m = re.match(r'(?:\d+/\d+(?:/\d+)*\s+)?(.+?),', a)
-        if m:
-            cand = m.group(1).strip()
-            if cand.lower() != "ingen adresse" and any(
-                    cand.lower().startswith(s) for s in street_names_lower):
-                return cand
-    # fra tittel: «Skibbuveien 2B 2/122/0/0, ...»
-    tm = re.match(r'^[\s\-–]*(.+?)\s+\d{1,3}\s*/', case["title"])
-    if tm:
-        cand = tm.group(1).strip()
-        if any(cand.lower().startswith(s) for s in street_names_lower):
-            return cand
-    # gnr/bnr -> adresse fra matrikkelen
-    gb = extract_gnrbnr(case["title"])
-    if gb:
-        key = f"{gb[0]}/{gb[1]}"
-        if key in gnrbnr_addr:
-            return gnrbnr_addr[key]
-    head = re.sub(r'^[\s\-–]*', '', case.get("addressHead") or case["title"].split(",")[0])
-    head = re.sub(r'\s*\d{1,3}\s*/\s*\d+(\s*/\s*\d+)*\s*$', '', head).strip()  # fjern matrikkel-hale
-    if head and len(head) > 2:
-        return head
-    if gb:
-        return f"gnr/bnr {gb[0]}/{gb[1]}"
-    return case["casenr"]
-
 
 def split_title(title):
     if "," in title:
@@ -577,48 +445,70 @@ def split_title(title):
     return title.strip(), ""
 
 
-# ---------------------------------------------------------------------------
-# Innsamling
-# ---------------------------------------------------------------------------
-
-def sweep_streets(street_names, street_names_lower, gnr_set):
-    found = {}
-    log(f"Gatesveip: søker OpenGov for {len(street_names)} gatenavn ...")
-    for i, street in enumerate(street_names, 1):
-        html = fetch(f"{SITE}?q={urllib.parse.quote(street)}")
-        if html:
-            for item in parse_case_list(html):
-                if item["type"] in CASE_TYPES and is_flekkeroy_candidate(item, street_names_lower, gnr_set):
-                    found[item["id"]] = item
-        if i % 20 == 0:
-            log(f"  {i}/{len(street_names)} gater, {len(found)} kandidater")
-        time.sleep(REQUEST_DELAY)
-    return found
-
-
-def fetch_main_lists(street_names_lower, gnr_set):
-    found = {}
-    for tname, tid in CASE_TYPES.items():
-        html = fetch(f"{SITE}?casetypeid={tid}")
-        if html:
-            for item in parse_case_list(html):
-                if item["type"] == tname and is_flekkeroy_candidate(item, street_names_lower, gnr_set):
-                    found.setdefault(item["id"], item)
-        time.sleep(REQUEST_DELAY)
-    return found
+def geocode(case, lookups):
+    by_addr, by_gnrbnr, gnrbnr_addr, street_centroids = lookups
+    candidates = []
+    for a in case.get("detailAddresses", []):
+        m = re.match(r'(?:\d+/\d+(?:/\d+)*\s+)?(.+?),\s*\d{4}', a)
+        if m:
+            candidates.append(m.group(1).strip().lower())
+    tm = re.match(r'^(.*?)\s+\d{1,3}\s*/', case["title"])
+    if tm:
+        candidates.append(tm.group(1).strip().lower())
+    candidates = [re.sub(r'^[\s\-–,]+', '', c) for c in candidates]
+    for c in candidates:
+        if c in by_addr:
+            lat, lon, pnr = by_addr[c]
+            return (lat, lon), "adresse", pnr
+    gb = extract_gnrbnr(case["title"]) or next(
+        (extract_gnrbnr(a) for a in case.get("detailAddresses", []) if extract_gnrbnr(a)), None)
+    if gb:
+        key = f"{gb[0]}/{gb[1]}"
+        if key in by_gnrbnr:
+            lat, lon, pnr = by_gnrbnr[key]
+            return (lat, lon), "gnr/bnr", pnr
+    for c in candidates:
+        street = re.sub(r'\s+\d+[a-zæøå]?$', '', c).strip()
+        if street in street_centroids:
+            return street_centroids[street], "gate", None
+    return None, None, None
 
 
-def build_case(cid, item, det, lookups, old_case=None, announce_new=False):
-    by_addr, by_gnrbnr, gnrbnr_addr, street_centroids, street_names_lower = lookups
-    addr_head, desc = split_title(item["title"])
-    gb = extract_gnrbnr(item["title"])
+def display_address(case, gnrbnr_addr):
+    for a in case.get("detailAddresses", []):
+        m = re.match(r'(?:\d+/\d+(?:/\d+)*\s+)?(.+?),', a)
+        if m and m.group(1).strip().lower() not in ("ingen adresse",):
+            return m.group(1).strip()
+    tm = re.match(r'^[\s\-–]*(.+?)\s+\d{1,3}\s*/', case["title"])
+    if tm and len(tm.group(1).strip()) > 2:
+        return tm.group(1).strip()
+    gb = extract_gnrbnr(case["title"])
+    if gb and f"{gb[0]}/{gb[1]}" in gnrbnr_addr:
+        return gnrbnr_addr[f"{gb[0]}/{gb[1]}"]
+    head = re.sub(r'^[\s\-–]*', '', case["title"].split(",")[0])
+    head = re.sub(r'\s*\d{1,3}\s*/\s*\d+(\s*/\s*\d+)*\s*$', '', head).strip()
+    if head and len(head) > 2:
+        return head
+    return f"gnr/bnr {gb[0]}/{gb[1]}" if gb else case["casenr"]
+
+
+def postnr_for(case, geo_pnr):
+    for a in case.get("detailAddresses", []):
+        m = re.search(r',\s*(\d{4})\s+\S', a)
+        if m:
+            return m.group(1)
+    return geo_pnr or "0000"
+
+
+def build_case(cid, det, lookups, old_case=None, announce_new=False):
+    addr_head, desc = split_title(det["title"])
+    gb = extract_gnrbnr(det["title"])
     case = {
         "id": cid,
-        "url": item["url"],
-        "title": item["title"],
-        "casenr": item["casenr"],
-        "type": item["type"],
-        "listAddress": item["listAddress"],
+        "url": f"{SITE}/Case/Details/{cid}",
+        "title": det["title"],
+        "casenr": det["casenr"],
+        "type": TYPE_BY_PREFIX[det["prefix"]],
         "description": desc,
         "addressHead": addr_head,
         "matrikkel": f"{gb[0]}/{gb[1]}" if gb else "",
@@ -628,337 +518,411 @@ def build_case(cid, item, det, lookups, old_case=None, announce_new=False):
         "fetchedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     if old_case:
-        for k in ("journalKey", "journalDoc"):
+        for k in ("journalKey", "journalDoc", "firstDate", "lastDate"):
             if old_case.get(k):
                 case[k] = old_case[k]
+        # behold gamle dokumentdatoer via tittelmatch
+        old_dates = {norm_title(d["title"]): d.get("date") for d in old_case.get("documents") or []}
+        for d in case["documents"]:
+            if not d.get("date") and old_dates.get(norm_title(d["title"])):
+                d["date"] = old_dates[norm_title(d["title"])]
+        dates = [d["date"] for d in case["documents"] if d.get("date")]
+        if dates:
+            case["firstDate"], case["lastDate"] = min(dates), max(dates)
     case["status"] = infer_status(case["documents"])
+    case["soker"] = case_soker(case)
 
-    # Endringshistorikk: hva har skjedd siden forrige innhenting
     today = datetime.now().strftime("%Y-%m-%d")
     endringer = list((old_case or {}).get("endringer") or [])
     if old_case is None:
-        if announce_new:  # kun organisk nye saker – ikke bulk fra områdeutvidelser
+        if announce_new:
             endringer.append({"dato": today, "tekst": "Saken dukket opp i kartet"})
     else:
-        n_new = len(case["documents"])
-        n_old = len(old_case.get("documents") or [])
+        n_new, n_old = len(case["documents"]), len(old_case.get("documents") or [])
         if n_new > n_old:
             titles = [re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', d["title"])
                       for d in case["documents"][:n_new - n_old]]
-            endringer.append({"dato": today,
-                              "tekst": f"{n_new - n_old} nye dokument(er): " + "; ".join(titles[:3])})
+            endringer.append({"dato": today, "tekst": f"{n_new - n_old} nye dokument(er): " + "; ".join(titles[:3])})
         if old_case.get("status") and old_case["status"] != case["status"]:
-            endringer.append({"dato": today,
-                              "tekst": f"Status endret: {old_case['status']} → {case['status']}"})
+            endringer.append({"dato": today, "tekst": f"Status endret: {old_case['status']} → {case['status']}"})
     case["endringer"] = endringer[-25:]
-    (case["latlon"], case["geoSource"]) = geocode(case, by_addr, by_gnrbnr, street_centroids)
-    case["displayAddress"] = display_address(case, street_names_lower, gnrbnr_addr)
+
+    (case["latlon"], case["geoSource"], geo_pnr) = geocode(case, lookups)
+    case["displayAddress"] = display_address(case, lookups[2])
+    case["postnr"] = postnr_for(case, geo_pnr)
+    case["summary"] = generate_summary(case)
     return case
 
 
-ICS_KEYWORDS = re.compile(r'befaring|frist|høring|politisk behandling', re.I)
-ICS_DATE = re.compile(r'\b(\d{2})\.(\d{2})\.(\d{4})\b')
+# ---------------------------------------------------------------------------
+# Lagring: index + chunks per postnummer
+# ---------------------------------------------------------------------------
+
+def thin(case):
+    e = {"i": case["id"], "c": case["casenr"], "t": case["type"][0],  # B/H/U
+         "s": case.get("status") or "", "a": case.get("displayAddress") or "",
+         "p": case.get("postnr") or "0000",
+         "n": len(case.get("documents") or []),
+         "d": (case.get("description") or "")[:90]}
+    if case.get("latlon"):
+        e["ll"] = [round(case["latlon"][0], 6), round(case["latlon"][1], 6)]
+    for src, dst in (("firstDate", "f"), ("lastDate", "l"), ("saksbehandler", "sb"),
+                     ("soker", "so"), ("journalKey", "jk"), ("matrikkel", "m")):
+        if case.get(src):
+            e[dst] = case[src]
+    if case.get("aiSummary"):
+        e["ai"] = 1
+    if case.get("endringer"):
+        nyd = next((x["dato"] for x in case["endringer"] if "dukket opp" in x.get("tekst", "")), None)
+        if nyd:
+            e["ny"] = nyd
+    return e
 
 
-def ics_escape(t):
-    return t.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+def load_chunks():
+    """-> dict postnr -> {id: case}"""
+    chunks = {}
+    if os.path.isdir(CHUNK_DIR):
+        for fn in os.listdir(CHUNK_DIR):
+            if fn.endswith(".json"):
+                with open(os.path.join(CHUNK_DIR, fn), encoding="utf-8") as f:
+                    data = json.load(f)
+                chunks[fn[:-5]] = {c["id"]: c for c in data.get("cases", [])}
+    if not chunks and os.path.exists(LEGACY_CASES):
+        log("Migrerer fra legacy cases.json ...")
+        with open(LEGACY_CASES, encoding="utf-8") as f:
+            legacy = json.load(f)
+        for c in legacy.get("cases", []):
+            c.setdefault("soker", case_soker(c))
+            if not c.get("displayAddress"):
+                c["displayAddress"] = display_address(c, {})
+            pnr = c.get("postnr") or postnr_for(c, None)
+            c["postnr"] = pnr
+            chunks.setdefault(pnr, {})[c["id"]] = c
+    return chunks
 
 
-def generate_ics(cases):
-    """Kalenderfeed: nye saker (siste 60 dager) + befaringer/frister nevnt i dokumenter."""
-    today = datetime.now().strftime("%Y-%m-%d")
-    cutoff = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
-    events = []
-    for c in cases:
-        addr = c.get("displayAddress") or c["casenr"]
-        if c.get("firstDate") and c["firstDate"] >= cutoff:
-            events.append({
-                "uid": f"ny-{c['id']}@byggesak",
-                "date": c["firstDate"].replace("-", ""),
-                "summary": f"Ny {c['type'].lower()}: {addr}",
-                "desc": f"{c.get('description') or c['title']} ({c['casenr']}) – {c['url']}",
-            })
-        for d in c.get("documents") or []:
-            if not ICS_KEYWORDS.search(d["title"]):
-                continue
-            for dm in ICS_DATE.finditer(d["title"]):
-                dd, mm, yyyy = dm.groups()
-                iso = f"{yyyy}-{mm}-{dd}"
-                if iso >= today:
-                    events.append({
-                        "uid": f"dok-{c['id']}-{yyyy}{mm}{dd}@byggesak",
-                        "date": f"{yyyy}{mm}{dd}",
-                        "summary": f"{addr}: {re.sub(r'^[A-ZÆØÅ]+-\\d{{2}}/\\d+-\\d+\\s*-\\s*', '', d['title'])[:70]}",
-                        "desc": f"{c['casenr']} – {c['url']}",
-                    })
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//byggesak-flekkeroy//NO",
-             "CALSCALE:GREGORIAN", "X-WR-CALNAME:Byggesaker Kristiansand"]
-    seen = set()
-    for e in events:
-        if e["uid"] in seen:
-            continue
-        seen.add(e["uid"])
-        lines += ["BEGIN:VEVENT", f"UID:{e['uid']}", f"DTSTAMP:{stamp}",
-                  f"DTSTART;VALUE=DATE:{e['date']}",
-                  f"SUMMARY:{ics_escape(e['summary'])}",
-                  f"DESCRIPTION:{ics_escape(e['desc'])}", "END:VEVENT"]
-    lines.append("END:VCALENDAR")
-    path = os.path.join(DATA_DIR, "kalender.ics")
-    with open(path, "w", encoding="utf-8", newline="\r\n") as f:
-        f.write("\n".join(lines) + "\n")
-    log(f"Skrev {path} ({len(seen)} hendelser)")
-
-
-def repair_dates():
-    """Prøv datoberikelse på nytt for saker som mangler journalkobling (sekvensielt)."""
-    with open(CASES_JSON, encoding="utf-8") as f:
-        out = json.load(f)
-    todo = [c for c in out["cases"] if c["documents"] and not c.get("journalKey")]
-
-    def recency(c):
-        m = re.match(r'[A-ZÆØÅ]+-(\d{2})/(\d+)', c["casenr"])
-        return (int(m.group(1)), int(m.group(2))) if m else (0, 0)
-    todo.sort(key=recency, reverse=True)  # nyeste saker dateres først
-    log(f"Reparasjon: {len(todo)} saker mangler journaldatoer (nyeste først).")
-
-    def save():
-        out["cases"].sort(key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True)
-        with open(CASES_JSON, "w", encoding="utf-8") as f:
-            json.dump(out, f, ensure_ascii=False, indent=1)
-        with open(CASES_JS, "w", encoding="utf-8") as f:
-            f.write("window.BYGGESAK_DATA = ")
-            json.dump(out, f, ensure_ascii=False)
-            f.write(";\n")
-
-    for i, c in enumerate(todo, 1):
-        try:
-            if enrich_case_dates(c):
-                c["summary"] = generate_summary(c)
-        except Exception as e:  # noqa: BLE001
-            log(f"  feil {c['casenr']}: {e}")
-        if i % 25 == 0:
-            fixed = sum(1 for x in todo[:i] if x.get("journalKey"))
-            log(f"  {i}/{len(todo)} ({fixed} reparert) – lagrer")
-            save()
-        time.sleep(JOURNAL_DELAY)
-    out["cases"].sort(key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True)
-    with open(CASES_JSON, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=1)
-    with open(CASES_JS, "w", encoding="utf-8") as f:
-        f.write("window.BYGGESAK_DATA = ")
-        json.dump(out, f, ensure_ascii=False)
-        f.write(";\n")
-    fixed = sum(1 for c in todo if c.get("journalKey"))
-    log(f"Reparerte {fixed}/{len(todo)} saker. Skrev {CASES_JSON} og {CASES_JS}")
-
-
-def main():
-    if "--dates-retry" in sys.argv:
-        repair_dates()
-        return
-    force_full = "--full" in sys.argv
-    force_sweep = "--sweep" in sys.argv
-    os.makedirs(DATA_DIR, exist_ok=True)
-
-    addresses = load_area_addresses()
-    by_addr, by_gnrbnr, gnrbnr_addr, street_centroids, street_names, gnr_set = build_lookups(addresses)
-    street_names_lower = [s.lower() for s in street_names]
-    lookups = (by_addr, by_gnrbnr, gnrbnr_addr, street_centroids, street_names_lower)
-
-    old_cases, old_meta = {}, {}
-    if os.path.exists(CASES_JSON) and not force_full:
-        with open(CASES_JSON, encoding="utf-8") as f:
-            old = json.load(f)
-        old_cases = {c["id"]: c for c in old.get("cases", [])}
-        old_meta = {k: old.get(k) for k in ("updated", "lastSweep", "postnumre")}
-        if old_meta.get("postnumre") != sorted(POSTNUMRE):
-            force_sweep = True
-            log(f"Områdelisten er endret ({old_meta.get('postnumre')} -> {sorted(POSTNUMRE)}) – tvinger gatesveip.")
-        log(f"Inkrementell oppdatering ({len(old_cases)} kjente saker).")
-
-    candidates = {}
-    to_fetch = set()
-    now = datetime.now(timezone.utc)
-
-    if not old_cases:
-        # Full innsamling
-        candidates = sweep_streets(street_names, street_names_lower, gnr_set)
-        candidates.update(fetch_main_lists(street_names_lower, gnr_set))
-        to_fetch = set(candidates)
-        organic_new = set()
-        last_sweep = now
-        log(f"Full innsamling: {len(candidates)} kandidater.")
-    else:
-        # 1) Nye saker fra hovedlistene
-        main_items = fetch_main_lists(street_names_lower, gnr_set)
-        new_ids = {cid for cid in main_items if cid not in old_cases}
-        candidates.update(main_items)
-        log(f"Hovedlister: {len(new_ids)} nye saker.")
-
-        # 2) Endringsfeed fra offentlig journal
-        try:
-            last_upd = datetime.strptime(old_meta.get("updated", ""), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            days = min(max((now - last_upd).days + 2, 2), 30)
-        except ValueError:
-            days = 7
-        feed = journal_change_feed(days)
-        key_to_id = {c.get("journalKey"): cid for cid, c in old_cases.items() if c.get("journalKey")}
-        changed_ids, unknown_streets = set(), set()
-        for e in feed:
-            if e["key"] in key_to_id:
-                changed_ids.add(key_to_id[e["key"]])
-            else:
-                t = e["rawtitle"].lower().lstrip("-– ")
-                for s in street_names_lower:
-                    if t.startswith(s + " ") or t.startswith(s + ","):
-                        unknown_streets.add(s)
-                        break
-        log(f"Journalfeed siste {days} døgn: {len(feed)} dokumenter, "
-            f"{len(changed_ids)} kjente saker med aktivitet, "
-            f"{len(unknown_streets)} Flekkerøy-gater med ukjent journalsak.")
-
-        # 3) Gate-søk kun for gater med uidentifisert aktivitet
-        for s in sorted(unknown_streets):
-            html = fetch(f"{SITE}?q={urllib.parse.quote(s)}")
-            if html:
-                for item in parse_case_list(html):
-                    if item["type"] in CASE_TYPES and is_flekkeroy_candidate(item, street_names_lower, gnr_set):
-                        candidates.setdefault(item["id"], item)
-                        if item["id"] not in old_cases:
-                            new_ids.add(item["id"])
-                        elif not old_cases[item["id"]].get("journalKey"):
-                            changed_ids.add(item["id"])
-            time.sleep(REQUEST_DELAY)
-
-        organic_new = set(new_ids)  # nye saker fra feed/lister = ekte nyheter
-
-        # 4) Ukentlig sikkerhetsnett: full gatesveip
-        last_sweep = None
-        if old_meta.get("lastSweep"):
-            try:
-                last_sweep = datetime.strptime(old_meta["lastSweep"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            except ValueError:
-                pass
-        if force_sweep or last_sweep is None or (now - last_sweep).days >= SWEEP_INTERVAL_DAYS:
-            swept = sweep_streets(street_names, street_names_lower, gnr_set)
-            for cid, item in swept.items():
-                candidates.setdefault(cid, item)
-                if cid not in old_cases:
-                    new_ids.add(cid)
-            last_sweep = now
-        # rekonstruer listAddress m.m. for endrede saker uten ferskt listeelement
-        for cid in changed_ids:
-            if cid not in candidates and cid in old_cases:
-                oc = old_cases[cid]
-                candidates[cid] = {"id": cid, "url": oc["url"], "title": oc["title"],
-                                   "casenr": oc["casenr"], "type": oc["type"],
-                                   "listAddress": oc.get("listAddress", "")}
-        to_fetch = new_ids | changed_ids
-
-    log(f"Henter detaljer for {len(to_fetch)} saker ...")
-
-    def fetch_one(cid):
-        html = fetch(f"{SITE}/Case/Details/{cid}")
-        time.sleep(REQUEST_DELAY)
-        return cid, (parse_detail(html) if html else None)
-
-    details = {}
-    if to_fetch:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-            for i, (cid, det) in enumerate(ex.map(fetch_one, sorted(to_fetch)), 1):
-                if det is not None:
-                    details[cid] = det
-                if i % 50 == 0:
-                    log(f"  {i}/{len(to_fetch)} detaljsider")
-
-    # Sett sammen sakene
-    cases, dropped = [], 0
-    rebuilt_ids = set()
-    for cid, det in details.items():
-        item = candidates.get(cid)
-        if item is None:
-            continue
-        if det["addresses"]:
-            postals = re.findall(r',\s*(\d{4})\s+\S', " | ".join(det["addresses"]))
-            if postals and not any(p in POSTNUMRE for p in postals):
-                dropped += 1
-                rebuilt_ids.add(cid)  # utenfor Flekkerøy: ikke gjenbruk gammel versjon
-                continue
-        case = build_case(cid, item, det, lookups, old_cases.get(cid), cid in organic_new)
-        cases.append(case)
-        rebuilt_ids.add(cid)
-
-    # Saker som skal datoberikes (før gamle saker flettes inn)
-    need_dates = [c for c in cases if c["documents"]]
-
-    # Gjenbruk alle gamle saker som ikke ble bygget på nytt
-    for cid, oc in old_cases.items():
-        if cid not in rebuilt_ids:
-            cases.append(oc)
-
-    summaries = {}
-    if os.path.exists(SUMMARIES_JSON):
-        with open(SUMMARIES_JSON, encoding="utf-8") as f:
-            summaries = json.load(f)
-
-    def flush():
-        for c in cases:
+def save_store(chunks, touched=None, summaries=None):
+    os.makedirs(CHUNK_DIR, exist_ok=True)
+    summaries = summaries if summaries is not None else load_summaries()
+    all_thin = []
+    for pnr, cases in sorted(chunks.items()):
+        for c in cases.values():
             ai = summaries.get("cases", {}).get(c["casenr"])
             if ai:
                 c["aiSummary"] = ai
+            elif "aiSummary" in c:
+                del c["aiSummary"]
+        all_thin.extend(thin(c) for c in cases.values())
+        if touched is None or pnr in touched:
+            with open(os.path.join(CHUNK_DIR, f"{pnr}.json"), "w", encoding="utf-8") as f:
+                json.dump({"postnr": pnr, "cases": sorted(cases.values(), key=lambda c: c["casenr"], reverse=True)},
+                          f, ensure_ascii=False)
+    all_thin.sort(key=lambda e: (e.get("l") or "", e["c"]), reverse=True)
+    index = {
+        "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "updatedLocal": datetime.now().strftime("%d.%m.%Y %H:%M"),
+        "kommune": "Kristiansand",
+        "poiSummaries": summaries.get("pois", {}),
+        "cases": all_thin,
+    }
+    with open(INDEX_JSON, "w", encoding="utf-8") as f:
+        json.dump(index, f, ensure_ascii=False)
+    return index
+
+
+def load_summaries():
+    if os.path.exists(SUMMARIES_JSON):
+        with open(SUMMARIES_JSON, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def all_cases(chunks):
+    for cases in chunks.values():
+        yield from cases.values()
+
+
+def case_by_id(chunks):
+    return {c["id"]: (pnr, c) for pnr, cases in chunks.items() for c in cases.values()}
+
+
+# ---------------------------------------------------------------------------
+# ICS
+# ---------------------------------------------------------------------------
+
+def generate_ics(chunks):
+    today = datetime.now().strftime("%Y-%m-%d")
+    cutoff = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
+    esc_ = lambda t: t.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")  # noqa: E731
+    events, seen = [], set()
+    kw = re.compile(r'befaring|frist|høring|politisk behandling', re.I)
+    dre = re.compile(r'\b(\d{2})\.(\d{2})\.(\d{4})\b')
+    for c in all_cases(chunks):
+        addr = c.get("displayAddress") or c["casenr"]
+        if c.get("firstDate") and c["firstDate"] >= cutoff:
+            events.append((f"ny-{c['id']}@byggesak", c["firstDate"].replace("-", ""),
+                           f"Ny {c['type'].lower()}: {addr}",
+                           f"{c.get('description') or c['title']} ({c['casenr']}) – {c['url']}"))
+        for d in c.get("documents") or []:
+            if not kw.search(d["title"]):
+                continue
+            for dm in dre.finditer(d["title"]):
+                iso = f"{dm.group(3)}-{dm.group(2)}-{dm.group(1)}"
+                if iso >= today:
+                    events.append((f"dok-{c['id']}-{iso}@byggesak", iso.replace("-", ""),
+                                   f"{addr}: {re.sub(r'^[A-ZÆØÅ]+-.{0,12}- *', '', d['title'])[:70]}",
+                                   f"{c['casenr']} – {c['url']}"))
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//byggesaker-kristiansand//NO",
+             "CALSCALE:GREGORIAN", "X-WR-CALNAME:Byggesaker Kristiansand"]
+    for uid, dt, summ, desc in events:
+        if uid in seen:
+            continue
+        seen.add(uid)
+        lines += ["BEGIN:VEVENT", f"UID:{uid}", f"DTSTAMP:{stamp}", f"DTSTART;VALUE=DATE:{dt}",
+                  f"SUMMARY:{esc_(summ)}", f"DESCRIPTION:{esc_(desc)}", "END:VEVENT"]
+    lines.append("END:VCALENDAR")
+    with open(os.path.join(DATA_DIR, "kalender.ics"), "w", encoding="utf-8", newline="\r\n") as f:
+        f.write("\n".join(lines) + "\n")
+    log(f"kalender.ics: {len(seen)} hendelser")
+
+
+# ---------------------------------------------------------------------------
+# Backfill: ID-enumerering av hele arkivet
+# ---------------------------------------------------------------------------
+
+def fetch_case_by_id(cid):
+    html = fetch(f"{SITE}/Case/Details/{cid}")
+    time.sleep(REQUEST_DELAY)
+    if html is None:
+        return cid, "err", None
+    det = parse_detail_page(html)
+    if det is None:
+        return cid, "empty", None
+    return cid, "ok", det
+
+
+def backfill(chunks, lookups):
+    known = {c["id"] for c in all_cases(chunks)}
+    max_known = max((int(i) for i in known), default=ID_START)
+    log(f"Backfill: kjenner {len(known)} saker, høyeste id {max_known}.")
+
+    # Finn øvre grense: probe forbi max til lang tom-serie
+    probe = max(max_known + 1, ID_START)
+    empty_run, upper = 0, probe
+    while empty_run < EMPTY_RUN_STOP_BACKFILL:
+        _, status, _ = fetch_case_by_id(probe)
+        empty_run = empty_run + 1 if status == "empty" else 0
+        if status == "ok":
+            upper = probe
+        probe += 1
+    upper = max(upper, max_known)
+    todo = [i for i in range(ID_START, upper + 1) if str(i) not in known]
+    log(f"Backfill: øvre grense {upper}, {len(todo)} id-er å hente.")
+
+    summaries = load_summaries()
+    processed, kept, touched = 0, 0, set()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+        for cid, status, det in ex.map(fetch_case_by_id, todo):
+            processed += 1
+            if status == "ok" and det["prefix"] in TYPE_BY_PREFIX:
+                case = build_case(str(cid), det, lookups)
+                chunks.setdefault(case["postnr"], {})[case["id"]] = case
+                touched.add(case["postnr"])
+                kept += 1
+            if processed % 1000 == 0:
+                log(f"  {processed}/{len(todo)} id-er ({kept} saker beholdt) – lagrer")
+                save_store(chunks, touched, summaries)
+                touched = set()
+    save_store(chunks, None, summaries)
+    generate_ics(chunks)
+    log(f"Backfill ferdig: {processed} id-er, {kept} nye saker, totalt {sum(len(v) for v in chunks.values())}.")
+
+
+# ---------------------------------------------------------------------------
+# Journal-bulk: månedsvis høsting + lokal matching
+# ---------------------------------------------------------------------------
+
+def month_range():
+    y, m = JOURNAL_START
+    now = datetime.now()
+    while (y, m) <= (now.year, now.month):
+        yield f"{y:04d}-{m:02d}"
+        m += 1
+        if m > 12:
+            y, m = y + 1, 1
+
+
+def journal_bulk():
+    wm = {"done": []}
+    if os.path.exists(JB_WM):
+        with open(JB_WM, encoding="utf-8") as f:
+            wm = json.load(f)
+    months = [ym for ym in month_range() if ym not in wm["done"]]
+    log(f"Journal-bulk: {len(months)} måneder igjen.")
+    for ym in months:
+        y, m = int(ym[:4]), int(ym[5:])
+        last_day = ((datetime(y + (m == 12), (m % 12) + 1, 1)) - timedelta(days=1)).day
+        fromd, tod = f"01.{m:02d}.{y}", f"{last_day:02d}.{m:02d}.{y}"
+        offset, count = 0, 0
+        with open(JB_PATH, "a", encoding="utf-8") as out:
+            while offset <= 100000:
+                rows = parse_journal_rows(fetch(
+                    f"{PJ_BASE}/Journal/SearchSimple?searchstring=&daterange=custom"
+                    f"&fromdate={fromd}&todate={tod}&selecteddepartments={PJ_DEPTS}&offset={offset}"))
+                if not rows:
+                    break
+                for r in rows:
+                    out.write(json.dumps(r, ensure_ascii=False) + "\n")
+                count += len(rows)
+                if len(rows) < 10:
+                    break
+                offset += 10
+                time.sleep(JOURNAL_DELAY)
+        wm["done"].append(ym)
+        with open(JB_WM, "w", encoding="utf-8") as f:
+            json.dump(wm, f)
+        log(f"  {ym}: {count} journalposter")
+    log("Journal-bulk ferdig.")
+
+
+def journal_match(chunks):
+    if not os.path.exists(JB_PATH):
+        log("Ingen journal_bulk.jsonl – kjør --journal-bulk først.")
+        return
+    by_key, title_keys = {}, {}
+    with open(JB_PATH, encoding="utf-8") as f:
+        for line in f:
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            by_key.setdefault(r["key"], []).append(r)
+            if len(r["ntitle"]) >= 15:
+                title_keys.setdefault(r["ntitle"], set()).add(r["key"])
+    log(f"Journal-match: {len(by_key)} journalsaker, {len(title_keys)} unike titler.")
+
+    matched, ambiguous, unmatched = 0, 0, 0
+    touched = set()
+    for pnr, cases in chunks.items():
+        for c in cases.values():
+            if c.get("journalKey") or not c.get("documents"):
+                continue
+            votes = Counter()
+            long_hits = {}
+            for d in c["documents"]:
+                nt = norm_title(d["title"])
+                for k in title_keys.get(nt, ()):  # noqa: B905
+                    votes[k] += 1
+                    if len(nt) >= 25:
+                        long_hits[k] = long_hits.get(k, 0) + 1
+            if not votes:
+                unmatched += 1
+                continue
+            best, cnt = votes.most_common(1)[0]
+            second = votes.most_common(2)[1][1] if len(votes) > 1 else 0
+            ok = (cnt >= 2 and cnt > second) or (cnt == 1 and second == 0 and long_hits.get(best))
+            if not ok:
+                ambiguous += 1
+                continue
+            hits = apply_journal_entries(c, by_key[best])
+            if hits:
+                c["journalKey"] = best
+                c["journalDoc"] = by_key[best][0]["docnum"]
+                c["summary"] = generate_summary(c)
+                matched += 1
+                touched.add(pnr)
             else:
-                c.pop("aiSummary", None)
-        out = {
-            "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "updatedLocal": datetime.now().strftime("%d.%m.%Y %H:%M"),
-            "lastSweep": (last_sweep or now).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "postnumre": sorted(POSTNUMRE),
-            "source": SITE,
-            "poiSummaries": summaries.get("pois", {}),
-            "cases": sorted(cases, key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True),
-        }
-        with open(CASES_JSON, "w", encoding="utf-8") as f:
-            json.dump(out, f, ensure_ascii=False, indent=1)
-        with open(CASES_JS, "w", encoding="utf-8") as f:
-            f.write("window.BYGGESAK_DATA = ")
-            json.dump(out, f, ensure_ascii=False)
-            f.write(";\n")
-        return out
+                unmatched += 1
+    save_store(chunks, touched)
+    generate_ics(chunks)
+    log(f"Journal-match: {matched} saker datert, {ambiguous} tvetydige, {unmatched} uten treff.")
 
-    for c in cases:
-        c.setdefault("summary", None)
-        c["summary"] = c["summary"] or generate_summary(c)
 
-    # Tidlig lagring: nye saker blir synlige i kartet før datoberikelsen er ferdig
-    flush()
-    with_geo = [c for c in cases if c.get("latlon")]
-    log(f"{len(cases)} saker totalt ({dropped} forkastet, {len(cases) - len(with_geo)} uten koordinat) – "
-        f"lagret. Datoberikelse for {len(need_dates)} saker starter ...")
+# ---------------------------------------------------------------------------
+# Daglig inkrementell
+# ---------------------------------------------------------------------------
 
-    def enrich_one(case):
-        jinfo = None
-        if case.get("journalKey") and case.get("journalDoc"):
-            y, s = case["journalKey"].split("-")
-            jinfo = (int(y), int(s), case["journalDoc"])
-        try:
-            if enrich_case_dates(case, jinfo):
+def incremental(chunks, lookups):
+    byid = case_by_id(chunks)
+    known = set(byid)
+    max_known = max((int(i) for i in known), default=ID_START)
+    touched = set()
+
+    # 1) Nye saker: probe id-er forbi høyeste kjente
+    new_ids, probe, empty_run = [], max_known + 1, 0
+    while empty_run < EMPTY_RUN_STOP_DAILY:
+        cid, status, det = fetch_case_by_id(probe)
+        if status == "empty":
+            empty_run += 1
+        else:
+            empty_run = 0
+            if status == "ok" and det["prefix"] in TYPE_BY_PREFIX:
+                case = build_case(str(cid), det, lookups, None, announce_new=True)
+                try:
+                    enrich_case_dates(case)
+                except Exception as e:  # noqa: BLE001
+                    log(f"  journal-feil {case['casenr']}: {e}")
                 case["summary"] = generate_summary(case)
-        except Exception as e:  # noqa: BLE001
-            log(f"  journal-feil {case['casenr']}: {e}")
+                chunks.setdefault(case["postnr"], {})[case["id"]] = case
+                touched.add(case["postnr"])
+                new_ids.append(case["casenr"])
+        probe += 1
+    log(f"Inkrementell: {len(new_ids)} nye saker ({', '.join(new_ids[:8])}{'…' if len(new_ids) > 8 else ''}).")
 
-    for i, case in enumerate(need_dates, 1):
-        enrich_one(case)
-        if i % 25 == 0:
-            dated_n = sum(1 for c in need_dates[:i] if c.get('journalKey'))
-            log(f"  {i}/{len(need_dates)} saker behandlet ({dated_n} datert) – lagrer")
-            flush()
-        time.sleep(JOURNAL_DELAY)
+    # 2) Endrede saker via journal-endringsfeed
+    feed = journal_change_feed(3)
+    key_to_case = {c.get("journalKey"): c["id"] for c in all_cases(chunks) if c.get("journalKey")}
+    changed = {key_to_case[e["key"]] for e in feed if e["key"] in key_to_case}
+    changed -= {c for c in changed if c not in byid}
+    log(f"Endringsfeed: {len(feed)} poster, {len(changed)} kjente saker med aktivitet.")
+    for cid in sorted(changed):
+        pnr_old, old = byid[cid]
+        _, status, det = fetch_case_by_id(int(cid))
+        if status != "ok":
+            continue
+        case = build_case(cid, det, lookups, old)
+        if case.get("journalKey"):
+            y, s = case["journalKey"].split("-")
+            try:
+                enrich_case_dates(case, (int(y), int(s), case.get("journalDoc") or 1))
+            except Exception as e:  # noqa: BLE001
+                log(f"  journal-feil {case['casenr']}: {e}")
+        case["summary"] = generate_summary(case)
+        if pnr_old != case["postnr"] and old["id"] in chunks.get(pnr_old, {}):
+            del chunks[pnr_old][old["id"]]
+            touched.add(pnr_old)
+        chunks.setdefault(case["postnr"], {})[case["id"]] = case
+        touched.add(case["postnr"])
 
-    out = flush()
-    dated = [c for c in out["cases"] if c.get("lastDate")]
-    log(f"Ferdig: {len(out['cases'])} saker, {len(dated)} med datoer. Skrev {CASES_JSON} og {CASES_JS}")
-    generate_ics(out["cases"])
+    save_store(chunks, touched)
+    generate_ics(chunks)
+    log(f"Inkrementell ferdig: {len(new_ids)} nye, {len(changed)} oppdaterte.")
+
+
+# ---------------------------------------------------------------------------
+
+def main():
+    os.makedirs(DATA_DIR, exist_ok=True)
+    addresses = load_addresses()
+    lookups = build_lookups(addresses)
+    chunks = load_chunks()
+    log(f"Datastore: {sum(len(v) for v in chunks.values())} saker i {len(chunks)} chunks.")
+
+    if "--kristiansand" in sys.argv:
+        backfill(chunks, lookups)
+    elif "--journal-bulk" in sys.argv:
+        journal_bulk()
+        journal_match(load_chunks())
+    elif "--journal-match" in sys.argv:
+        journal_match(chunks)
+    elif "--reindex" in sys.argv:
+        save_store(chunks)
+        generate_ics(chunks)
+        log("Reindeksert.")
+    else:
+        incremental(chunks, lookups)
 
 
 if __name__ == "__main__":
