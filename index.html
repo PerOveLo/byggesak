@@ -125,7 +125,11 @@
     /* iOS auto-zoomer på felt med skrift < 16px – hold alle inndatafelt på 16px */
     input, select, textarea { font-size: 16px !important; }
     .m-hide { display: none !important; }
-    #filterWrap { display: none !important; }
+    #typeSeg { order: 6; width: 100%; justify-content: center; background: transparent;
+      padding: 0; gap: 6px; box-shadow: none; }
+    #typeSeg button { background: var(--glass-strong); border: 1px solid var(--glass-border);
+      padding: 5px 11px; font-size: 12px; box-shadow: var(--glass-inset); opacity: .55; }
+    #typeSeg button.on { opacity: 1; box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.5); }
     .topbar { gap: 8px; padding: 8px 12px; }
     .brand h1 { font-size: 15px; }
     .brand span { display: none; }
@@ -2297,14 +2301,13 @@ const menuSheet = document.getElementById("menuSheet");
 const IS_MOBILE_MQ = window.matchMedia("(max-width: 760px)");
 function layoutForViewport() {
   const fw = document.getElementById("filterWrap");
+  const yr = document.getElementById("yearSel");
   if (IS_MOBILE_MQ.matches) {
-    document.getElementById("menuControls").appendChild(fw);
-    fw.style.display = "flex";
-    fw.style.flexDirection = "column";
-    fw.style.gap = "10px";
+    document.getElementById("menuControls").appendChild(yr);
+    yr.style.width = "100%";
   } else {
-    document.querySelector(".searchwrap").after(fw);
-    fw.style.display = "contents";
+    fw.appendChild(yr);
+    yr.style.width = "";
     menuSheet.classList.remove("open");
   }
 }
