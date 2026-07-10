@@ -627,9 +627,82 @@ def build_case(cid, item, det, lookups, old_case=None):
             if old_case.get(k):
                 case[k] = old_case[k]
     case["status"] = infer_status(case["documents"])
+
+    # Endringshistorikk: hva har skjedd siden forrige innhenting
+    today = datetime.now().strftime("%Y-%m-%d")
+    endringer = list((old_case or {}).get("endringer") or [])
+    if old_case is None:
+        if os.path.exists(CASES_JSON):  # bare interessant ved inkrementelle kjøringer
+            endringer.append({"dato": today, "tekst": "Saken dukket opp i kartet"})
+    else:
+        n_new = len(case["documents"])
+        n_old = len(old_case.get("documents") or [])
+        if n_new > n_old:
+            titles = [re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', d["title"])
+                      for d in case["documents"][:n_new - n_old]]
+            endringer.append({"dato": today,
+                              "tekst": f"{n_new - n_old} nye dokument(er): " + "; ".join(titles[:3])})
+        if old_case.get("status") and old_case["status"] != case["status"]:
+            endringer.append({"dato": today,
+                              "tekst": f"Status endret: {old_case['status']} → {case['status']}"})
+    case["endringer"] = endringer[-25:]
     (case["latlon"], case["geoSource"]) = geocode(case, by_addr, by_gnrbnr, street_centroids)
     case["displayAddress"] = display_address(case, street_names_lower, gnrbnr_addr)
     return case
+
+
+ICS_KEYWORDS = re.compile(r'befaring|frist|høring|politisk behandling', re.I)
+ICS_DATE = re.compile(r'\b(\d{2})\.(\d{2})\.(\d{4})\b')
+
+
+def ics_escape(t):
+    return t.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+
+
+def generate_ics(cases):
+    """Kalenderfeed: nye saker (siste 60 dager) + befaringer/frister nevnt i dokumenter."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    cutoff = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
+    events = []
+    for c in cases:
+        addr = c.get("displayAddress") or c["casenr"]
+        if c.get("firstDate") and c["firstDate"] >= cutoff:
+            events.append({
+                "uid": f"ny-{c['id']}@byggesak",
+                "date": c["firstDate"].replace("-", ""),
+                "summary": f"Ny {c['type'].lower()}: {addr}",
+                "desc": f"{c.get('description') or c['title']} ({c['casenr']}) – {c['url']}",
+            })
+        for d in c.get("documents") or []:
+            if not ICS_KEYWORDS.search(d["title"]):
+                continue
+            for dm in ICS_DATE.finditer(d["title"]):
+                dd, mm, yyyy = dm.groups()
+                iso = f"{yyyy}-{mm}-{dd}"
+                if iso >= today:
+                    events.append({
+                        "uid": f"dok-{c['id']}-{yyyy}{mm}{dd}@byggesak",
+                        "date": f"{yyyy}{mm}{dd}",
+                        "summary": f"{addr}: {re.sub(r'^[A-ZÆØÅ]+-\\d{{2}}/\\d+-\\d+\\s*-\\s*', '', d['title'])[:70]}",
+                        "desc": f"{c['casenr']} – {c['url']}",
+                    })
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//byggesak-flekkeroy//NO",
+             "CALSCALE:GREGORIAN", "X-WR-CALNAME:Byggesaker Flekkerøy og Søm"]
+    seen = set()
+    for e in events:
+        if e["uid"] in seen:
+            continue
+        seen.add(e["uid"])
+        lines += ["BEGIN:VEVENT", f"UID:{e['uid']}", f"DTSTAMP:{stamp}",
+                  f"DTSTART;VALUE=DATE:{e['date']}",
+                  f"SUMMARY:{ics_escape(e['summary'])}",
+                  f"DESCRIPTION:{ics_escape(e['desc'])}", "END:VEVENT"]
+    lines.append("END:VCALENDAR")
+    path = os.path.join(DATA_DIR, "kalender.ics")
+    with open(path, "w", encoding="utf-8", newline="\r\n") as f:
+        f.write("\n".join(lines) + "\n")
+    log(f"Skrev {path} ({len(seen)} hendelser)")
 
 
 def repair_dates():
@@ -865,6 +938,7 @@ def main():
         json.dump(out, f, ensure_ascii=False)
         f.write(";\n")
     log(f"Skrev {CASES_JSON} og {CASES_JS}")
+    generate_ics(out["cases"])
 
 
 if __name__ == "__main__":

@@ -3,8 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7">
+<meta name="theme-color" content="#eef1f6">
 <title>Byggesaker Flekkerøy</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="ikon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="ikon.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <style>
@@ -304,6 +307,29 @@
     border-radius: 6px; box-shadow: 0 4px 30px rgba(0,0,0,.5); background: #fff; }
   #viewerMsg { color: #d1d1d6; padding: 60px 20px; font-size: 14px; }
 
+  /* Statistikk */
+  .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0 4px; }
+  .kpi { background: var(--card); border: 0.5px solid var(--glass-border); border-radius: 16px; padding: 12px 14px;
+    box-shadow: 0 2px 10px rgba(15,20,40,.08), inset 0 1px 0 rgba(255,255,255,.5); }
+  .kpi .k-val { font-size: 24px; font-weight: 750; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+  .kpi .k-lbl { font-size: 11.5px; color: var(--ink2); margin-top: 2px; line-height: 1.35; }
+  .bars { margin: 4px 0 2px; }
+  .barrow { display: grid; grid-template-columns: 110px 1fr 34px; gap: 8px; align-items: center; padding: 3.5px 0; }
+  .barrow .b-lbl { font-size: 12px; color: var(--ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+  .barrow .b-track { height: 14px; border-radius: 7px; background: var(--fill); overflow: hidden; }
+  .barrow .b-fill { height: 100%; border-radius: 7px; min-width: 3px; }
+  .barrow .b-val { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+  /* Notater og endringer */
+  .notes textarea { width: 100%; min-height: 60px; border: 0.5px solid var(--glass-border); border-radius: 11px;
+    background: var(--fill); color: var(--ink); padding: 9px 11px; font: inherit; font-size: 13px; outline: none; resize: vertical; }
+  .notes .n-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--ink3); margin-top: 4px; }
+  .endring { font-size: 12.5px; padding: 5px 0; border-top: 1px dashed var(--line); }
+  .endring .e-date { color: var(--ink2); font-size: 11px; font-weight: 600; }
+
+  .lvlsel { appearance: none; -webkit-appearance: none; border: 0.5px solid var(--glass-border); outline: none;
+    background: var(--fill); color: var(--ink2); border-radius: 999px; padding: 4px 9px; font-size: 11.5px; font-weight: 600; }
+
   .listnote { text-align: center; font-size: 12px; color: var(--ink2); padding: 10px 0 4px; }
   .emptystate { text-align: center; color: var(--ink2); padding: 46px 20px; font-size: 14px; }
   .emptystate .big { font-size: 40px; margin-bottom: 10px; }
@@ -330,6 +356,7 @@
     <option value="10">Siste 10 år</option>
   </select>
   <button class="iconbtn" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
+  <button class="iconbtn" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
   <button class="iconbtn" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
 </header>
 
@@ -423,7 +450,76 @@ const store = {
     get() { return localStorage.getItem("bsEmail") || ""; },
     set(v) { localStorage.setItem("bsEmail", v); },
   },
+  notes: {
+    read() { try { return JSON.parse(localStorage.getItem("bsNotes") || "{}"); } catch { return {}; } },
+    write(v) { localStorage.setItem("bsNotes", JSON.stringify(v)); },
+  },
+  session: {
+    get() { try { return JSON.parse(localStorage.getItem("bsSession") || "null"); } catch { return null; } },
+    set(v) { v ? localStorage.setItem("bsSession", JSON.stringify(v)) : localStorage.removeItem("bsSession"); },
+  },
+  prefs: {
+    read() { try { return JSON.parse(localStorage.getItem("bsPrefs") || "{}"); } catch { return {}; } },
+    write(v) { localStorage.setItem("bsPrefs", JSON.stringify(v)); },
+  },
 };
+
+/* ---------------- Konto-API og synkronisering ---------------- */
+async function api(path, opts = {}) {
+  if (!CFG.apiBase) throw new Error("Varslings-API er ikke konfigurert");
+  const sess = store.session.get();
+  const r = await fetch(CFG.apiBase.replace(/\/$/, "") + path, {
+    headers: { "Content-Type": "application/json", ...(sess ? { Authorization: "Bearer " + sess.token } : {}) },
+    ...opts,
+  });
+  if (r.status === 401 && sess && path !== "/verify") { store.session.set(null); renderAccountState(); }
+  if (!r.ok) throw new Error((await r.text().catch(() => "")) || ("HTTP " + r.status));
+  return r.json();
+}
+const loggedIn = () => !!store.session.get();
+
+let syncT;
+function scheduleSync() {
+  if (!loggedIn()) return;
+  clearTimeout(syncT);
+  syncT = setTimeout(async () => {
+    try {
+      const prefs = store.prefs.read();
+      const addresses = Object.values(store.addrs.read()).map(a => ({ label: a.label, level: a.level || "alt" }));
+      await api("/me", { method: "PUT", body: JSON.stringify({ addresses, radius: prefs.radius || null, weekly: !!prefs.weekly }) });
+      await api("/notes", { method: "PUT", body: JSON.stringify({ notes: store.notes.read() }) });
+    } catch (e) { console.warn("Synk feilet:", e.message); }
+  }, 1200);
+}
+async function pullAccount() {
+  if (!loggedIn()) return;
+  try {
+    const me = await api("/me");
+    const fa = store.addrs.read();
+    for (const a of me.addresses || []) {
+      const k = addrKey(a.label);
+      const p = POIS.find(p => addrKey(p.label) === k);
+      fa[k] = { ...(fa[k] || (p ? poiState(p) : { n: 0, lastDate: null })), label: a.label, level: a.level || "alt" };
+    }
+    store.addrs.write(fa);
+    const prefs = store.prefs.read();
+    prefs.weekly = !!me.weekly;
+    if (me.radius) prefs.radius = me.radius;
+    store.prefs.write(prefs);
+    const serverNotes = await api("/notes");
+    const local = store.notes.read();
+    for (const [k, v] of Object.entries(serverNotes)) {
+      if (!local[k] || (v.updated || "") > (local[k].updated || "")) local[k] = v;
+    }
+    store.notes.write(local);
+    drawRadius();
+    render();
+  } catch (e) { console.warn("Kunne ikke hente konto:", e.message); }
+}
+function renderAccountState() {
+  const b = document.getElementById("followBtn");
+  b.style.background = loggedIn() ? "linear-gradient(180deg, rgba(48,209,88,.35), rgba(48,209,88,.15))" : "";
+}
 function poiState(p) {
   return { n: p.cases.length, lastDate: p.cases.map(c => c.lastDate || "").sort().pop() || null };
 }
@@ -440,9 +536,10 @@ function toggleFollowAddr(p) {
   const f = store.addrs.read();
   const k = addrKey(p.label);
   if (f[k]) delete f[k];
-  else f[k] = { ...poiState(p), label: p.label };
+  else f[k] = { ...poiState(p), label: p.label, level: "alt" };
   store.addrs.write(f);
   refreshBadges();
+  scheduleSync();
 }
 function markSeenCase(c) {
   const f = store.cases.read();
@@ -657,11 +754,15 @@ function openFollowList() {
 
   let html = emailBox();
   html += `<div class="sectionlabel">Adresser du følger (${followedAddrs.length})</div>`;
+  const LVL = { alt: "Alt", vedtak: "Vedtak/ulovlighet", nye: "Kun nye saker" };
   html += followedAddrs.length ? followedAddrs.map(a => `
     <div class="addrrow" data-addr="${esc(a.label)}">
       <span>📍</span>
-      <div><div class="a-name">${esc(a.label)} ${addrUpd.has(addrKey(a.label)) ? '<span class="newbadge">NYTT</span>' : ""}</div>
+      <div style="flex:1;min-width:0"><div class="a-name">${esc(a.label)} ${addrUpd.has(addrKey(a.label)) ? '<span class="newbadge">NYTT</span>' : ""}</div>
       <div class="a-sub">${a.n || 0} sak(er)${a.lastDate ? " · sist aktivitet " + fmtDate(a.lastDate) : ""}</div></div>
+      <select class="lvlsel" data-lvl="${esc(a.label)}" title="Varslingsnivå">
+        ${Object.entries(LVL).map(([v, l]) => `<option value="${v}" ${(a.level || "alt") === v ? "selected" : ""}>${l}</option>`).join("")}
+      </select>
       <button class="unfollow" data-unfollow="${esc(a.label)}">Fjern</button>
     </div>`).join("")
     : `<div class="listnote">Ingen fulgte adresser. Åpne en adresse i kartet og trykk ☆ øverst i panelet.</div>`;
@@ -683,8 +784,17 @@ function openFollowList() {
       const f = store.addrs.read();
       delete f[addrKey(b.dataset.unfollow)];
       store.addrs.write(f);
+      scheduleSync();
       openFollowList();
       render();
+    });
+  });
+  document.querySelectorAll("#panelBody .lvlsel").forEach(s => {
+    s.addEventListener("click", e => e.stopPropagation());
+    s.addEventListener("change", () => {
+      const f = store.addrs.read();
+      const e = f[addrKey(s.dataset.lvl)];
+      if (e) { e.level = s.value; store.addrs.write(f); scheduleSync(); }
     });
   });
   wireEmailBox();
@@ -717,76 +827,122 @@ function openNogeo() {
   openPanel("Uten kartfeste", `${NOGEO.length} saker som ikke kunne plasseres på kartet`, NOGEO.filter(caseVisible).map(caseCard).join(""));
 }
 
-/* ---------------- E-postvarsling ---------------- */
+/* ---------------- Konto, varsling og innlogging ---------------- */
 function emailBox() {
-  const email = store.email.get();
-  const followedAddrs = Object.values(store.addrs.read()).map(a => a.label);
+  const sess = store.session.get();
+  const prefs = store.prefs.read();
+  if (sess) {
+    return `<div class="formbox">
+      <h4>✅ Innlogget som ${esc(sess.email)}</h4>
+      <p>Adresser, varslingsnivåer, notater og innstillinger synkroniseres automatisk til kontoen din.</p>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0">
+        <input type="checkbox" id="weeklyChk" ${prefs.weekly ? "checked" : ""}> Ukessammendrag på e-post hver fredag
+      </label>
+      <div class="formrow" style="margin-top:8px">
+        <button class="btn sec" id="pushBtn" style="flex:1">🔔 Push-varsler på denne enheten</button>
+        <button class="btn sec" id="logoutBtn" style="flex:1">Logg ut</button>
+      </div>
+      <div class="formrow" style="margin-top:8px">
+        <button class="btn sec" id="radiusBtn" style="flex:1">📍 ${prefs.radius ? `Områdevarsling: ${prefs.radius.m} m (endre)` : "Sett opp områdevarsling"}</button>
+        ${prefs.radius ? '<button class="btn sec" id="radiusOff">Fjern</button>' : ""}
+      </div>
+      <div class="formmsg" id="emailMsg"></div>
+      <p style="margin-top:10px">📅 <a href="data/kalender.ics" style="color:var(--blue)">Kalenderfeed (iCal)</a> – nye saker og befaringer rett i kalenderen din.</p>
+    </div>`;
+  }
   return `<div class="formbox">
-    <h4>📮 E-postvarsling</h4>
-    <p>Få e-post når adresser du følger får nye saker eller dokumenter. Registrer e-posten din – adressene over følger med.</p>
+    <h4>📮 Logg inn for varsling</h4>
+    <p>Få e-post (og push) når adresser du følger får aktivitet. Skriv e-posten din, så sender vi en innloggingslenke – ingen passord.</p>
     <div class="formrow">
-      <input id="emailInput" type="email" placeholder="din@epost.no" value="${esc(email)}">
-      <button class="btn" id="emailSubmit">Aktiver</button>
+      <input id="emailInput" type="email" placeholder="din@epost.no" value="${esc(store.email.get())}">
+      <button class="btn" id="loginBtn">Send lenke</button>
     </div>
-    <div class="formrow" style="margin-top:8px">
-      <button class="btn sec" id="emailShow" style="flex:1">Vis mine varslinger</button>
-      <button class="btn sec" id="emailStop" style="flex:1">Stopp alle</button>
-    </div>
-    <div class="formmsg" id="emailMsg">${CFG.apiBase ? "" : "⚠️ Varslings-API er ikke konfigurert ennå – innstillingen lagres lokalt og aktiveres når APIet er på plass (se README)."}</div>
-    <div id="emailList"></div>
+    <div class="formmsg" id="emailMsg">${CFG.apiBase ? "" : "⚠️ Varslings-API er ikke konfigurert ennå – følgelisten lagres lokalt i nettleseren og kobles til kontoen din når APIet er på plass (se README)."}</div>
+    <p style="margin-top:10px">📅 <a href="data/kalender.ics" style="color:var(--blue)">Kalenderfeed (iCal)</a> – nye saker og befaringer rett i kalenderen din.</p>
   </div>`;
 }
+
 function wireEmailBox() {
   const msg = document.getElementById("emailMsg");
-  const input = document.getElementById("emailInput");
-  const setMsg = (t, cls) => { msg.textContent = t; msg.className = "formmsg " + (cls || ""); };
-  const api = async (path, opts) => {
-    const r = await fetch(CFG.apiBase.replace(/\/$/, "") + path, {
-      headers: { "Content-Type": "application/json" }, ...opts,
-    });
-    if (!r.ok) throw new Error(await r.text() || r.status);
-    return r.json();
-  };
-  document.getElementById("emailSubmit").onclick = async () => {
-    const email = input.value.trim().toLowerCase();
+  const setMsg = (t, cls) => { if (msg) { msg.textContent = t; msg.className = "formmsg " + (cls || ""); } };
+
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) loginBtn.onclick = async () => {
+    const email = document.getElementById("emailInput").value.trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setMsg("Ugyldig e-postadresse.", "err");
-    const addresses = Object.values(store.addrs.read()).map(a => a.label);
-    if (!addresses.length) return setMsg("Følg minst én adresse først (☆ på en adresse i kartet).", "err");
     store.email.set(email);
-    if (!CFG.apiBase) return setMsg("Lagret lokalt. E-postvarsling aktiveres når varslings-APIet er satt opp.", "ok");
+    if (!CFG.apiBase) return setMsg("Lagret lokalt – innlogging aktiveres når varslings-APIet er satt opp.", "ok");
     try {
-      await api("/subscribe", { method: "POST", body: JSON.stringify({ email, addresses }) });
-      setMsg(`Aktivert! ${addresses.length} adresse(r) er registrert for ${email}.`, "ok");
-    } catch (e) { setMsg("Feil ved registrering: " + e.message, "err"); }
-  };
-  document.getElementById("emailShow").onclick = async () => {
-    const email = input.value.trim().toLowerCase();
-    if (!email) return setMsg("Skriv inn e-postadressen din først.", "err");
-    store.email.set(email);
-    const list = document.getElementById("emailList");
-    if (!CFG.apiBase) {
-      const local = Object.values(store.addrs.read()).map(a => a.label);
-      list.innerHTML = local.length ? `<p style="font-size:12.5px;margin-top:8px">Lokalt lagret (ikke aktivert): ${local.map(esc).join(", ")}</p>` : "";
-      return setMsg("APIet er ikke satt opp – viser lokal liste.", "");
-    }
-    try {
-      const res = await api("/subscriptions?email=" + encodeURIComponent(email));
-      list.innerHTML = (res.addresses || []).length
-        ? `<p style="font-size:12.5px;margin-top:8px"><b>Registrerte varslinger:</b> ${res.addresses.map(esc).join(", ")}</p>`
-        : `<p style="font-size:12.5px;margin-top:8px">Ingen registrerte varslinger for ${esc(email)}.</p>`;
-      setMsg("", "");
-    } catch (e) { setMsg("Feil ved henting: " + e.message, "err"); }
-  };
-  document.getElementById("emailStop").onclick = async () => {
-    const email = input.value.trim().toLowerCase();
-    if (!email) return setMsg("Skriv inn e-postadressen din først.", "err");
-    if (!CFG.apiBase) return setMsg("APIet er ikke satt opp ennå.", "");
-    try {
-      await api("/unsubscribe", { method: "POST", body: JSON.stringify({ email }) });
-      document.getElementById("emailList").innerHTML = "";
-      setMsg("Alle varslinger for " + email + " er stoppet.", "ok");
+      await api("/login", { method: "POST", body: JSON.stringify({ email }) });
+      setMsg("Innloggingslenke sendt! Sjekk e-posten din (gyldig i 15 min).", "ok");
     } catch (e) { setMsg("Feil: " + e.message, "err"); }
   };
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) logoutBtn.onclick = () => { store.session.set(null); renderAccountState(); openFollowList(); };
+
+  const weeklyChk = document.getElementById("weeklyChk");
+  if (weeklyChk) weeklyChk.onchange = () => {
+    const p = store.prefs.read(); p.weekly = weeklyChk.checked; store.prefs.write(p);
+    scheduleSync(); setMsg(weeklyChk.checked ? "Ukessammendrag aktivert." : "Ukessammendrag skrudd av.", "ok");
+  };
+
+  const pushBtn = document.getElementById("pushBtn");
+  if (pushBtn) pushBtn.onclick = async () => {
+    try {
+      if (!CFG.vapidPublicKey) return setMsg("Push krever at VAPID-nøkler er konfigurert (se README).", "err");
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") return setMsg("Varsler ble ikke tillatt i nettleseren.", "err");
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: Uint8Array.from(atob(CFG.vapidPublicKey.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)),
+      });
+      await api("/push", { method: "POST", body: JSON.stringify({ subscription: sub.toJSON() }) });
+      setMsg("Push-varsler aktivert på denne enheten! 🎉", "ok");
+    } catch (e) { setMsg("Push feilet: " + e.message, "err"); }
+  };
+
+  const radiusBtn = document.getElementById("radiusBtn");
+  if (radiusBtn) radiusBtn.onclick = () => {
+    closePanel();
+    startRadiusPick();
+  };
+  const radiusOff = document.getElementById("radiusOff");
+  if (radiusOff) radiusOff.onclick = () => {
+    const p = store.prefs.read(); delete p.radius; store.prefs.write(p);
+    drawRadius(); scheduleSync(); openFollowList();
+  };
+}
+
+/* ---------------- Områdevarsling (radius) ---------------- */
+let radiusCircle = null;
+function drawRadius() {
+  const r = store.prefs.read().radius;
+  if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+  if (r) {
+    radiusCircle = L.circle([r.lat, r.lon], { radius: r.m, color: "#0a84ff", weight: 1.5, fillOpacity: 0.07, dashArray: "6 6" });
+    radiusCircle.addTo(map);
+    radiusCircle.bindTooltip(`Områdevarsling: ${r.m} m`, { direction: "top" });
+  }
+}
+function startRadiusPick() {
+  const hint = document.createElement("div");
+  hint.className = "toast";
+  hint.style.cssText = "position:fixed;top:calc(env(safe-area-inset-top,0px) + 90px);left:50%;transform:translateX(-50%);z-index:3000";
+  hint.innerHTML = `<span class="emoji">📍</span><div><div class="t-title">Klikk i kartet</div><div class="t-sub">der du vil ha senteret for områdevarslingen</div></div>`;
+  document.body.appendChild(hint);
+  map.once("click", e => {
+    hint.remove();
+    const valg = prompt("Radius i meter (100–5000):", String(store.prefs.read().radius?.m || 300));
+    const m = Math.min(Math.max(parseInt(valg, 10) || 300, 50), 5000);
+    const p = store.prefs.read();
+    p.radius = { lat: e.latlng.lat, lon: e.latlng.lng, m, level: "alt" };
+    store.prefs.write(p);
+    drawRadius();
+    scheduleSync();
+    openFollowList();
+  });
 }
 
 /* ---------------- Sakskort ---------------- */
@@ -820,9 +976,26 @@ function caseCard(c) {
       <div class="summary">${c.aiSummary ? "🧠 " : ""}${esc(summary)}</div>
       <div class="meta">${c.saksbehandler ? "Saksbehandler: " + esc(c.saksbehandler) + "<br>" : ""}${(c.documents || []).length} dokument(er)${c.matrikkel ? " · gnr/bnr " + esc(c.matrikkel) : ""}</div>
       ${docs ? `<div class="tl">${docs}</div>` : '<div class="listnote">Ingen offentlig tilgjengelige dokumenter.</div>'}
+      ${endringerHtml(c)}
+      ${notesHtml(c)}
       <a class="extlink" href="${esc(c.url)}" target="_blank" rel="noopener">Åpne i kommunens innsynsløsning ↗</a>
     </div>
   </div>`;
+}
+function endringerHtml(c) {
+  const e = c.endringer || [];
+  if (!e.length) return "";
+  return `<div class="sectionlabel" style="margin-top:10px">Endringer oppdaget</div>` +
+    e.slice(-6).reverse().map(x =>
+      `<div class="endring"><span class="e-date">${fmtDate(x.dato)}</span> ${esc(x.tekst)}</div>`).join("");
+}
+function notesHtml(c) {
+  const n = store.notes.read()[c.casenr];
+  return `<div class="sectionlabel" style="margin-top:10px">Mitt notat 🔒</div>
+    <div class="notes" data-note="${esc(c.casenr)}">
+      <textarea placeholder="Privat notat om saken (lagres ${loggedIn() ? "på kontoen din" : "kun i denne nettleseren"}) …">${esc(n ? n.text : "")}</textarea>
+      <div class="n-meta"><span>${n && n.updated ? "Sist lagret " + fmtDate(n.updated.slice(0, 10)) : ""}</span><span class="n-status"></span></div>
+    </div>`;
 }
 
 function wireCards() {
@@ -851,6 +1024,89 @@ function wireCards() {
       render();
     });
   });
+  document.querySelectorAll("#panelBody .notes textarea").forEach(t => {
+    if (t.dataset.wired) return;
+    t.dataset.wired = "1";
+    let nT;
+    t.addEventListener("input", () => {
+      clearTimeout(nT);
+      const box = t.closest(".notes");
+      box.querySelector(".n-status").textContent = "…";
+      nT = setTimeout(() => {
+        const notes = store.notes.read();
+        const nr = box.dataset.note;
+        if (t.value.trim()) notes[nr] = { text: t.value, updated: new Date().toISOString() };
+        else delete notes[nr];
+        store.notes.write(notes);
+        scheduleSync();
+        box.querySelector(".n-status").textContent = "Lagret ✓";
+      }, 600);
+    });
+  });
+}
+
+/* ---------------- Statistikk ---------------- */
+function median(arr) {
+  if (!arr.length) return null;
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+}
+function barList(rows, color) {
+  const max = Math.max(...rows.map(r => r.v), 1);
+  return `<div class="bars">` + rows.map(r => `
+    <div class="barrow" title="${esc(r.k)}: ${r.v}">
+      <div class="b-lbl">${esc(r.k)}</div>
+      <div class="b-track"><div class="b-fill" style="width:${Math.round(r.v / max * 100)}%;background:${r.c || color}"></div></div>
+      <div class="b-val">${r.v}</div>
+    </div>`).join("") + `</div>`;
+}
+function openStats() {
+  const now = new Date();
+  const yr = now.getFullYear();
+  const cutoff12 = new Date(now - 365 * 864e5).toISOString().slice(0, 10);
+  const cs = DATA.cases;
+
+  const last12 = cs.filter(c => (c.firstDate || "") >= cutoff12);
+  const decided = cs.filter(c => /tillatelse gitt|rammetillatelse|igangsetting|avslag|ferdigattest/i.test(c.status || ""));
+  const granted = decided.filter(c => !/avslag/i.test(c.status)).length;
+  const rejected = decided.length - granted;
+  const durations = cs.filter(c => c.firstDate && c.lastDate && /ferdigattest|tillatelse gitt|avslag|avsluttet/i.test(c.status || ""))
+    .map(c => Math.round((new Date(c.lastDate) - new Date(c.firstDate)) / 864e5)).filter(d => d >= 0);
+  const aktiveUlov = cs.filter(c => c.type === "Ulovlighetssak" && !/avsluttet|trukket|avvist/i.test(c.status || "")).length;
+
+  const perYear = [];
+  for (let y = yr - 7; y <= yr; y++) {
+    const n = cs.filter(c => caseYear(c) === y).length;
+    perYear.push({ k: String(y), v: n });
+  }
+  const perType = TYPES.map(t => ({ k: t, v: cs.filter(c => c.type === t).length, c: COLORS[t] }));
+  const streetCount = {};
+  for (const c of cs) {
+    if ((c.lastDate || "") < cutoff12) continue;
+    const street = (c.displayAddress || "").replace(/\s+\d+[A-Za-zæøå]?$/, "").trim();
+    if (street) streetCount[street] = (streetCount[street] || 0) + 1;
+  }
+  const topStreets = Object.entries(streetCount).sort((a, b) => b[1] - a[1]).slice(0, 8)
+    .map(([k, v]) => ({ k, v }));
+  const statusCount = {};
+  for (const c of cs) statusCount[c.status || "?"] = (statusCount[c.status || "?"] || 0) + 1;
+  const topStatus = Object.entries(statusCount).sort((a, b) => b[1] - a[1]).slice(0, 7)
+    .map(([k, v]) => ({ k, v }));
+
+  const html = `
+    <div class="kpis">
+      <div class="kpi"><div class="k-val">${last12.length}</div><div class="k-lbl">nye saker siste 12 måneder</div></div>
+      <div class="kpi"><div class="k-val">${median(durations) ?? "–"}</div><div class="k-lbl">median dager fra første til siste dokument (avgjorte saker)</div></div>
+      <div class="kpi"><div class="k-val">${decided.length ? Math.round(granted / decided.length * 100) + "%" : "–"}</div><div class="k-lbl">innvilget av avgjorte søknader (${granted} av ${decided.length}, ${rejected} avslag)</div></div>
+      <div class="kpi"><div class="k-val">${aktiveUlov}</div><div class="k-lbl">åpne ulovlighetssaker</div></div>
+    </div>
+    <div class="sectionlabel">Saker per år</div>${barList(perYear, "#0a84ff")}
+    <div class="sectionlabel">Sakstyper (alle år)</div>${barList(perType)}
+    <div class="sectionlabel">Mest aktive gater siste 12 mnd</div>${topStreets.length ? barList(topStreets, "#0a84ff") : '<div class="listnote">Ingen data ennå.</div>'}
+    <div class="sectionlabel">Statusfordeling</div>${barList(topStatus, "#8e8e93")}
+    <div class="listnote">Basert på ${cs.length} saker fra kommunens innsynsløsning. Datoer = journalført dato.</div>`;
+  openPanel("Statistikk", "Flekkerøy og Søm – alle saker i kartet", html);
 }
 
 /* ---------------- Varsler (toasts) ---------------- */
@@ -1072,9 +1328,40 @@ document.getElementById("followBtn").onclick = () => {
   openFollowList();
 };
 document.getElementById("newsBtn").onclick = openNews;
+document.getElementById("statsBtn").onclick = openStats;
+
+/* ---------------- Oppstart ---------------- */
+if ("serviceWorker" in navigator && IS_HTTP) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+(async function handleLoginToken() {
+  const params = new URLSearchParams(location.search);
+  const t = params.get("login");
+  if (!t || !CFG.apiBase) return;
+  history.replaceState(null, "", location.pathname);
+  try {
+    const res = await api("/verify?token=" + encodeURIComponent(t));
+    store.session.set({ token: res.session, email: res.email });
+    store.email.set(res.email);
+    renderAccountState();
+    await pullAccount();
+    openFollowList();
+    const box = document.getElementById("toasts");
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = `<span class="emoji">✅</span><div><div class="t-title">Innlogget</div><div class="t-sub">${esc(res.email)} – innstillingene dine synkroniseres nå</div></div>`;
+    box.appendChild(el);
+    setTimeout(() => el.remove(), 8000);
+  } catch (e) {
+    alert("Innloggingen feilet: " + e.message + "\nBe om en ny lenke fra ★-panelet.");
+  }
+})();
 
 render();
 showToasts();
+renderAccountState();
+drawRadius();
+if (loggedIn()) pullAccount();
 </script>
 </body>
 </html>

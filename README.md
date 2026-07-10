@@ -40,6 +40,20 @@ bruker ingen AI-tokens; kun den planlagte Claude-oppgaven bruker tokens når den
 4. **Visning**: gnr/bnr oversettes til adresse (`displayAddress`); status utledes av dokumenttitler
    (vedtaksbrev veier tyngst); AI-analyser fra `data/summaries.json` flettes inn (🧠).
 
+## Funksjoner for innloggede brukere
+
+- **Innlogging med magisk lenke** (ingen passord): ★-panelet → skriv e-post → klikk lenken i innboksen.
+  Fulgte adresser, varslingsnivåer, notater og innstillinger synkroniseres da mellom enhetene dine.
+- **Varslingsnivå per adresse**: Alt · Vedtak/ulovlighet · Kun nye saker (velges i ★-panelet).
+- **Områdevarsling**: sett et punkt i kartet + radius (50–5000 m) og bli varslet om all aktivitet innenfor.
+- **Private notater** per sak (🔒 i sakskortet) – lagres på kontoen, aldri offentlig.
+- **Ukessammendrag** på e-post hver fredag (avkrysning i ★-panelet).
+- **Web-push** til mobil/PC (knapp i ★-panelet; krever VAPID-nøkler, se under).
+- **Endringshistorikk** per sak («Endringer oppdaget») – bygges automatisk av de daglige kjøringene.
+- **Statistikk-dashbord** (📊): nye saker, median saksvarighet, innvilgelsesandel, saker per år, mest aktive gater.
+- **Kalenderfeed (iCal)**: `data/kalender.ics` – nye saker og befaringer/frister rett i kalenderen.
+- **PWA**: «Legg til på Hjem-skjerm» på mobil gir appfølelse og push-støtte.
+
 ## Offentlig hosting (GitHub Pages + Actions)
 
 Repoet er rigget for gratis, serverløs drift:
@@ -49,10 +63,12 @@ Repoet er rigget for gratis, serverløs drift:
    og committer oppdaterte `data/`-filer. Kan også trigges manuelt fra Actions-fanen.
 3. **Pages**: Settings → Pages → «Deploy from a branch» → `main` / `(root)`. Kartet blir liggende på
    `https://<bruker>.github.io/<repo>/`.
-4. **E-postvarsling + PDF-proxy** (valgfritt, gratis): deploy `worker/varsler-worker.js` til Cloudflare Workers
-   (instruksjoner i filens topp), fyll inn worker-URLen i `config.js`, og legg inn GitHub Secrets:
-   `VARSLER_API_URL`, `VARSLER_API_SECRET`, `RESEND_API_KEY` (resend.com), `VARSLER_FRA`, `SITE_URL`.
-   Da sender den daglige Actions-kjøringen e-post til alle som har registrert adresser via ★-panelet i kartet.
+4. **Innlogging, varsling + PDF-proxy** (valgfritt, gratis): deploy `worker/varsler-worker.js` til Cloudflare
+   Workers (steg-for-steg i filens topp: KV-namespace `VARSLER` + secrets `API_SECRET`, `RESEND_API_KEY`,
+   variabler `FROM_ADDR`, `SITE_URL`). Fyll inn worker-URLen i `config.js` (`apiBase` + `pdfProxy`) og legg inn
+   GitHub Secrets: `VARSLER_API_URL`, `VARSLER_API_SECRET`, `RESEND_API_KEY`, `VARSLER_FRA`, `SITE_URL`.
+5. **Web-push** (valgfritt): kjør `npx web-push generate-vapid-keys`; offentlig nøkkel → `config.js`
+   (`vapidPublicKey`), privat nøkkel → GitHub Secrets `VAPID_PRIVATE_KEY` + `VAPID_CLAIM_EMAIL` (mailto:-adresse).
    Uten worker fungerer alt annet – PDF-er åpnes da i egen fane, og varsling skjer kun i appen.
 
 **Personvern:** Dette re-publiserer offentlige innsynsdata (adresser/navn i dokumenttitler). Vurder å legge

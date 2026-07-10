@@ -3,7 +3,7 @@ rem Publiserer byggesakskartet til GitHub (repo + push + GitHub Pages).
 rem Forste gang: logger deg inn i GitHub via nettleseren.
 cd /d "%~dp0"
 set GH=C:\Program Files\GitHub CLI\gh.exe
-set REPO=byggesak-flekkeroy
+set REPO=byggesak
 
 "%GH%" auth status >nul 2>&1
 if errorlevel 1 (
@@ -24,7 +24,7 @@ if errorlevel 1 (
 for /f %%u in ('"%GH%" api user --jq .login') do set GHUSER=%%u
 
 echo Aktiverer GitHub Pages...
-"%GH%" api repos/%GHUSER%/%REPO%/pages -X POST -f "source[branch]=main" -f "source[path]=/" >nul 2>&1
+"%GH%" api repos/%GHUSER%/%REPO%/pages -X POST -f "source[branch]=gh-pages" -f "source[path]=/" 2>nul
 
 echo Trigger forste dataoppdatering i skyen...
 "%GH%" workflow run oppdater-data.yml >nul 2>&1
