@@ -121,6 +121,7 @@
   @media (max-width: 760px) {
     .iconbtn .lbl { display: none; }
     .only-mobile { display: flex !important; }
+    #menuBtn { margin-left: auto; }
     .m-hide { display: none !important; }
     #filterWrap { display: none !important; }
     .topbar { gap: 8px; padding: 8px 12px; }
@@ -1991,11 +1992,35 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(
     el.addEventListener("pointercancel", up);
   }
   // Scroller man i innholdet mens arket er halvåpent, løftes det til fullskjerm
-  document.getElementById("panelBody").addEventListener("scroll", function () {
+  const pBody = document.getElementById("panelBody");
+  pBody.addEventListener("scroll", function () {
     if (!IS_MOBILE_MQ.matches) return;
     const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
     if (frac < 0.8 && this.scrollTop > 25) panel.style.setProperty("--sheet", "92dvh");
   }, { passive: true });
+
+  // Sveip hvor som helst i innholdet (ikke på skjema-felt): opp = maksimer, ned fra toppen = minimer/lukk
+  let tY = null, tScroll = 0, tHandled = false, tInteractive = false;
+  pBody.addEventListener("touchstart", e => {
+    tY = e.touches[0].clientY;
+    tScroll = pBody.scrollTop;
+    tHandled = false;
+    tInteractive = !!e.target.closest("textarea, select, input");
+  }, { passive: true });
+  pBody.addEventListener("touchmove", e => {
+    if (!IS_MOBILE_MQ.matches || tY === null || tHandled || tInteractive) return;
+    const dy = e.touches[0].clientY - tY;
+    const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
+    if (dy < -22 && frac < 0.85) {                      // sveip opp -> fullskjerm
+      panel.style.setProperty("--sheet", "92dvh");
+      tHandled = true;
+    } else if (dy > 34 && tScroll <= 2 && pBody.scrollTop <= 2) {  // sveip ned fra toppen
+      if (frac > 0.72) panel.style.setProperty("--sheet", "55dvh");
+      else closePanel();
+      tHandled = true;
+    }
+  }, { passive: true });
+  pBody.addEventListener("touchend", () => { tY = null; }, { passive: true });
 })();
 
 /* ---------------- Automatisk datalast ---------------- */
