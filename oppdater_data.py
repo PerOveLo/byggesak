@@ -603,7 +603,7 @@ def fetch_main_lists(street_names_lower, gnr_set):
     return found
 
 
-def build_case(cid, item, det, lookups, old_case=None):
+def build_case(cid, item, det, lookups, old_case=None, announce_new=False):
     by_addr, by_gnrbnr, gnrbnr_addr, street_centroids, street_names_lower = lookups
     addr_head, desc = split_title(item["title"])
     gb = extract_gnrbnr(item["title"])
@@ -632,7 +632,7 @@ def build_case(cid, item, det, lookups, old_case=None):
     today = datetime.now().strftime("%Y-%m-%d")
     endringer = list((old_case or {}).get("endringer") or [])
     if old_case is None:
-        if os.path.exists(CASES_JSON):  # bare interessant ved inkrementelle kjøringer
+        if announce_new:  # kun organisk nye saker – ikke bulk fra områdeutvidelser
             endringer.append({"dato": today, "tekst": "Saken dukket opp i kartet"})
     else:
         n_new = len(case["documents"])
@@ -710,7 +710,12 @@ def repair_dates():
     with open(CASES_JSON, encoding="utf-8") as f:
         out = json.load(f)
     todo = [c for c in out["cases"] if c["documents"] and not c.get("journalKey")]
-    log(f"Reparasjon: {len(todo)} saker mangler journaldatoer.")
+
+    def recency(c):
+        m = re.match(r'[A-ZÆØÅ]+-(\d{2})/(\d+)', c["casenr"])
+        return (int(m.group(1)), int(m.group(2))) if m else (0, 0)
+    todo.sort(key=recency, reverse=True)  # nyeste saker dateres først
+    log(f"Reparasjon: {len(todo)} saker mangler journaldatoer (nyeste først).")
 
     def save():
         out["cases"].sort(key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True)
@@ -776,6 +781,7 @@ def main():
         candidates = sweep_streets(street_names, street_names_lower, gnr_set)
         candidates.update(fetch_main_lists(street_names_lower, gnr_set))
         to_fetch = set(candidates)
+        organic_new = set()
         last_sweep = now
         log(f"Full innsamling: {len(candidates)} kandidater.")
     else:
@@ -819,6 +825,8 @@ def main():
                         elif not old_cases[item["id"]].get("journalKey"):
                             changed_ids.add(item["id"])
             time.sleep(REQUEST_DELAY)
+
+        organic_new = set(new_ids)  # nye saker fra feed/lister = ekte nyheter
 
         # 4) Ukentlig sikkerhetsnett: full gatesveip
         last_sweep = None
@@ -872,7 +880,7 @@ def main():
                 dropped += 1
                 rebuilt_ids.add(cid)  # utenfor Flekkerøy: ikke gjenbruk gammel versjon
                 continue
-        case = build_case(cid, item, det, lookups, old_cases.get(cid))
+        case = build_case(cid, item, det, lookups, old_cases.get(cid), cid in organic_new)
         cases.append(case)
         rebuilt_ids.add(cid)
 

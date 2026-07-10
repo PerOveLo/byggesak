@@ -10,24 +10,18 @@ self.addEventListener("activate", e => {
     Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
-// Data og kart-fliser: alltid nett først (fersk data), fall tilbake til cache.
+// Nettverk først for ALT (alltid ferskt innhold etter deploy); cache som
+// reserve ved frakobling. Vellykkede svar legges fortløpende i cachen.
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
-  if (url.pathname.includes("/data/")) {
-    e.respondWith(fetch(e.request).then(r => {
+  e.respondWith(fetch(e.request).then(r => {
+    if (r.ok) {
       const copy = r.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
-      return r;
-    }).catch(() => caches.match(e.request)));
-  } else {
-    e.respondWith(caches.match(e.request).then(hit => hit ||
-      fetch(e.request).then(r => {
-        const copy = r.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
-        return r;
-      })));
-  }
+    }
+    return r;
+  }).catch(() => caches.match(e.request, { ignoreSearch: url.pathname.endsWith("/") })));
 });
 
 self.addEventListener("push", e => {

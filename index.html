@@ -670,15 +670,25 @@ function renderLegend(counts) {
     `<div class="updated-tag">Oppdatert ${esc(DATA.updatedLocal || "")}${NOGEO.length ? ` · <a href="#" onclick="openNogeo();return false" style="color:var(--blue)">${NOGEO.length} uten kartfeste</a>` : ""}</div>`;
   document.getElementById("updatedTag").textContent = `${DATA.cases.length} saker · oppdatert ${DATA.updatedLocal || "?"}`;
 }
+function caseAppeared(c) {
+  if (c.firstDate) return c.firstDate;
+  const e = (c.endringer || []).find(x => /dukket opp/i.test(x.tekst || ""));
+  return e ? e.dato : null;
+}
+function caseLastActivity(c) {
+  const e = c.endringer && c.endringer.length ? c.endringer[c.endringer.length - 1].dato : null;
+  return [c.lastDate, e].filter(Boolean).sort().pop() || null;
+}
 function newsCases(days) {
   const cutoff = isoDaysAgo(days);
   const fresh = [], active = [];
   for (const c of DATA.cases) {
-    if (!c.lastDate) continue;
-    if (c.firstDate && c.firstDate >= cutoff) fresh.push(c);
-    else if (c.lastDate >= cutoff) active.push(c);
+    const appeared = caseAppeared(c);
+    const activity = caseLastActivity(c);
+    if (appeared && appeared >= cutoff) fresh.push(c);
+    else if (activity && activity >= cutoff) active.push(c);
   }
-  const byDate = (a, b) => (b.lastDate || "").localeCompare(a.lastDate || "");
+  const byDate = (a, b) => (caseLastActivity(b) || "").localeCompare(caseLastActivity(a) || "");
   return { fresh: fresh.sort(byDate), active: active.sort(byDate) };
 }
 function refreshBadges() {
@@ -804,7 +814,12 @@ function openNews() {
   refreshBadges();
   const day = newsCases(1), week = newsCases(7);
   const seg = (id, label, n) => `<button data-days="${id}">${label} (${n})</button>`;
-  let html = `<div class="seg" id="newsSeg" style="margin:6px 0 12px">${seg(1, "Siste døgn", day.fresh.length)}${seg(7, "Siste uke", week.fresh.length)}${seg(30, "Siste 30 dager", newsCases(30).fresh.length)}</div><div id="newsBody"></div>`;
+  const withDocs = DATA.cases.filter(c => (c.documents || []).length).length;
+  const dated = DATA.cases.filter(c => c.lastDate).length;
+  const hint = withDocs && dated / withDocs < 0.7
+    ? `<div class="listnote">⏳ Journaldatoer hentes fortsatt inn (${dated} av ${withDocs} saker datert) – nyeste saker dateres først, og listene under fylles etter hvert som dataene oppdateres.</div>`
+    : "";
+  let html = hint + `<div class="seg" id="newsSeg" style="margin:6px 0 12px">${seg(1, "Siste døgn", day.fresh.length)}${seg(7, "Siste uke", week.fresh.length)}${seg(30, "Siste 30 dager", newsCases(30).fresh.length)}</div><div id="newsBody"></div>`;
   openPanel("Nye saker", "Nye saker og ny aktivitet på Flekkerøy", html);
   const body = document.getElementById("newsBody");
   const draw = days => {
