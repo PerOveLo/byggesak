@@ -259,6 +259,9 @@
   .case-addr { font-size: 12px; color: var(--ink2); margin-top: 2px; }
   .followbtn { margin-left: 2px; font-size: 17px; line-height: 1; opacity: .35; transition: transform .15s, opacity .15s; }
   .followbtn.on { opacity: 1; transform: scale(1.1); }
+  .sharebtn { font-size: 14px; line-height: 1; opacity: .4; padding: 2px 4px; }
+  .sharebtn:active { opacity: 1; transform: scale(1.15); }
+  @media (max-width: 760px) { .sharebtn, .followbtn { font-size: 19px; padding: 4px 6px; } }
   .newbadge { background: var(--red); color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 7px; }
   .case-body { display: none; padding: 0 14px 13px; }
   .case.open .case-body { display: block; }
@@ -466,6 +469,7 @@
   <div id="panelHead">
     <button class="headbtn" id="panelBack" style="display:none" title="Tilbake">‹</button>
     <div class="titles"><h2 id="panelTitle"></h2><div class="sub" id="panelSub"></div></div>
+    <button class="headbtn" id="panelShare" style="display:none" title="Del lenke">📤</button>
     <button class="headbtn" id="panelFollow" style="display:none">☆</button>
     <button class="closebtn" onclick="closePanel()">✕</button>
   </div>
@@ -925,6 +929,7 @@ function openPanel(title, sub, bodyHtml, followPoi) {
   document.getElementById("panelTitle").textContent = title;
   document.getElementById("panelSub").innerHTML = sub;
   document.getElementById("panelBody").innerHTML = bodyHtml;
+  document.getElementById("panelShare").style.display = "none";
   const fb = document.getElementById("panelFollow");
   if (followPoi) {
     fb.style.display = "flex";
@@ -973,6 +978,7 @@ function renderPoi(p) {
   if (!vis.length) html = `<div class="listnote">Ingen saker innenfor filtrene – viser alle på punktet.</div>` + html;
   const mtr = p.cases.find(c => c.matrikkel)?.matrikkel;
   openPanel(p.label, `${show.length} sak${show.length > 1 ? "er" : ""}${mtr ? " · gnr/bnr " + esc(mtr) : ""}`, html, p);
+  setPanelShare(`adresse=${encodeURIComponent(p.label)}@${p.latlon[0].toFixed(5)},${p.latlon[1].toFixed(5)},17`, p.label);
   markSeenAddr(p);
   fireEvent("poi", p.label);
 }
@@ -1322,6 +1328,7 @@ function caseCard(c) {
         ${c.planfase ? `<span class="fase ${esc(c.planfase.replace(/[^A-Za-zÆØÅæøå]/g, ""))}">${esc(c.planfase)}</span>` : ""}
         ${caseUpd.has(c.casenr) ? '<span class="newbadge">NYTT</span>' : ""}
         <span class="case-date" title="${esc(rangeTitle)}">${range}</span>
+        <button class="sharebtn" data-share="${esc(c.casenr)}" title="Del lenke til saken">📤</button>
         <button class="followbtn ${isFollowedCase(c.casenr) ? "on" : ""}" data-follow="${esc(c.casenr)}" title="Følg saken">${isFollowedCase(c.casenr) ? "★" : "☆"}</button>
       </div>
       <div class="case-desc">${esc(c.description || displayAddr(c))}</div>
@@ -1405,7 +1412,7 @@ function wireCards() {
     if (h.dataset.wired) return;
     h.dataset.wired = "1";
     h.addEventListener("click", e => {
-      if (e.target.closest(".followbtn")) return;
+      if (e.target.closest(".followbtn") || e.target.closest(".sharebtn")) return;
       const card = h.parentElement;
       card.classList.toggle("open");
       if (card.classList.contains("open")) {
@@ -1437,6 +1444,14 @@ function wireCards() {
         return;
       }
       openEntity(kind, name);
+    });
+  });
+  document.querySelectorAll("#panelBody .sharebtn").forEach(b => {
+    if (b.dataset.wiredS) return;
+    b.dataset.wiredS = "1";
+    b.addEventListener("click", () => {
+      const c = DATA.cases.find(x => x.casenr === b.dataset.share);
+      shareLink("sak=" + encodeURIComponent(b.dataset.share), c ? `${c.displayAddress} – ${c.casenr}` : b.dataset.share);
     });
   });
   document.querySelectorAll("#panelBody .followbtn").forEach(b => {
@@ -1792,6 +1807,55 @@ function highlightCase(c) {
   ]).addTo(map);
 }
 
+/* ---------------- Deling (dyplenker) ---------------- */
+function miniToast(txt) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = `<span class="emoji">🔗</span><div><div class="t-title">${esc(txt)}</div></div>`;
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+async function shareLink(hash, title) {
+  const url = location.origin + location.pathname + "#" + hash;
+  if (navigator.share) {
+    try { await navigator.share({ title: title || "Byggesaker Kristiansand", url }); return; }
+    catch (e) { if (e.name === "AbortError") return; }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    miniToast("Lenke kopiert – lim inn hvor som helst");
+  } catch {
+    prompt("Kopier lenken:", url);
+  }
+}
+function setPanelShare(hash, title) {
+  const b = document.getElementById("panelShare");
+  if (!hash) { b.style.display = "none"; return; }
+  b.style.display = "flex";
+  b.onclick = () => shareLink(hash, title);
+}
+function handleDeepLink() {
+  const raw = location.hash.slice(1);
+  if (!raw) return;
+  const h = decodeURIComponent(raw);
+  if (h.startsWith("sak=")) {
+    const nr = h.slice(4);
+    const c = DATA.cases.find(x => x.casenr === nr);
+    if (c) setTimeout(() => focusCase(c), 500);
+  } else if (h.startsWith("adresse=")) {
+    const rest = h.slice(8);
+    const [label, geo] = rest.split("@");
+    const p = POIS.find(x => addrKey(x.label) === addrKey(label));
+    if (geo) {
+      const [lat, lng, z] = geo.split(",").map(Number);
+      if (isFinite(lat) && isFinite(lng)) map.setView([lat, lng], isFinite(z) ? z : 17);
+    } else if (p) {
+      map.setView(p.latlon, 17);
+    }
+    if (p) setTimeout(() => openPoi(p), 400);
+  }
+}
+
 /* ---------------- Varsler (toasts) ---------------- */
 function showToasts() {
   const ups = followUpdates();
@@ -2128,6 +2192,7 @@ drawRadius();
   }
   render();
   showToasts();
+  handleDeepLink();
   if (loggedIn()) pullAccount();
 })();
 </script>
