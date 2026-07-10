@@ -7,3 +7,4 @@ data/journal_watermark.json
 data/cases.json
 worker/.api_secret.txt
 worker/.wrangler/
+worker/.vapid_keys.txt

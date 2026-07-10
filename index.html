@@ -995,6 +995,15 @@ function renderKonto() {
       <button class="btn sec" id="gdprDelete" style="flex:1;color:var(--red)">Slett kontoen min</button>
     </div>`;
   }
+  const isIos = /iphone|ipad/i.test(navigator.userAgent);
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (isIos && !standalone) {
+    html += `<div class="formbox" style="border-color:rgba(10,132,255,.4)">
+      <h4>📲 Få varsler rett på mobilen</h4>
+      <p>Legg appen på Hjem-skjermen for push-varsler: trykk <b>Del-knappen</b> (firkant med pil) i Safari
+      → <b>«Legg til på Hjem-skjerm»</b>. Åpne appen derfra og aktiver push under Min konto.</p>
+    </div>`;
+  }
   html += `<div class="listnote"><a href="personvern.html" style="color:var(--blue)">Personvern og skjerming</a></div>`;
   openPanel("Min konto", sess ? "Innstillinger, varsling og personvern" : "Logg inn eller opprett konto", html);
   wireEmailBox();
