@@ -4,6 +4,5 @@
 # gjøres søkbare via søkemotorer.)
 User-agent: *
 Disallow: /data/
-Disallow: /admin.html
 Allow: /$
 Allow: /index.html

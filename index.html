@@ -197,6 +197,23 @@
   .pill.Byggesak { background: rgba(10,132,255,.14); color: var(--blue); }
   .pill.Henvendelse { background: rgba(255,159,10,.16); color: #c77700; }
   .pill.Ulovlighetssak { background: rgba(255,69,58,.14); color: var(--red); }
+  .pill.Plansak { background: rgba(191,90,242,.15); color: var(--purple); }
+  .fase { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 650; }
+  .fase.Oppstart { background: rgba(10,132,255,.14); color: var(--blue); }
+  .fase.Planprogram, .fase.Førstegangsbehandling { background: rgba(120,120,128,.18); color: var(--ink2); }
+  .fase.Påhøring { background: rgba(255,159,10,.18); color: #c77700; }
+  .fase.Vedtatt { background: rgba(48,209,88,.16); color: #1e9e4a; }
+  .plancard { background: var(--card); border: 0.5px solid var(--glass-border); border-radius: 18px;
+    margin-bottom: 12px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(15,20,40,.08), inset 0 1px 0 rgba(255,255,255,.5); }
+  .plancard .case { border: none; box-shadow: none; border-radius: 0; margin: 0; }
+  .planbanner { position: relative; height: 130px; background: linear-gradient(135deg, rgba(191,90,242,.25), rgba(10,132,255,.2));
+    display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .planbanner img, .planbanner canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .planbanner .ph { font-size: 34px; opacity: .5; }
+  .planbanner .fase { position: absolute; top: 8px; right: 8px; backdrop-filter: blur(8px);
+    background: rgba(255,255,255,.75); }
+  @media (prefers-color-scheme: dark) { .planbanner .fase { background: rgba(30,30,34,.75); color: var(--ink); } }
   @media (prefers-color-scheme: dark) { .pill.Henvendelse { color: var(--orange); } }
   .statusdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .status-txt { font-size: 12px; font-weight: 600; color: var(--ink2); }
@@ -378,6 +395,7 @@
   </select>
   <button class="iconbtn" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
   <button class="iconbtn" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
+  <button class="iconbtn" id="regBtn" title="Reguleringsplaner">📐<span class="lbl">Regulering</span></button>
   <button class="iconbtn" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
   <button class="iconbtn" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
   <a class="vizbo" href="https://vizbo.no" target="_blank" rel="noopener" title="Levert av Vizbo"><img src="vizbo-logo.png" alt="Vizbo"></a>
@@ -415,7 +433,7 @@
 /* Datalag v3: tynn indeks (data/index.json) + fulle saker per postnummer-chunk
    (data/chunks/<postnr>.json) som lastes ved behov. */
 let DATA = { cases: [], updatedLocal: "laster …", poiSummaries: {} };
-const TYPE_FULL = { B: "Byggesak", H: "Henvendelse", U: "Ulovlighetssak" };
+const TYPE_FULL = { B: "Byggesak", P: "Plansak", H: "Henvendelse", U: "Ulovlighetssak" };
 function inflate(e) {
   return {
     id: e.i, casenr: e.c, type: TYPE_FULL[e.t] || e.t, status: e.s,
@@ -423,7 +441,7 @@ function inflate(e) {
     latlon: e.ll || null, firstDate: e.f || null, lastDate: e.l || null,
     saksbehandler: e.sb || "", soker: e.so || null, journalKey: e.jk || null,
     matrikkel: e.m || "", hasAi: !!e.ai, nyDato: e.ny || null, description: e.d || "",
-    kategorier: e.k || [],
+    kategorier: e.k || [], planfase: e.pf || null,
     url: "https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/" + e.i,
   };
 }
@@ -444,9 +462,9 @@ async function loadFull(c) {
   return c._full;
 }
 const CFG = window.BYGGESAK_CONFIG || {};           // { apiBase: "https://...workers.dev", pdfProxy: "https://.../pdfproxy" }
-const TYPES = ["Byggesak", "Henvendelse", "Ulovlighetssak"];
-const TYPE_LABEL = { Byggesak: "Bygg", Henvendelse: "Henv.", Ulovlighetssak: "Ulovlig" };
-const COLORS = { Byggesak: "#0a84ff", Henvendelse: "#ff9f0a", Ulovlighetssak: "#ff453a" };
+const TYPES = ["Byggesak", "Plansak", "Henvendelse", "Ulovlighetssak"];
+const TYPE_LABEL = { Byggesak: "Bygg", Plansak: "Plan", Henvendelse: "Henv.", Ulovlighetssak: "Ulovlig" };
+const COLORS = { Byggesak: "#0a84ff", Plansak: "#bf5af2", Henvendelse: "#ff9f0a", Ulovlighetssak: "#ff453a" };
 const IS_HTTP = /^https?:$/.test(location.protocol);
 const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
 const state = { types: new Set(TYPES), years: 5, q: "", view: null };
@@ -633,7 +651,7 @@ function renderAccountState() {
   b.style.background = loggedIn() ? "linear-gradient(180deg, rgba(48,209,88,.35), rgba(48,209,88,.15))" : "";
   const lbl = document.getElementById("accountLbl");
   const sess = store.session.get();
-  if (lbl) lbl.textContent = sess ? sess.email.split("@")[0] : "Logg inn";
+  if (lbl) lbl.textContent = sess ? ((sess.navn || sess.email).split(/[@ ]/)[0]) : "Logg inn";
 }
 function poiState(p) {
   return { n: p.cases.length, lastDate: p.cases.map(c => c.lastDate || "").sort().pop() || null };
@@ -747,6 +765,7 @@ function caseVisible(c) {
 }
 function poiColor(cs) {
   if (cs.some(c => c.type === "Ulovlighetssak")) return COLORS.Ulovlighetssak;
+  if (cs.some(c => c.type === "Plansak")) return COLORS.Plansak;
   if (cs.some(c => c.type === "Byggesak")) return COLORS.Byggesak;
   return COLORS.Henvendelse;
 }
@@ -1035,8 +1054,9 @@ function emailBox() {
   const sess = store.session.get();
   const prefs = store.prefs.read();
   if (sess) {
+    const visNavn = sess.navn ? `${esc(sess.navn)} (${esc(sess.email)})` : esc(sess.email);
     return `<div class="formbox">
-      <h4>✅ Innlogget som ${esc(sess.email)}</h4>
+      <h4>✅ Innlogget som ${visNavn}</h4>
       <p>Adresser, varslingsnivåer, notater og innstillinger synkroniseres automatisk til kontoen din.</p>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0">
         <input type="checkbox" id="weeklyChk" ${prefs.weekly ? "checked" : ""}> Ukessammendrag på e-post hver fredag
@@ -1049,6 +1069,9 @@ function emailBox() {
         <button class="btn sec" id="radiusBtn" style="flex:1">📍 ${prefs.radius ? `Områdevarsling: ${prefs.radius.m} m (endre)` : "Sett opp områdevarsling"}</button>
         ${prefs.radius ? '<button class="btn sec" id="radiusOff">Fjern</button>' : ""}
       </div>
+      ${sess.rolle === "admin" ? `<div class="formrow" style="margin-top:8px">
+        <button class="btn" id="adminBtn" style="flex:1;background:linear-gradient(180deg,#d47aff,#bf5af2);box-shadow:0 4px 14px rgba(191,90,242,.4), inset 0 1px 0 rgba(255,255,255,.4)">🛠 Adminpanel (superadmin)</button>
+      </div>` : ""}
       <div class="formmsg" id="emailMsg"></div>
       <p style="margin-top:10px">📅 <a href="data/kalender.ics" style="color:var(--blue)">Kalenderfeed (iCal)</a> – nye saker og befaringer rett i kalenderen din.</p>
     </div>`;
@@ -1084,7 +1107,7 @@ function wireEmailBox() {
       if (!CFG.apiBase) return setMsg("Innloggings-APIet er ikke satt opp ennå (se README).", "err");
       try {
         const res = await api("/login-passord", { method: "POST", body: JSON.stringify({ email, password }) });
-        store.session.set({ token: res.session, email: res.email, rolle: res.rolle });
+        store.session.set({ token: res.session, email: res.email, rolle: res.rolle, navn: res.navn || null });
         renderAccountState();
         await pullAccount();
         renderFollowList();
@@ -1106,6 +1129,9 @@ function wireEmailBox() {
       setMsg("Innloggingslenke sendt! Sjekk e-posten din (gyldig i 15 min).", "ok");
     } catch (e2) { setMsg("Feil: " + e2.message, "err"); }
   };
+
+  const adminBtn = document.getElementById("adminBtn");
+  if (adminBtn) adminBtn.onclick = openAdmin;
 
   const logoutBtn = document.getElementById("logoutBtn");
   if (logoutBtn) logoutBtn.onclick = () => { store.session.set(null); renderAccountState(); renderFollowList(); };
@@ -1184,6 +1210,7 @@ function caseCard(c) {
         <span class="statusdot" style="background:${statusColor(c.status)}"></span>
         <span class="status-txt">${esc(c.status)}</span>
         <span class="pill ${c.type}">${c.type}</span>
+        ${c.planfase ? `<span class="fase ${esc(c.planfase.replace(/[^A-Za-zÆØÅæøå]/g, ""))}">${esc(c.planfase)}</span>` : ""}
         ${caseUpd.has(c.casenr) ? '<span class="newbadge">NYTT</span>' : ""}
         <span class="case-date">${range}</span>
         <button class="followbtn ${isFollowedCase(c.casenr) ? "on" : ""}" data-follow="${esc(c.casenr)}" title="Følg saken">${isFollowedCase(c.casenr) ? "★" : "☆"}</button>
@@ -1334,6 +1361,171 @@ function wireCards() {
       }, 600);
     });
   });
+}
+
+/* ---------------- Adminpanel (innebygd, kun superadmin) ---------------- */
+function openAdmin() { navOpen("admin", () => renderAdmin("oversikt")); }
+async function renderAdmin(tab) {
+  const sess = store.session.get();
+  if (!sess || sess.rolle !== "admin") { openFollowList(); return; }
+  const seg = `<div class="seg" id="admSeg" style="margin:6px 0 12px">
+    ${[["oversikt", "Oversikt"], ["brukere", "Brukere"], ["sporing", "Sporing"]].map(([k, l]) =>
+      `<button data-t="${k}" class="${k === tab ? "on" : ""}">${l}</button>`).join("")}
+  </div><div id="admBody"><div class="listnote">Laster …</div></div>`;
+  openPanel("Adminpanel", `Innlogget som ${esc(sess.navn || sess.email)} · all bruk logges`, seg);
+  document.querySelectorAll("#admSeg button").forEach(b => b.addEventListener("click", () => renderAdmin(b.dataset.t)));
+  const body = document.getElementById("admBody");
+  try {
+    if (tab === "oversikt") {
+      const s = await api("/admin/stats");
+      const row = (t, v) => `<div class="barrow" style="grid-template-columns:1fr 40px"><div class="b-lbl" style="text-align:left">${esc(t)}</div><div class="b-val">${v}</div></div>`;
+      body.innerHTML = `
+        <div class="kpis">
+          <div class="kpi"><div class="k-val">${s.brukere}</div><div class="k-lbl">brukere</div></div>
+          <div class="kpi"><div class="k-val">${s.innloggetSiste7d}</div><div class="k-lbl">aktive siste 7 d</div></div>
+          <div class="kpi"><div class="k-val">${s.hendelser7d ?? 0}</div><div class="k-lbl">hendelser siste 7 d</div></div>
+          <div class="kpi"><div class="k-val">${s.folger}</div><div class="k-lbl">følge-oppføringer</div></div>
+        </div>
+        <div class="sectionlabel">🔥 Mest åpnede saker (30 d)</div>
+        ${(s.toppSaker || []).map(r => row(r.objekt, r.n)).join("") || '<div class="listnote">Ingen hendelser ennå.</div>'}
+        <div class="sectionlabel">📍 Mest åpnede adresser (30 d)</div>
+        ${(s.toppAdresser || []).map(r => row(r.objekt, r.n)).join("") || '<div class="listnote">Ingen hendelser ennå.</div>'}
+        <div class="sectionlabel">⭐ Mest fulgte</div>
+        ${(s.toppFulgte || []).map(r => row(`[${r.slag}] ${r.verdi}`, r.n)).join("") || '<div class="listnote">Ingen følgere ennå.</div>'}`;
+    } else if (tab === "brukere") {
+      body.innerHTML = `<div class="formrow"><input id="admQ" placeholder="Søk e-post …" style="flex:1"><button class="btn sec" id="admSok">Søk</button></div><div id="admUsers"></div>`;
+      const loadUsers = async () => {
+        const rows = await api("/admin/users?q=" + encodeURIComponent(document.getElementById("admQ").value.trim()));
+        document.getElementById("admUsers").innerHTML = rows.map(u => `
+          <div class="addrrow" style="border-radius:16px">
+            <div style="flex:1;min-width:0">
+              <div class="a-name">${esc(u.navn || u.epost)} ${u.rolle === "admin" ? '<span class="newbadge" style="background:var(--purple)">ADMIN</span>' : ""}</div>
+              <div class="a-sub">${esc(u.epost)} · ${u.folger} følger · ${u.notater} notater · sist: ${u.sist_innlogget ? esc(u.sist_innlogget.slice(0, 16).replace("T", " ")) : "–"}</div>
+            </div>
+            <select class="lvlsel" data-uid="${u.id}">${["gratis", "privat", "bedrift"].map(t => `<option ${t === u.tier ? "selected" : ""}>${t}</option>`).join("")}</select>
+            <button class="unfollow" data-del="${u.id}" data-epost="${esc(u.epost)}">Slett</button>
+          </div>`).join("") || '<div class="listnote">Ingen treff.</div>';
+        document.querySelectorAll("#admUsers .lvlsel").forEach(s => s.onchange = async () => {
+          await api("/admin/user", { method: "PUT", body: JSON.stringify({ id: +s.dataset.uid, tier: s.value }) });
+        });
+        document.querySelectorAll("#admUsers [data-del]").forEach(b => b.onclick = async () => {
+          if (!confirm(`Slette ${b.dataset.epost} og alle data (GDPR)?`)) return;
+          await api("/admin/user/delete", { method: "POST", body: JSON.stringify({ id: +b.dataset.del }) });
+          loadUsers();
+        });
+      };
+      document.getElementById("admSok").onclick = loadUsers;
+      loadUsers();
+    } else if (tab === "sporing") {
+      body.innerHTML = `<div class="formrow"><input id="audQ" placeholder="Filtrer på bruker …" style="flex:1"><button class="btn sec" id="audSok">Filtrer</button></div><div id="audRows" style="margin-top:8px"></div>`;
+      const loadAudit = async () => {
+        const q = document.getElementById("audQ").value.trim();
+        const rows = await api("/admin/audit?limit=100" + (q ? "&bruker=" + encodeURIComponent(q) : ""));
+        document.getElementById("audRows").innerHTML = rows.map(r => `
+          <div class="endring"><span class="e-date">${esc(r.ts.slice(0, 16).replace("T", " "))}</span>
+          <b>${esc(r.bruker || "anonym")}</b> · <span class="pill">${esc(r.handling)}</span>
+          ${r.objekt ? " · " + esc(r.objekt) : ""}${r.detaljer ? " · " + esc(r.detaljer) : ""}
+          <span style="color:var(--ink3)"> · ${esc(r.ip || "")}</span></div>`).join("") || '<div class="listnote">Tomt.</div>';
+      };
+      document.getElementById("audSok").onclick = loadAudit;
+      loadAudit();
+    }
+  } catch (e) {
+    body.innerHTML = `<div class="listnote">Feil: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ---------------- Reguleringsoversikt ---------------- */
+const BANNER_CACHE = new Map();
+function pickBannerFile(full) {
+  const files = (full.documents || []).flatMap(d => d.files || []);
+  const score = f => {
+    const n = f.name.toLowerCase();
+    if (/illustrasjon|visualiser|perspektiv|3d|fasade/.test(n)) return 5;
+    if (/plankart|situasjonsplan|situasjonskart|kartutsnitt/.test(n)) return 4;
+    if (/planbeskrivelse|snitt|oversikt/.test(n)) return 2;
+    return 1;
+  };
+  return files.sort((a, b) => score(b) - score(a))[0] || null;
+}
+async function renderPlanBanner(el, c) {
+  if (BANNER_CACHE.has(c.id)) {
+    const url = BANNER_CACHE.get(c.id);
+    if (url) el.innerHTML = `<img src="${url}" alt="">` + el.querySelector(".fase")?.outerHTML || "";
+    return;
+  }
+  try {
+    const full = await loadFull(c);
+    const f = full && pickBannerFile(full);
+    const proxied = f && proxyUrl(f.url);
+    if (!proxied) { BANNER_CACHE.set(c.id, null); return; }
+    const pdfjs = await loadPdfJs();
+    const pdf = await pdfjs.getDocument({ url: proxied }).promise;
+    const page = await pdf.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    const scale = 480 / base.width;
+    const vp = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = vp.width; canvas.height = vp.height;
+    await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+    const url = canvas.toDataURL("image/jpeg", 0.7);
+    BANNER_CACHE.set(c.id, url);
+    const badge = el.querySelector(".fase");
+    el.innerHTML = `<img src="${url}" alt="">` + (badge ? badge.outerHTML : "");
+  } catch { BANNER_CACHE.set(c.id, null); }
+}
+let bannerQueue = Promise.resolve();
+function queueBanner(el, c) {
+  bannerQueue = bannerQueue.then(() => renderPlanBanner(el, c)).catch(() => {});
+}
+
+function planCard(c) {
+  const faseCls = c.planfase ? esc(c.planfase.replace(/[^A-Za-zÆØÅæøå]/g, "")) : "";
+  return `<div class="plancard" data-plan="${esc(c.id)}">
+    <div class="planbanner" data-banner="${esc(c.id)}">
+      <span class="ph">📐</span>
+      ${c.planfase ? `<span class="fase ${faseCls}">${esc(c.planfase)}</span>` : ""}
+    </div>
+    ${caseCard(c)}
+  </div>`;
+}
+
+function openRegulering() { navOpen("regulering", renderRegulering); }
+function renderRegulering() {
+  const plans = DATA.cases.filter(c => c.type === "Plansak").sort(byActivity);
+  const grupper = [
+    ["detaljregulering", "Detaljreguleringer"],
+    ["områderegulering", "Områdereguleringer"],
+    ["kommune(del)plan", "Kommune(del)planer"],
+    ["planendring", "Planendringer"],
+  ];
+  const seg = `<div class="seg" id="regSeg" style="margin:6px 0 12px; flex-wrap: wrap;">
+    <button data-g="alle" class="on">Alle (${plans.length})</button>
+    ${grupper.map(([k, l]) => {
+      const n = plans.filter(c => (c.kategorier || []).includes(k)).length;
+      return n ? `<button data-g="${k}">${l.split(" ")[0]} (${n})</button>` : "";
+    }).join("")}
+  </div>`;
+  const html = (plans.length ? seg : "") + `<div id="regBody">` +
+    (plans.length ? "" : `<div class="emptystate"><div class="big">📐</div>Ingen reguleringssaker i datasettet ennå.<br>Plansakene hentes inn i natt – kom tilbake i morgen!</div>`) +
+    `</div>`;
+  openPanel("Regulering", "Område- og detaljreguleringer i Kristiansand", html);
+  const body = document.getElementById("regBody");
+  const draw = g => {
+    const list = g === "alle" ? plans : plans.filter(c => (c.kategorier || []).includes(g));
+    body.innerHTML = list.slice(0, 40).map(planCard).join("") +
+      (list.length > 40 ? `<div class="listnote">Viser 40 av ${list.length} – bruk søkefeltet for å finne flere.</div>` : "");
+    document.querySelectorAll("#regSeg button").forEach(b => b.classList.toggle("on", b.dataset.g === g));
+    wireCards();
+    document.querySelectorAll("#regBody .planbanner").forEach(el => {
+      const c = plans.find(x => x.id === el.dataset.banner);
+      if (c) queueBanner(el, c);
+    });
+  };
+  if (plans.length) {
+    document.querySelectorAll("#regSeg button").forEach(b => b.addEventListener("click", () => draw(b.dataset.g)));
+    draw("alle");
+  }
 }
 
 /* ---------------- Saksliste-panel (klikkbar statistikk) ---------------- */
@@ -1721,6 +1913,7 @@ document.getElementById("accountBtn").onclick = () => {
   openFollowList();
 };
 document.getElementById("statsBtn").onclick = openStats;
+document.getElementById("regBtn").onclick = openRegulering;
 
 /* ---------------- Oppstart ---------------- */
 if ("serviceWorker" in navigator && IS_HTTP) {

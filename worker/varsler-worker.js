@@ -38,6 +38,11 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const ALLOWED_PDF_HOSTS = new Set(["opengov.360online.com"]);
 const LEVELS = new Set(["alt", "vedtak", "nye"]);
 const token = () => crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
+const ADMIN_NAVN = {
+  "per@vizbo.no": "Per-Ove Løvsland",
+  "sjur@vizbo.no": "Sjur Magnus Ringøen",
+  "david@fbc-ark.no": "David Naglestad",
+};
 
 async function audit(env, req, bruker, rolle, handling, objekt, detaljer) {
   try {
@@ -78,10 +83,11 @@ async function upsertUser(env, epost) {
   const admins = (env.ADMIN_EPOST || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
   const rolle = admins.includes(epost) ? "admin" : "bruker";
   await env.DB.prepare(
-    `INSERT INTO brukere (epost, rolle, opprettet, sist_innlogget) VALUES (?,?,?,?)
+    `INSERT INTO brukere (epost, navn, rolle, opprettet, sist_innlogget) VALUES (?,?,?,?,?)
      ON CONFLICT(epost) DO UPDATE SET sist_innlogget = excluded.sist_innlogget,
+       navn = COALESCE(excluded.navn, brukere.navn),
        rolle = CASE WHEN excluded.rolle = 'admin' THEN 'admin' ELSE brukere.rolle END`)
-    .bind(epost, rolle, now(), now()).run();
+    .bind(epost, ADMIN_NAVN[epost] || null, rolle, now(), now()).run();
   return env.DB.prepare("SELECT * FROM brukere WHERE epost = ?").bind(epost).first();
 }
 
@@ -196,7 +202,7 @@ export default {
         }
         const s = await makeSession(env, user);
         await audit(env, req, e, user.rolle, "innlogging", null, "passord");
-        return json({ session: s, email: user.epost, rolle: user.rolle, tier: user.tier });
+        return json({ session: s, email: user.epost, navn: user.navn || ADMIN_NAVN[user.epost] || null, rolle: user.rolle, tier: user.tier });
       }
 
       // Brukshendelser (anonymt OK) – gir adminstatistikk over hva folk ser på
@@ -218,7 +224,7 @@ export default {
         const user = await upsertUser(env, row.epost);
         const s = await makeSession(env, user);
         await audit(env, req, user.epost, user.rolle, "innlogging", null, "magisk lenke");
-        return json({ session: s, email: user.epost, rolle: user.rolle, tier: user.tier });
+        return json({ session: s, email: user.epost, navn: user.navn || ADMIN_NAVN[user.epost] || null, rolle: user.rolle, tier: user.tier });
       }
 
       // ---------- Profil ----------
@@ -227,7 +233,8 @@ export default {
         if (!sess) return err("Ikke innlogget", 401);
         if (req.method === "GET") {
           const prof = await readProfile(env, sess.id);
-          return json({ email: sess.epost, rolle: sess.rolle, tier: sess.tier, ...prof });
+          const u = await env.DB.prepare("SELECT navn FROM brukere WHERE id = ?").bind(sess.id).first();
+          return json({ email: sess.epost, navn: (u && u.navn) || null, rolle: sess.rolle, tier: sess.tier, ...prof });
         }
         if (req.method === "PUT") {
           await writeProfile(env, sess.id, await req.json());
@@ -334,7 +341,7 @@ export default {
           const q = (url.searchParams.get("q") || "").toLowerCase();
           const limit = Math.min(parseInt(url.searchParams.get("limit"), 10) || 50, 200);
           const rows = (await env.DB.prepare(
-            `SELECT b.id, b.epost, b.rolle, b.tier, b.opprettet, b.sist_innlogget,
+            `SELECT b.id, b.epost, b.navn, b.rolle, b.tier, b.opprettet, b.sist_innlogget,
                     (SELECT COUNT(*) FROM folger f WHERE f.bruker_id = b.id) folger,
                     (SELECT COUNT(*) FROM notater n WHERE n.bruker_id = b.id) notater
              FROM brukere b WHERE b.epost LIKE ? ORDER BY b.sist_innlogget DESC LIMIT ?`)

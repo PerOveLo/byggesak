@@ -44,7 +44,7 @@ PJ_DEPTS = "18,19,72,74,83"   # Byggesak, Byggesaksbehandling, Plan og bygg, PoB
 KARTVERKET = "https://ws.geonorge.no/adresser/v1/sok"
 KOMMUNENUMMER = "4204"
 
-TYPE_BY_PREFIX = {"BYGG": "Byggesak", "HENV": "Henvendelse", "ULOV": "Ulovlighetssak"}
+TYPE_BY_PREFIX = {"BYGG": "Byggesak", "HENV": "Henvendelse", "ULOV": "Ulovlighetssak", "PLAN": "Plansak"}
 ID_START = 200100            # første sak i arkivet ligger like over (sak 20/00001 ≈ 200157)
 EMPTY_RUN_STOP_BACKFILL = 300
 EMPTY_RUN_STOP_DAILY = 30
@@ -442,6 +442,27 @@ def klassifiser(case):
     return kats[:3]
 
 
+PLANFASE_RULES = [
+    (r'vedtak av plan|egengodkjen|vedtatt reguleringsplan|sluttbehandling|planvedtak|kunngjøring av vedtatt', "Vedtatt"),
+    (r'offentlig ettersyn|høring|merknad til plan', "På høring"),
+    (r'førstegangsbehandling|1\. ?gangsbehandling', "Førstegangsbehandling"),
+    (r'planprogram|konsekvensutredning', "Planprogram"),
+    (r'varsel om oppstart|oppstartsmøte|planinitiativ|kunngjøring om oppstart|igangsatt regulering', "Oppstart"),
+]
+
+
+def plan_fase(case):
+    """Utled planfase fra dokumenttitlene (nyeste først)."""
+    if case.get("type") != "Plansak":
+        return None
+    for d in sorted(case.get("documents") or [], key=lambda x: doc_seq(x["title"]), reverse=True):
+        t = d["title"].lower()
+        for pat, fase in PLANFASE_RULES:
+            if re.search(pat, t):
+                return fase
+    return "Under arbeid"
+
+
 def fmt_no_date(iso):
     if not iso:
         return ""
@@ -566,6 +587,19 @@ def build_case(cid, det, lookups, old_case=None, announce_new=False):
     case["status"] = infer_status(case["documents"])
     case["soker"] = case_soker(case)
     case["kategorier"] = klassifiser(case)
+    if case["type"] == "Plansak":
+        hay = (case["title"] + " " + " ".join(d["title"] for d in case["documents"][:4])).lower()
+        plankat = []
+        if re.search(r'områdereguler', hay):
+            plankat.append("områderegulering")
+        if re.search(r'detaljreguler', hay):
+            plankat.append("detaljregulering")
+        if re.search(r'kommunedelplan|kommuneplan', hay):
+            plankat.append("kommune(del)plan")
+        if re.search(r'endring av reguleringsplan|reguleringsendring|mindre endring', hay):
+            plankat.append("planendring")
+        case["kategorier"] = (plankat or ["plansak"]) + [k for k in case["kategorier"] if k != "dispensasjon"][:2]
+        case["planfase"] = plan_fase(case)
 
     today = datetime.now().strftime("%Y-%m-%d")
     endringer = list((old_case or {}).get("endringer") or [])
@@ -607,6 +641,8 @@ def thin(case):
             e[dst] = case[src]
     if case.get("kategorier"):
         e["k"] = case["kategorier"]
+    if case.get("planfase"):
+        e["pf"] = case["planfase"]
     if case.get("aiSummary"):
         e["ai"] = 1
     if case.get("endringer"):
@@ -740,7 +776,8 @@ def fetch_case_by_id(cid):
     return cid, "ok", det
 
 
-def backfill(chunks, lookups):
+def backfill(chunks, lookups, keep_prefixes=None):
+    keep_prefixes = keep_prefixes or set(TYPE_BY_PREFIX)
     known = {c["id"] for c in all_cases(chunks)}
     max_known = max((int(i) for i in known), default=ID_START)
     log(f"Backfill: kjenner {len(known)} saker, høyeste id {max_known}.")
@@ -763,7 +800,7 @@ def backfill(chunks, lookups):
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
         for cid, status, det in ex.map(fetch_case_by_id, todo):
             processed += 1
-            if status == "ok" and det["prefix"] in TYPE_BY_PREFIX:
+            if status == "ok" and det["prefix"] in keep_prefixes:
                 case = build_case(str(cid), det, lookups)
                 chunks.setdefault(case["postnr"], {})[case["id"]] = case
                 touched.add(case["postnr"])
@@ -949,6 +986,8 @@ def main():
 
     if "--kristiansand" in sys.argv:
         backfill(chunks, lookups)
+    elif "--plansaker" in sys.argv:
+        backfill(chunks, lookups, keep_prefixes={"PLAN"})
     elif "--journal-bulk" in sys.argv:
         journal_bulk()
         journal_match(load_chunks())

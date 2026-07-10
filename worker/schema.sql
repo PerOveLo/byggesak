@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS brukere (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   epost TEXT UNIQUE NOT NULL,
+  navn TEXT,
   passord_hash TEXT,                        -- salt$pbkdf2 (passordinnlogging)
   rolle TEXT NOT NULL DEFAULT 'bruker',     -- bruker | admin
   tier TEXT NOT NULL DEFAULT 'gratis',      -- gratis | privat | bedrift

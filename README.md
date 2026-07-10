@@ -1,6 +1,6 @@
 # Byggesaker Kristiansand
 
-**Live:** https://perovelo.github.io/byggesak/ · **Repo:** https://github.com/PerOveLo/byggesak · **Admin:** admin.html
+**Live:** https://perovelo.github.io/byggesak/ · **Repo:** https://github.com/PerOveLo/byggesak · Admin: innebygd (superadmin, 👤-menyen)
 
 Interaktivt kart over byggesaker, henvendelser og ulovlighetssaker i hele Kristiansand (2020→),
 hentet fra [Kristiansand kommunes innsynsløsning](https://opengov.360online.com/Cases/KRSANDEBYGG)
@@ -37,7 +37,7 @@ bruker ingen AI-tokens; kun den planlagte Claude-oppgaven bruker tokens når den
   journaldatoer bulk-høstes månedsvis (`--journal-bulk`, resumerbar) og matches lokalt.
 - **Innlogging/admin**: Cloudflare Worker + **D1** (SQL, `worker/schema.sql` speiler fremtidig Postgres-modell):
   magisk lenke, profiler, notater, push, GDPR-eksport/-sletting og **append-only revisjonslogg**
-  (databasetriggere blokkerer endring/sletting). Adminside: `admin.html` (brukere, tier, sporing, pipeline-helse).
+  (databasetriggere blokkerer endring/sletting). Adminpanelet er innebygd i kartet og vises kun for superadmin (👤-menyen → Adminpanel).
   Deploy: se `worker/wrangler.toml` (10 min). Admin-tilgang styres av `ADMIN_EPOST`-variabelen.
 
 ## Datakilder og virkemåte
