@@ -666,7 +666,7 @@ function emailBox() {
   const email = store.email.get();
   const followedAddrs = Object.values(store.addrs.read()).map(a => a.label);
   return `<div class="formbox">
-    <h4>�may E-postvarsling</h4>
+    <h4>📮 E-postvarsling</h4>
     <p>Få e-post når adresser du følger får nye saker eller dokumenter. Registrer e-posten din – adressene over følger med.</p>
     <div class="formrow">
       <input id="emailInput" type="email" placeholder="din@epost.no" value="${esc(email)}">
@@ -678,7 +678,7 @@ function emailBox() {
     </div>
     <div class="formmsg" id="emailMsg">${CFG.apiBase ? "" : "⚠️ Varslings-API er ikke konfigurert ennå – innstillingen lagres lokalt og aktiveres når APIet er på plass (se README)."}</div>
     <div id="emailList"></div>
-  </div>`.replace("�may", "📮");
+  </div>`;
 }
 function wireEmailBox() {
   const msg = document.getElementById("emailMsg");
