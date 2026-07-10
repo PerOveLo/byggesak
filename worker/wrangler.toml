@@ -20,7 +20,7 @@ compatibility_date = "2026-06-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "byggesak"
-database_id = "SETT-INN-ID-FRA-STEG-2"
+database_id = "93124d5c-db09-4073-ac9f-be8d230a2168"
 
 [vars]
 FROM_ADDR = "Byggesaker Kristiansand <varsel@vizbo.no>"

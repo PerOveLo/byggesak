@@ -1,9 +1,7 @@
-// Konfigurasjon for offentlig hosting av byggesakskartet.
-// Fyll inn URL-ene når Cloudflare Worker-en (worker/varsler-worker.js) er deployet.
-// Tomme verdier = e-postvarsling lagres kun lokalt, og PDF-er åpnes i egen fane
-// (unntatt på localhost, der server.py sin innebygde proxy brukes automatisk).
+// Konfigurasjon for Byggesaker Kristiansand.
+// apiBase/pdfProxy peker på Cloudflare-workeren (worker/varsler-worker.js).
 window.BYGGESAK_CONFIG = {
-  apiBase: "",         // f.eks. "https://byggesak-varsler.<konto>.workers.dev"
-  pdfProxy: "",        // f.eks. "https://byggesak-varsler.<konto>.workers.dev/pdfproxy"
-  vapidPublicKey: "",  // offentlig VAPID-nøkkel for web-push (generer med: npx web-push generate-vapid-keys)
+  apiBase: "https://byggesak-api.per-732.workers.dev",
+  pdfProxy: "https://byggesak-api.per-732.workers.dev/pdfproxy",
+  vapidPublicKey: "",  // valgfritt: web-push (npx web-push generate-vapid-keys)
 };
