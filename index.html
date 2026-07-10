@@ -143,6 +143,10 @@
   .menu-item:active { transform: scale(.97); }
   .mbadge { margin-left: auto; background: var(--red); color: #fff; font-size: 11px; font-weight: 700;
     border-radius: 999px; padding: 2px 7px; display: none; }
+  .vizbo-m { align-items: center; padding: 0 2px; opacity: .92; }
+  .vizbo-m img { height: 26px; display: block; }
+  @media (prefers-color-scheme: dark) { .vizbo-m img { filter: invert(1); } }
+  @media (max-width: 760px) { .searchwrap { order: 5; flex-basis: 100%; max-width: none; } }
   .vizbo { display: flex; align-items: center; margin-left: auto; padding: 0 4px; opacity: .92; transition: opacity .15s; }
   .vizbo:hover { opacity: 1; }
   .vizbo img { height: 30px; display: block; }
@@ -413,6 +417,7 @@
     <h1>Byggesaker Kristiansand</h1>
     <span id="updatedTag">–</span>
   </div>
+  <a class="vizbo-m only-mobile" href="https://vizbo.no" target="_blank" rel="noopener"><img src="vizbo-logo.png" alt="Vizbo"></a>
   <button class="iconbtn only-mobile" id="menuBtn" title="Meny">☰<span class="bubble" id="menuBubble" style="display:none">0</span></button>
   <div class="searchwrap">
     <input id="q" type="search" placeholder="Søk adresse, saksnummer …" autocomplete="off">
@@ -428,7 +433,7 @@
     <option value="10">Siste 10 år</option>
   </select>
   </span>
-  <button class="iconbtn" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
+  <button class="iconbtn m-hide" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
   <button class="iconbtn m-hide" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
   <button class="iconbtn m-hide" id="regBtn" title="Reguleringsplaner">📐<span class="lbl">Regulering</span></button>
   <button class="iconbtn m-hide" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
@@ -439,6 +444,7 @@
 <div id="menuSheet">
   <div id="menuControls"></div>
   <div class="menu-grid">
+    <button class="menu-item" data-menu="konto" style="grid-column: span 2">👤 <span id="mKontoLbl">Logg inn / Min konto</span></button>
     <button class="menu-item" data-menu="nytt">🕐 Nytt <span class="mbadge" id="mbNytt"></span></button>
     <button class="menu-item" data-menu="regulering">📐 Regulering</button>
     <button class="menu-item" data-menu="statistikk">📊 Statistikk</button>
@@ -698,6 +704,8 @@ function renderAccountState() {
   const lbl = document.getElementById("accountLbl");
   const sess = store.session.get();
   if (lbl) lbl.textContent = sess ? ((sess.navn || sess.email).split(/[@ ]/)[0]) : "Logg inn";
+  const ml = document.getElementById("mKontoLbl");
+  if (ml) ml.textContent = sess ? `Min konto – ${sess.navn || sess.email}` : "Logg inn / Min konto";
 }
 function poiState(p) {
   return { n: p.cases.length, lastDate: p.cases.map(c => c.lastDate || "").sort().pop() || null };
@@ -2039,7 +2047,7 @@ document.addEventListener("click", e => {
 });
 document.querySelectorAll(".menu-item").forEach(b => b.addEventListener("click", () => {
   menuSheet.classList.remove("open");
-  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList })[b.dataset.menu]();
+  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto })[b.dataset.menu]();
 }));
 document.getElementById("accountBtn").onclick = openKonto;
 document.getElementById("statsBtn").onclick = openStats;
