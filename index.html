@@ -353,7 +353,14 @@
   .toast .emoji { font-size: 22px; }
   .toast .t-title { font-size: 13px; font-weight: 700; }
   .toast .t-sub { font-size: 12px; color: var(--ink2); }
-  .toast .t-x { margin-left: auto; color: var(--ink3); font-weight: 700; padding: 4px 6px; }
+  .toast .t-x { margin-left: auto; color: var(--ink2); font-weight: 700; flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 50%; background: var(--fill);
+    display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .toast .t-x:active { background: var(--fill2); }
+  @media (max-width: 760px) {
+    .toast .t-x { width: 44px; height: 44px; font-size: 17px; }
+    .toast { padding: 12px 12px 12px 16px; }
+  }
 
   /* ---------- PDF-viser ---------- */
   #viewer { position: fixed; inset: 0; z-index: 4000; display: none; flex-direction: column; background: rgba(0,0,0,.78); backdrop-filter: blur(8px); }
