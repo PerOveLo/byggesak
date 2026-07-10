@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7">
+<title>Byggesaker Flekkerøy</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<style>
+  :root {
+    --blue: #0a84ff; --orange: #ff9f0a; --red: #ff453a; --green: #30d158; --purple: #bf5af2;
+    --bg: rgba(249,249,251,.82); --bg-solid: #f2f2f7; --card: #ffffff;
+    --ink: #1c1c1e; --ink2: #6e6e73; --ink3: #aeaeb2;
+    --line: rgba(60,60,67,.12); --fill: rgba(120,120,128,.12); --fill2: rgba(120,120,128,.2);
+    --shadow: 0 8px 40px rgba(0,0,0,.14), 0 1px 3px rgba(0,0,0,.08);
+    --radius: 18px; --blur: saturate(1.8) blur(22px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: rgba(28,28,30,.8); --bg-solid: #1c1c1e; --card: #2c2c2e;
+      --ink: #f5f5f7; --ink2: #98989d; --ink3: #636366;
+      --line: rgba(84,84,88,.5); --fill: rgba(120,120,128,.22); --fill2: rgba(120,120,128,.32);
+      --shadow: 0 8px 40px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable", "Segoe UI", Roboto, sans-serif;
+    color: var(--ink); background: var(--bg-solid);
+    -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; }
+  input { font: inherit; }
+  #map { position: fixed; inset: 0; z-index: 0; background: #dfe8ef; }
+
+  /* ---------- Toppbar ---------- */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
+    background: var(--bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border-bottom: 0.5px solid var(--line);
+  }
+  .brand { display: flex; flex-direction: column; margin-right: 4px; }
+  .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: -.2px; }
+  .brand span { font-size: 11px; color: var(--ink2); }
+  .searchwrap { position: relative; flex: 1 1 170px; max-width: 330px; }
+  .searchwrap input {
+    width: 100%; padding: 8px 12px 8px 32px; border: none; border-radius: 11px;
+    background: var(--fill); color: var(--ink); outline: none; font-size: 14px;
+  }
+  .searchwrap::before { content: "🔍"; position: absolute; left: 9px; top: 15px; transform: translateY(-50%); font-size: 12px; opacity: .55; }
+  #suggest {
+    position: absolute; top: 36px; left: 0; right: 0; z-index: 1500;
+    background: var(--card); border-radius: 13px; box-shadow: var(--shadow);
+    border: 0.5px solid var(--line); overflow: hidden; display: none;
+  }
+  #suggest button { display: block; width: 100%; text-align: left; padding: 9px 13px; font-size: 13.5px; }
+  #suggest button:hover, #suggest button.sel { background: var(--fill); }
+  #suggest .s-sub { font-size: 11px; color: var(--ink2); }
+  .seg {
+    display: flex; background: var(--fill); border-radius: 11px; padding: 2.5px; gap: 2px;
+  }
+  .seg button {
+    padding: 6px 11px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--ink2);
+    transition: all .18s ease; white-space: nowrap;
+  }
+  .seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 5px rgba(0,0,0,.15); }
+  .seg button .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  select.pill {
+    appearance: none; -webkit-appearance: none; border: none; outline: none;
+    background: var(--fill); color: var(--ink); border-radius: 11px; padding: 8px 12px; font-size: 13px; font-weight: 600;
+  }
+  .iconbtn {
+    position: relative; height: 36px; min-width: 36px; padding: 0 10px; border-radius: 11px; background: var(--fill);
+    font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 5px; transition: background .15s;
+    font-weight: 600;
+  }
+  .iconbtn:hover { background: var(--fill2); }
+  .iconbtn .lbl { font-size: 13px; }
+  .iconbtn .bubble {
+    position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px;
+    border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  @media (max-width: 760px) { .iconbtn .lbl { display: none; } }
+
+  /* ---------- Panel ---------- */
+  #panel {
+    position: fixed; z-index: 1100; display: flex; flex-direction: column;
+    background: var(--bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    box-shadow: var(--shadow); overflow: hidden;
+    transition: transform .32s cubic-bezier(.32,.72,.24,1);
+  }
+  @media (min-width: 761px) {
+    #panel {
+      top: 78px; right: 12px; bottom: 12px; width: min(440px, 44vw);
+      border-radius: var(--radius); border: 0.5px solid var(--line);
+      transform: translateX(calc(100% + 24px));
+    }
+    #panel.open { transform: translateX(0); }
+    .sheet-grip { display: none; }
+  }
+  @media (max-width: 760px) {
+    #panel {
+      left: 0; right: 0; bottom: 0; height: 88dvh;
+      border-radius: 22px 22px 0 0; border-top: 0.5px solid var(--line);
+      transform: translateY(100%);
+    }
+    #panel.open { transform: translateY(calc(100% - var(--sheet, 60dvh))); }
+    .sheet-grip { width: 40px; height: 5px; border-radius: 3px; background: var(--ink3);
+      margin: 8px auto 2px; flex-shrink: 0; }
+  }
+  #panelHead { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px 8px; }
+  #panelHead .titles { flex: 1; min-width: 0; }
+  #panelHead h2 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -.3px; }
+  #panelHead .sub { font-size: 12.5px; color: var(--ink2); margin-top: 2px; }
+  .headbtn { width: 34px; height: 34px; border-radius: 50%; background: var(--fill); font-size: 16px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .headbtn.on { color: var(--orange); }
+  .closebtn { width: 30px; height: 30px; border-radius: 50%; background: var(--fill); color: var(--ink2);
+    font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  #panelBody { flex: 1; overflow-y: auto; padding: 4px 14px calc(env(safe-area-inset-bottom, 0px) + 24px); overscroll-behavior: contain; }
+
+  .ai-box {
+    background: linear-gradient(135deg, rgba(10,132,255,.10), rgba(191,90,242,.10));
+    border: 0.5px solid rgba(10,132,255,.25);
+    border-radius: 14px; padding: 12px 14px; margin: 8px 0 14px; font-size: 13.5px; line-height: 1.55;
+  }
+  .ai-box h3 { margin: 0 0 6px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--blue); }
+  .ai-box p { margin: 0; white-space: pre-wrap; }
+  .ai-box .stamp { font-size: 11px; color: var(--ink2); margin-top: 8px; }
+
+  .sectionlabel { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px;
+    color: var(--ink2); margin: 14px 4px 8px; }
+  .case {
+    background: var(--card); border-radius: 16px; margin-bottom: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.07); overflow: hidden; border: 0.5px solid var(--line);
+  }
+  .case-head { padding: 12px 14px 11px; cursor: pointer; }
+  .case-head:active { background: var(--fill); }
+  .case-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .pill { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 650; }
+  .pill.Byggesak { background: rgba(10,132,255,.14); color: var(--blue); }
+  .pill.Henvendelse { background: rgba(255,159,10,.16); color: #c77700; }
+  .pill.Ulovlighetssak { background: rgba(255,69,58,.14); color: var(--red); }
+  @media (prefers-color-scheme: dark) { .pill.Henvendelse { color: var(--orange); } }
+  .statusdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .status-txt { font-size: 12px; font-weight: 600; color: var(--ink2); }
+  .case-date { margin-left: auto; font-size: 11.5px; color: var(--ink3); font-variant-numeric: tabular-nums; }
+  .case-desc { font-size: 14.5px; font-weight: 600; margin-top: 6px; line-height: 1.35; letter-spacing: -.1px; }
+  .case-addr { font-size: 12px; color: var(--ink2); margin-top: 2px; }
+  .followbtn { margin-left: 2px; font-size: 17px; line-height: 1; opacity: .35; transition: transform .15s, opacity .15s; }
+  .followbtn.on { opacity: 1; transform: scale(1.1); }
+  .newbadge { background: var(--red); color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 7px; }
+  .case-body { display: none; padding: 0 14px 13px; }
+  .case.open .case-body { display: block; }
+  .case-body .summary { font-size: 13px; line-height: 1.55; background: var(--fill); border-radius: 11px; padding: 10px 12px; margin: 2px 0 10px; }
+  .case-body .meta { font-size: 12px; color: var(--ink2); margin-bottom: 6px; line-height: 1.6; }
+  .tl { position: relative; margin: 6px 0 4px; padding-left: 16px; border-left: 2px solid var(--fill2); }
+  .doc { position: relative; padding: 7px 0; }
+  .doc::before { content: ""; position: absolute; left: -21.5px; top: 13px; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--ink3); border: 2px solid var(--card); }
+  .doc.dated::before { background: var(--blue); }
+  .doc .d-date { font-size: 11px; color: var(--ink2); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .doc .d-title { font-size: 13px; line-height: 1.4; margin: 1px 0 2px; }
+  .doc .d-meta { font-size: 11px; color: var(--ink3); }
+  .filechip {
+    display: inline-flex; align-items: center; gap: 5px; margin: 4px 6px 0 0; padding: 5px 10px;
+    background: rgba(10,132,255,.12); color: var(--blue); border-radius: 999px; font-size: 12px; font-weight: 600;
+    text-decoration: none;
+  }
+  .filechip:active { background: rgba(10,132,255,.25); }
+  .extlink { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--blue); text-decoration: none; font-weight: 600; }
+
+  .addrrow {
+    display: flex; align-items: center; gap: 10px; background: var(--card); border: 0.5px solid var(--line);
+    border-radius: 14px; padding: 11px 14px; margin-bottom: 8px; cursor: pointer;
+  }
+  .addrrow .a-name { font-weight: 650; font-size: 14px; }
+  .addrrow .a-sub { font-size: 12px; color: var(--ink2); }
+  .addrrow .unfollow { margin-left: auto; color: var(--ink3); font-size: 13px; }
+
+  /* Skjema (varsling) */
+  .formbox { background: var(--card); border: 0.5px solid var(--line); border-radius: 14px; padding: 13px 14px; margin-bottom: 10px; }
+  .formbox h4 { margin: 0 0 4px; font-size: 14px; }
+  .formbox p { margin: 4px 0 10px; font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
+  .formrow { display: flex; gap: 8px; }
+  .formrow input {
+    flex: 1; padding: 9px 12px; border: 0.5px solid var(--line); border-radius: 10px;
+    background: var(--fill); color: var(--ink); outline: none; font-size: 14px; min-width: 0;
+  }
+  .btn { background: var(--blue); color: #fff; border-radius: 10px; padding: 9px 14px; font-size: 13.5px; font-weight: 650; white-space: nowrap; }
+  .btn.sec { background: var(--fill); color: var(--ink); }
+  .formmsg { font-size: 12.5px; margin-top: 8px; }
+  .formmsg.ok { color: var(--green); } .formmsg.err { color: var(--red); }
+
+  /* ---------- Markører ---------- */
+  .poi { border-radius: 50%; color: #fff; font-weight: 700; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.35); border: 2.5px solid rgba(255,255,255,.95); }
+  .poi.pulse::after { content: ""; position: absolute; inset: -7px; border-radius: 50%;
+    border: 3px solid var(--red); animation: pulse 1.6s ease-out infinite; }
+  @keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
+  .cluster { background: rgba(255,255,255,.85); backdrop-filter: blur(4px); color: #1c1c1e;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12.5px; box-shadow: 0 2px 10px rgba(0,0,0,.28); border: 2px solid #fff; }
+
+  .legend {
+    position: fixed; left: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); z-index: 900;
+    background: var(--bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 0.5px solid var(--line); border-radius: 13px; padding: 9px 13px; font-size: 12px; line-height: 1.9;
+    box-shadow: var(--shadow);
+  }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; }
+  .updated-tag { color: var(--ink2); font-size: 11px; }
+  @media (max-width: 760px) { .legend { display: none; } }
+
+  /* ---------- Varsler ---------- */
+  #toasts { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 50%; transform: translateX(-50%);
+    z-index: 3000; display: flex; flex-direction: column; gap: 8px; width: min(420px, calc(100vw - 24px)); }
+  .toast {
+    background: var(--bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 0.5px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 11px 14px; display: flex; gap: 11px; align-items: center; cursor: pointer;
+    animation: slidein .4s cubic-bezier(.32,.72,.24,1);
+  }
+  @keyframes slidein { from { transform: translateY(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .toast .emoji { font-size: 22px; }
+  .toast .t-title { font-size: 13px; font-weight: 700; }
+  .toast .t-sub { font-size: 12px; color: var(--ink2); }
+  .toast .t-x { margin-left: auto; color: var(--ink3); font-weight: 700; padding: 4px 6px; }
+
+  /* ---------- PDF-viser ---------- */
+  #viewer { position: fixed; inset: 0; z-index: 4000; display: none; flex-direction: column; background: rgba(0,0,0,.78); backdrop-filter: blur(8px); }
+  #viewer.open { display: flex; }
+  #viewerBar {
+    display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
+    color: #f5f5f7; font-size: 13.5px;
+  }
+  #viewerBar .vtitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  #viewerBar button, #viewerBar a {
+    background: rgba(255,255,255,.14); border-radius: 10px; padding: 7px 12px; color: #fff;
+    font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+  }
+  #viewerBody { flex: 1; overflow: auto; text-align: center; padding: 8px 0 30px; }
+  #viewerBody canvas, #viewerBody img { display: block; margin: 10px auto; max-width: calc(100vw - 20px);
+    border-radius: 6px; box-shadow: 0 4px 30px rgba(0,0,0,.5); background: #fff; }
+  #viewerMsg { color: #d1d1d6; padding: 60px 20px; font-size: 14px; }
+
+  .listnote { text-align: center; font-size: 12px; color: var(--ink2); padding: 10px 0 4px; }
+  .emptystate { text-align: center; color: var(--ink2); padding: 46px 20px; font-size: 14px; }
+  .emptystate .big { font-size: 40px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>Byggesaker Flekkerøy</h1>
+    <span id="updatedTag">–</span>
+  </div>
+  <div class="searchwrap">
+    <input id="q" type="search" placeholder="Søk adresse, saksnummer …" autocomplete="off">
+    <div id="suggest"></div>
+  </div>
+  <div class="seg" id="typeSeg"></div>
+  <select class="pill" id="yearSel" title="Tidsrom">
+    <option value="0">Alle år</option>
+    <option value="1">Siste år</option>
+    <option value="2">Siste 2 år</option>
+    <option value="5" selected>Siste 5 år</option>
+    <option value="10">Siste 10 år</option>
+  </select>
+  <button class="iconbtn" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
+  <button class="iconbtn" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
+</header>
+
+<aside id="panel">
+  <div class="sheet-grip" id="grip"></div>
+  <div id="panelHead">
+    <div class="titles"><h2 id="panelTitle"></h2><div class="sub" id="panelSub"></div></div>
+    <button class="headbtn" id="panelFollow" style="display:none">☆</button>
+    <button class="closebtn" onclick="closePanel()">✕</button>
+  </div>
+  <div id="panelBody"></div>
+</aside>
+
+<div class="legend" id="legend"></div>
+<div id="toasts"></div>
+
+<div id="viewer">
+  <div id="viewerBar">
+    <span class="vtitle" id="viewerTitle"></span>
+    <a id="viewerExt" href="#" target="_blank" rel="noopener">Åpne i fane</a>
+    <button onclick="closeViewer()">Lukk</button>
+  </div>
+  <div id="viewerBody"></div>
+</div>
+
+<script>window.BYGGESAK_CONFIG = window.BYGGESAK_CONFIG || {};</script>
+<script src="config.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="data/cases.js"></script>
+<script>
+"use strict";
+let DATA = window.BYGGESAK_DATA || { cases: [], updatedLocal: "ingen data", poiSummaries: {} };
+const CFG = window.BYGGESAK_CONFIG || {};           // { apiBase: "https://...workers.dev", pdfProxy: "https://.../pdfproxy" }
+const TYPES = ["Byggesak", "Henvendelse", "Ulovlighetssak"];
+const TYPE_LABEL = { Byggesak: "Bygg", Henvendelse: "Henv.", Ulovlighetssak: "Ulovlig" };
+const COLORS = { Byggesak: "#0a84ff", Henvendelse: "#ff9f0a", Ulovlighetssak: "#ff453a" };
+const IS_HTTP = /^https?:$/.test(location.protocol);
+const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
+const state = { types: new Set(TYPES), years: 5, q: "", view: null };
+
+/* ---------------- Hjelpere ---------------- */
+const esc = t => (t || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmtDate = iso => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return `${d}.${m}.${y}`; };
+const fmtMonth = iso => {
+  if (!iso) return "";
+  const mnd = ["jan.", "feb.", "mar.", "apr.", "mai", "jun.", "jul.", "aug.", "sep.", "okt.", "nov.", "des."];
+  const [y, m] = iso.split("-");
+  return `${mnd[parseInt(m, 10) - 1]} ${y}`;
+};
+const isoDaysAgo = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+function caseYear(c) {
+  if (c.lastDate) return parseInt(c.lastDate.slice(0, 4), 10);
+  const m = /^[A-ZÆØÅ]+-(\d{2})\//.exec(c.casenr);
+  return m ? 2000 + parseInt(m[1], 10) : null;
+}
+function statusColor(s) {
+  s = (s || "").toLowerCase();
+  if (/ferdigattest|tillatelse gitt|rammetillatelse|igangsetting|brukstillatelse/.test(s)) return "var(--green)";
+  if (/avslag|pålegg|tvangsmulkt|overtredelse|avvist|stoppordre/.test(s)) return "var(--red)";
+  if (/under behandling|forhåndsvarsel|venter|politisk/.test(s)) return "var(--orange)";
+  return "var(--ink3)";
+}
+function cleanDocTitle(t, c) {
+  t = t.replace(/^[A-ZÆØÅ]+-\d{2}\/\d+-\d+\s*-\s*/, "");
+  const addr = (c.displayAddress || "").trim();
+  if (addr) {
+    const re = new RegExp("^[-–\\s]*" + addr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*[-–,]?\\s*", "i");
+    t = t.replace(re, "");
+  }
+  t = t.replace(/^[-–\s]*\d{1,3}\/\d+(?:\/\d+)*\s*[-–,]?\s*/, "");
+  return t.trim() ? t.trim()[0].toUpperCase() + t.trim().slice(1) : t;
+}
+function caseDesc(c) {
+  const d = (c.description || c.title || "").trim();
+  return d ? d[0].toUpperCase() + d.slice(1) : c.title;
+}
+const addrKey = a => (a || "").toLowerCase().trim();
+
+/* ---------------- Følge-lagring (saker + adresser) ---------------- */
+const store = {
+  cases: {
+    read() { try { return JSON.parse(localStorage.getItem("bsFollow") || "{}"); } catch { return {}; } },
+    write(v) { localStorage.setItem("bsFollow", JSON.stringify(v)); },
+  },
+  addrs: {
+    read() { try { return JSON.parse(localStorage.getItem("bsFollowAddr") || "{}"); } catch { return {}; } },
+    write(v) { localStorage.setItem("bsFollowAddr", JSON.stringify(v)); },
+  },
+  email: {
+    get() { return localStorage.getItem("bsEmail") || ""; },
+    set(v) { localStorage.setItem("bsEmail", v); },
+  },
+};
+function poiState(p) {
+  return { n: p.cases.length, lastDate: p.cases.map(c => c.lastDate || "").sort().pop() || null };
+}
+function isFollowedCase(nr) { return !!store.cases.read()[nr]; }
+function isFollowedAddr(label) { return !!store.addrs.read()[addrKey(label)]; }
+function toggleFollowCase(c) {
+  const f = store.cases.read();
+  if (f[c.casenr]) delete f[c.casenr];
+  else f[c.casenr] = { docs: (c.documents || []).length, lastDate: c.lastDate || null, addr: c.displayAddress };
+  store.cases.write(f);
+  refreshBadges();
+}
+function toggleFollowAddr(p) {
+  const f = store.addrs.read();
+  const k = addrKey(p.label);
+  if (f[k]) delete f[k];
+  else f[k] = { ...poiState(p), label: p.label };
+  store.addrs.write(f);
+  refreshBadges();
+}
+function markSeenCase(c) {
+  const f = store.cases.read();
+  if (f[c.casenr]) {
+    f[c.casenr].docs = (c.documents || []).length;
+    f[c.casenr].lastDate = c.lastDate || null;
+    store.cases.write(f);
+    refreshBadges();
+  }
+}
+function markSeenAddr(p) {
+  const f = store.addrs.read();
+  const k = addrKey(p.label);
+  if (f[k]) { f[k] = { ...poiState(p), label: p.label }; store.addrs.write(f); refreshBadges(); }
+}
+function followUpdates() {
+  const out = [];
+  const fc = store.cases.read();
+  for (const c of DATA.cases) {
+    const e = fc[c.casenr];
+    if (!e) continue;
+    const nDocs = (c.documents || []).length;
+    if (nDocs > (e.docs || 0) || (c.lastDate && e.lastDate && c.lastDate > e.lastDate)) {
+      out.push({ kind: "case", c, label: c.displayAddress || c.casenr, newDocs: Math.max(nDocs - (e.docs || 0), 0) });
+    }
+  }
+  const fa = store.addrs.read();
+  for (const p of POIS) {
+    const e = fa[addrKey(p.label)];
+    if (!e) continue;
+    const st = poiState(p);
+    if (st.n > (e.n || 0) || (st.lastDate && e.lastDate && st.lastDate > e.lastDate)) {
+      out.push({ kind: "addr", p, label: p.label, newCases: Math.max(st.n - (e.n || 0), 0) });
+    }
+  }
+  return out;
+}
+
+/* ---------------- Kart ---------------- */
+const map = L.map("map", { zoomControl: false }).setView([58.068, 8.005], 13);
+L.control.zoom({ position: "bottomright" }).addTo(map);
+const topo = L.tileLayer("https://cache.kartverket.no/v1/wmts/1.0.0/topo/default/webmercator/{z}/{y}/{x}.png", { maxZoom: 19, attribution: "© Kartverket" });
+const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" });
+const foto = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "© Esri" });
+topo.addTo(map);
+L.control.layers({ "Kart": topo, "OpenStreetMap": osm, "Flyfoto": foto }, null, { position: "bottomright" }).addTo(map);
+new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById("map"));
+
+const cluster = L.markerClusterGroup({
+  maxClusterRadius: 34, disableClusteringAtZoom: 16, showCoverageOnHover: false,
+  iconCreateFunction: cl => L.divIcon({ className: "", iconSize: [34, 34],
+    html: `<div class="cluster" style="width:34px;height:34px">${cl.getChildCount()}</div>` }),
+});
+map.addLayer(cluster);
+
+function buildPois() {
+  const m = new Map();
+  for (const c of DATA.cases) {
+    if (!c.latlon) continue;
+    const key = c.latlon[0].toFixed(5) + "," + c.latlon[1].toFixed(5);
+    if (!m.has(key)) m.set(key, { latlon: c.latlon, cases: [] });
+    m.get(key).cases.push(c);
+  }
+  for (const p of m.values()) {
+    p.cases.sort((a, b) => ((b.lastDate || "") + b.casenr).localeCompare((a.lastDate || "") + a.casenr));
+    p.label = p.cases[0].displayAddress || p.cases[0].listAddress || p.cases[0].title.split(",")[0];
+  }
+  return [...m.values()];
+}
+let POIS = buildPois();
+let NOGEO = DATA.cases.filter(c => !c.latlon);
+
+function caseVisible(c) {
+  if (!state.types.has(c.type)) return false;
+  if (state.years > 0) {
+    const y = caseYear(c);
+    if (y && y < new Date().getFullYear() - state.years + 1) return false;
+  }
+  if (state.q) {
+    const hay = (c.title + " " + c.casenr + " " + (c.displayAddress || "") + " " + (c.status || "")).toLowerCase();
+    if (!hay.includes(state.q)) return false;
+  }
+  return true;
+}
+function poiColor(cs) {
+  if (cs.some(c => c.type === "Ulovlighetssak")) return COLORS.Ulovlighetssak;
+  if (cs.some(c => c.type === "Byggesak")) return COLORS.Byggesak;
+  return COLORS.Henvendelse;
+}
+
+function render() {
+  cluster.clearLayers();
+  const counts = { Byggesak: 0, Henvendelse: 0, Ulovlighetssak: 0 };
+  const caseUpd = new Set(), addrUpd = new Set();
+  for (const u of followUpdates()) (u.kind === "case" ? caseUpd.add(u.c.casenr) : addrUpd.add(addrKey(u.label)));
+  for (const c of DATA.cases) if (caseVisible(c)) counts[c.type]++;
+  for (const p of POIS) {
+    const vis = p.cases.filter(caseVisible);
+    if (!vis.length) continue;
+    const size = vis.length > 1 ? 30 : 24;
+    const hasNews = vis.some(c => caseUpd.has(c.casenr)) || addrUpd.has(addrKey(p.label));
+    const icon = L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+      html: `<div class="poi ${hasNews ? "pulse" : ""}" style="position:relative;width:${size}px;height:${size}px;background:${poiColor(vis)}">${vis.length > 1 ? vis.length : ""}</div>` });
+    const mk = L.marker(p.latlon, { icon, title: p.label });
+    mk.bindTooltip(`<b>${esc(p.label)}</b><br>${vis.length} sak${vis.length > 1 ? "er" : ""}`, { direction: "top", offset: [0, -12] });
+    mk.on("click", () => openPoi(p));
+    cluster.addLayer(mk);
+  }
+  renderSeg(counts);
+  renderLegend(counts);
+  refreshBadges();
+}
+
+function renderSeg(counts) {
+  const seg = document.getElementById("typeSeg");
+  seg.innerHTML = "";
+  for (const t of TYPES) {
+    const b = document.createElement("button");
+    b.className = state.types.has(t) ? "on" : "";
+    b.innerHTML = `<span class="dot" style="background:${COLORS[t]}"></span>${TYPE_LABEL[t]}${counts ? " " + counts[t] : ""}`;
+    b.onclick = () => { state.types.has(t) ? state.types.delete(t) : state.types.add(t); render(); };
+    seg.appendChild(b);
+  }
+}
+function renderLegend(counts) {
+  document.getElementById("legend").innerHTML =
+    TYPES.map(t => `<div><span class="dot" style="background:${COLORS[t]}"></span>${t} <b>${counts[t]}</b></div>`).join("") +
+    `<div class="updated-tag">Oppdatert ${esc(DATA.updatedLocal || "")}${NOGEO.length ? ` · <a href="#" onclick="openNogeo();return false" style="color:var(--blue)">${NOGEO.length} uten kartfeste</a>` : ""}</div>`;
+  document.getElementById("updatedTag").textContent = `${DATA.cases.length} saker · oppdatert ${DATA.updatedLocal || "?"}`;
+}
+function newsCases(days) {
+  const cutoff = isoDaysAgo(days);
+  const fresh = [], active = [];
+  for (const c of DATA.cases) {
+    if (!c.lastDate) continue;
+    if (c.firstDate && c.firstDate >= cutoff) fresh.push(c);
+    else if (c.lastDate >= cutoff) active.push(c);
+  }
+  const byDate = (a, b) => (b.lastDate || "").localeCompare(a.lastDate || "");
+  return { fresh: fresh.sort(byDate), active: active.sort(byDate) };
+}
+function refreshBadges() {
+  const n = followUpdates().length;
+  const fb = document.getElementById("followBubble");
+  fb.style.display = n ? "flex" : "none";
+  fb.textContent = n;
+  const nn = newsCases(7).fresh.length;
+  const nb = document.getElementById("newsBubble");
+  nb.style.display = nn ? "flex" : "none";
+  nb.textContent = nn;
+}
+
+/* ---------------- Panel ---------------- */
+const panel = document.getElementById("panel");
+function openPanel(title, sub, bodyHtml, followPoi) {
+  document.getElementById("panelTitle").textContent = title;
+  document.getElementById("panelSub").innerHTML = sub;
+  document.getElementById("panelBody").innerHTML = bodyHtml;
+  const fb = document.getElementById("panelFollow");
+  if (followPoi) {
+    fb.style.display = "flex";
+    const upd = () => {
+      const on = isFollowedAddr(followPoi.label);
+      fb.textContent = on ? "★" : "☆";
+      fb.className = "headbtn" + (on ? " on" : "");
+      fb.title = on ? "Slutt å følge adressen" : "Følg adressen – varsles ved nye saker/dokumenter";
+    };
+    upd();
+    fb.onclick = () => { toggleFollowAddr(followPoi); upd(); render(); };
+  } else {
+    fb.style.display = "none";
+  }
+  panel.classList.add("open");
+  panel.style.setProperty("--sheet", "60dvh");
+  document.getElementById("panelBody").scrollTop = 0;
+  wireCards();
+}
+function closePanel() { panel.classList.remove("open"); }
+
+function poiAi(p) {
+  const keys = Object.keys(DATA.poiSummaries || {});
+  const label = addrKey(p.label);
+  for (const k of keys) if (addrKey(k) === label) return DATA.poiSummaries[k];
+  for (const c of p.cases) for (const k of keys) {
+    if (addrKey(c.displayAddress) === addrKey(k)) return DATA.poiSummaries[k];
+  }
+  return null;
+}
+
+function openPoi(p) {
+  const vis = p.cases.filter(caseVisible);
+  const show = vis.length ? vis : p.cases;
+  const ai = poiAi(p);
+  let html = "";
+  if (ai) html += `<div class="ai-box"><h3>Analyse</h3><p>${esc(ai.text)}</p>${ai.updated ? `<div class="stamp">Oppdatert ${esc(ai.updated)}</div>` : ""}</div>`;
+  html += show.map(caseCard).join("");
+  if (!vis.length) html = `<div class="listnote">Ingen saker innenfor filtrene – viser alle på punktet.</div>` + html;
+  const mtr = p.cases.find(c => c.matrikkel)?.matrikkel;
+  openPanel(p.label, `${show.length} sak${show.length > 1 ? "er" : ""}${mtr ? " · gnr/bnr " + esc(mtr) : ""}`, html, p);
+  markSeenAddr(p);
+}
+
+function openFollowList() {
+  refreshBadges();
+  const fa = store.addrs.read();
+  const followedAddrs = Object.values(fa);
+  const fc = store.cases.read();
+  const followedCases = DATA.cases.filter(c => fc[c.casenr]);
+  const updates = followUpdates();
+  const addrUpd = new Set(updates.filter(u => u.kind === "addr").map(u => addrKey(u.label)));
+  const caseUpd = new Set(updates.filter(u => u.kind === "case").map(u => u.c.casenr));
+
+  let html = emailBox();
+  html += `<div class="sectionlabel">Adresser du følger (${followedAddrs.length})</div>`;
+  html += followedAddrs.length ? followedAddrs.map(a => `
+    <div class="addrrow" data-addr="${esc(a.label)}">
+      <span>📍</span>
+      <div><div class="a-name">${esc(a.label)} ${addrUpd.has(addrKey(a.label)) ? '<span class="newbadge">NYTT</span>' : ""}</div>
+      <div class="a-sub">${a.n || 0} sak(er)${a.lastDate ? " · sist aktivitet " + fmtDate(a.lastDate) : ""}</div></div>
+      <button class="unfollow" data-unfollow="${esc(a.label)}">Fjern</button>
+    </div>`).join("")
+    : `<div class="listnote">Ingen fulgte adresser. Åpne en adresse i kartet og trykk ☆ øverst i panelet.</div>`;
+
+  html += `<div class="sectionlabel">Enkeltsaker du følger (${followedCases.length})</div>`;
+  html += followedCases.length ? followedCases.map(caseCard).join("")
+    : `<div class="listnote">Ingen fulgte saker. Trykk ☆ på en sak.</div>`;
+
+  openPanel("Følger og varsling", "Varsles i appen – og på e-post om aktivert", html);
+  document.querySelectorAll("#panelBody .addrrow").forEach(r => {
+    r.addEventListener("click", e => {
+      if (e.target.closest(".unfollow")) return;
+      const p = POIS.find(p => addrKey(p.label) === addrKey(r.dataset.addr));
+      if (p) { flyToPoi(p); }
+    });
+  });
+  document.querySelectorAll("#panelBody [data-unfollow]").forEach(b => {
+    b.addEventListener("click", () => {
+      const f = store.addrs.read();
+      delete f[addrKey(b.dataset.unfollow)];
+      store.addrs.write(f);
+      openFollowList();
+      render();
+    });
+  });
+  wireEmailBox();
+}
+
+function openNews() {
+  refreshBadges();
+  const day = newsCases(1), week = newsCases(7);
+  const seg = (id, label, n) => `<button data-days="${id}">${label} (${n})</button>`;
+  let html = `<div class="seg" id="newsSeg" style="margin:6px 0 12px">${seg(1, "Siste døgn", day.fresh.length)}${seg(7, "Siste uke", week.fresh.length)}${seg(30, "Siste 30 dager", newsCases(30).fresh.length)}</div><div id="newsBody"></div>`;
+  openPanel("Nye saker", "Nye saker og ny aktivitet på Flekkerøy", html);
+  const body = document.getElementById("newsBody");
+  const draw = days => {
+    const { fresh, active } = newsCases(days);
+    body.innerHTML =
+      `<div class="sectionlabel">Nye saker (${fresh.length})</div>` +
+      (fresh.length ? fresh.map(caseCard).join("") : `<div class="listnote">Ingen nye saker i perioden.</div>`) +
+      `<div class="sectionlabel">Ny aktivitet i eksisterende saker (${active.length})</div>` +
+      (active.length ? active.map(caseCard).join("") : `<div class="listnote">Ingen aktivitet i perioden.</div>`);
+    document.querySelectorAll("#newsSeg button").forEach(b =>
+      b.className = parseInt(b.dataset.days, 10) === days ? "on" : "");
+    wireCards();
+  };
+  document.querySelectorAll("#newsSeg button").forEach(b =>
+    b.addEventListener("click", () => draw(parseInt(b.dataset.days, 10))));
+  draw(7);
+}
+
+function openNogeo() {
+  openPanel("Uten kartfeste", `${NOGEO.length} saker som ikke kunne plasseres på kartet`, NOGEO.filter(caseVisible).map(caseCard).join(""));
+}
+
+/* ---------------- E-postvarsling ---------------- */
+function emailBox() {
+  const email = store.email.get();
+  const followedAddrs = Object.values(store.addrs.read()).map(a => a.label);
+  return `<div class="formbox">
+    <h4>�may E-postvarsling</h4>
+    <p>Få e-post når adresser du følger får nye saker eller dokumenter. Registrer e-posten din – adressene over følger med.</p>
+    <div class="formrow">
+      <input id="emailInput" type="email" placeholder="din@epost.no" value="${esc(email)}">
+      <button class="btn" id="emailSubmit">Aktiver</button>
+    </div>
+    <div class="formrow" style="margin-top:8px">
+      <button class="btn sec" id="emailShow" style="flex:1">Vis mine varslinger</button>
+      <button class="btn sec" id="emailStop" style="flex:1">Stopp alle</button>
+    </div>
+    <div class="formmsg" id="emailMsg">${CFG.apiBase ? "" : "⚠️ Varslings-API er ikke konfigurert ennå – innstillingen lagres lokalt og aktiveres når APIet er på plass (se README)."}</div>
+    <div id="emailList"></div>
+  </div>`.replace("�may", "📮");
+}
+function wireEmailBox() {
+  const msg = document.getElementById("emailMsg");
+  const input = document.getElementById("emailInput");
+  const setMsg = (t, cls) => { msg.textContent = t; msg.className = "formmsg " + (cls || ""); };
+  const api = async (path, opts) => {
+    const r = await fetch(CFG.apiBase.replace(/\/$/, "") + path, {
+      headers: { "Content-Type": "application/json" }, ...opts,
+    });
+    if (!r.ok) throw new Error(await r.text() || r.status);
+    return r.json();
+  };
+  document.getElementById("emailSubmit").onclick = async () => {
+    const email = input.value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setMsg("Ugyldig e-postadresse.", "err");
+    const addresses = Object.values(store.addrs.read()).map(a => a.label);
+    if (!addresses.length) return setMsg("Følg minst én adresse først (☆ på en adresse i kartet).", "err");
+    store.email.set(email);
+    if (!CFG.apiBase) return setMsg("Lagret lokalt. E-postvarsling aktiveres når varslings-APIet er satt opp.", "ok");
+    try {
+      await api("/subscribe", { method: "POST", body: JSON.stringify({ email, addresses }) });
+      setMsg(`Aktivert! ${addresses.length} adresse(r) er registrert for ${email}.`, "ok");
+    } catch (e) { setMsg("Feil ved registrering: " + e.message, "err"); }
+  };
+  document.getElementById("emailShow").onclick = async () => {
+    const email = input.value.trim().toLowerCase();
+    if (!email) return setMsg("Skriv inn e-postadressen din først.", "err");
+    store.email.set(email);
+    const list = document.getElementById("emailList");
+    if (!CFG.apiBase) {
+      const local = Object.values(store.addrs.read()).map(a => a.label);
+      list.innerHTML = local.length ? `<p style="font-size:12.5px;margin-top:8px">Lokalt lagret (ikke aktivert): ${local.map(esc).join(", ")}</p>` : "";
+      return setMsg("APIet er ikke satt opp – viser lokal liste.", "");
+    }
+    try {
+      const res = await api("/subscriptions?email=" + encodeURIComponent(email));
+      list.innerHTML = (res.addresses || []).length
+        ? `<p style="font-size:12.5px;margin-top:8px"><b>Registrerte varslinger:</b> ${res.addresses.map(esc).join(", ")}</p>`
+        : `<p style="font-size:12.5px;margin-top:8px">Ingen registrerte varslinger for ${esc(email)}.</p>`;
+      setMsg("", "");
+    } catch (e) { setMsg("Feil ved henting: " + e.message, "err"); }
+  };
+  document.getElementById("emailStop").onclick = async () => {
+    const email = input.value.trim().toLowerCase();
+    if (!email) return setMsg("Skriv inn e-postadressen din først.", "err");
+    if (!CFG.apiBase) return setMsg("APIet er ikke satt opp ennå.", "");
+    try {
+      await api("/unsubscribe", { method: "POST", body: JSON.stringify({ email }) });
+      document.getElementById("emailList").innerHTML = "";
+      setMsg("Alle varslinger for " + email + " er stoppet.", "ok");
+    } catch (e) { setMsg("Feil: " + e.message, "err"); }
+  };
+}
+
+/* ---------------- Sakskort ---------------- */
+function caseCard(c) {
+  const caseUpd = new Set(followUpdates().filter(u => u.kind === "case").map(u => u.c.casenr));
+  const range = c.firstDate ? (fmtMonth(c.firstDate) === fmtMonth(c.lastDate) ? fmtMonth(c.firstDate) : `${fmtMonth(c.firstDate)} – ${fmtMonth(c.lastDate)}`) : "";
+  const docs = (c.documents || []).map(d => {
+    const files = (d.files || []).map(f =>
+      `<a class="filechip" href="${esc(f.url)}" data-name="${esc(f.name)}" onclick="return openFile(this)">📄 ${esc(f.name)}</a>`).join("");
+    return `<div class="doc ${d.date ? "dated" : ""}">
+      ${d.date ? `<div class="d-date">${fmtDate(d.date)}</div>` : ""}
+      <div class="d-title">${esc(cleanDocTitle(d.title, c))}</div>
+      <div class="d-meta">${esc(d.type)}${d.from ? " · fra " + esc(d.from) : ""}${d.to ? " · til " + esc(d.to) : ""}</div>
+      ${files}</div>`;
+  }).join("");
+  const summary = c.aiSummary ? (c.aiSummary.text || c.aiSummary) : c.summary;
+  return `<div class="case" data-nr="${esc(c.casenr)}">
+    <div class="case-head">
+      <div class="case-top">
+        <span class="statusdot" style="background:${statusColor(c.status)}"></span>
+        <span class="status-txt">${esc(c.status)}</span>
+        <span class="pill ${c.type}">${c.type}</span>
+        ${caseUpd.has(c.casenr) ? '<span class="newbadge">NYTT</span>' : ""}
+        <span class="case-date">${range}</span>
+        <button class="followbtn ${isFollowedCase(c.casenr) ? "on" : ""}" data-follow="${esc(c.casenr)}" title="Følg saken">${isFollowedCase(c.casenr) ? "★" : "☆"}</button>
+      </div>
+      <div class="case-desc">${esc(caseDesc(c))}</div>
+      <div class="case-addr">${esc(c.displayAddress || "")}${c.displayAddress ? " · " : ""}${esc(c.casenr)}</div>
+    </div>
+    <div class="case-body">
+      <div class="summary">${c.aiSummary ? "🧠 " : ""}${esc(summary)}</div>
+      <div class="meta">${c.saksbehandler ? "Saksbehandler: " + esc(c.saksbehandler) + "<br>" : ""}${(c.documents || []).length} dokument(er)${c.matrikkel ? " · gnr/bnr " + esc(c.matrikkel) : ""}</div>
+      ${docs ? `<div class="tl">${docs}</div>` : '<div class="listnote">Ingen offentlig tilgjengelige dokumenter.</div>'}
+      <a class="extlink" href="${esc(c.url)}" target="_blank" rel="noopener">Åpne i kommunens innsynsløsning ↗</a>
+    </div>
+  </div>`;
+}
+
+function wireCards() {
+  document.querySelectorAll("#panelBody .case-head").forEach(h => {
+    if (h.dataset.wired) return;
+    h.dataset.wired = "1";
+    h.addEventListener("click", e => {
+      if (e.target.closest(".followbtn")) return;
+      const card = h.parentElement;
+      card.classList.toggle("open");
+      if (card.classList.contains("open")) {
+        const c = DATA.cases.find(x => x.casenr === card.dataset.nr);
+        if (c) markSeenCase(c);
+      }
+    });
+  });
+  document.querySelectorAll("#panelBody .followbtn").forEach(b => {
+    if (b.dataset.wired) return;
+    b.dataset.wired = "1";
+    b.addEventListener("click", () => {
+      const c = DATA.cases.find(x => x.casenr === b.dataset.follow);
+      if (!c) return;
+      toggleFollowCase(c);
+      b.classList.toggle("on");
+      b.textContent = b.classList.contains("on") ? "★" : "☆";
+      render();
+    });
+  });
+}
+
+/* ---------------- Varsler (toasts) ---------------- */
+function showToasts() {
+  const ups = followUpdates();
+  refreshBadges();
+  const box = document.getElementById("toasts");
+  for (const u of ups.slice(0, 4)) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    const sub = u.kind === "addr"
+      ? (u.newCases ? `${u.newCases} ny(e) sak(er) på adressen` : "Ny aktivitet på adressen")
+      : `${u.newDocs ? u.newDocs + " nye dokumenter" : "Ny aktivitet"} · ${esc(u.c.casenr)}`;
+    t.innerHTML = `<span class="emoji">🔔</span><div><div class="t-title">${esc(u.label)}</div>
+      <div class="t-sub">${sub}</div></div><span class="t-x">✕</span>`;
+    t.querySelector(".t-x").onclick = e => { e.stopPropagation(); t.remove(); };
+    t.onclick = () => {
+      t.remove();
+      if (u.kind === "addr") flyToPoi(u.p);
+      else focusCase(u.c);
+    };
+    box.appendChild(t);
+    setTimeout(() => t.remove(), 14000);
+  }
+  if (ups.length && "Notification" in window && Notification.permission === "granted" && document.hidden) {
+    new Notification("Byggesaker Flekkerøy", {
+      body: ups.map(u => `${u.label}: ny aktivitet`).join("\n"),
+    });
+  }
+}
+function flyToPoi(p) {
+  map.flyTo(p.latlon, Math.max(map.getZoom(), 16), { duration: 0.8 });
+  setTimeout(() => openPoi(p), 850);
+}
+function focusCase(c) {
+  if (!c.latlon) { openNogeo(); return; }
+  const p = POIS.find(p => p.cases.includes(c));
+  if (!p) return;
+  map.flyTo(c.latlon, 17, { duration: 0.8 });
+  setTimeout(() => {
+    openPoi(p);
+    const card = document.querySelector(`.case[data-nr="${CSS.escape(c.casenr)}"]`);
+    if (card) { card.classList.add("open"); card.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  }, 850);
+}
+
+/* ---------------- Søk med forslag og kart-flytting ---------------- */
+const suggest = document.getElementById("suggest");
+let selIdx = -1;
+function searchMatches(q) {
+  q = q.toLowerCase().trim();
+  if (q.length < 2) return [];
+  const out = [];
+  for (const p of POIS) {
+    const l = p.label.toLowerCase();
+    if (l.startsWith(q) || l.includes(" " + q)) out.push({ p, score: l.startsWith(q) ? 0 : 1 });
+  }
+  const nr = DATA.cases.find(c => c.casenr.toLowerCase().includes(q) && c.latlon);
+  out.sort((a, b) => a.score - b.score || a.p.label.localeCompare(b.p.label));
+  const res = out.slice(0, 6).map(o => ({ type: "addr", p: o.p, label: o.p.label, sub: `${o.p.cases.length} sak(er)` }));
+  if (nr) res.unshift({ type: "case", c: nr, label: nr.casenr, sub: nr.displayAddress || "" });
+  return res.slice(0, 6);
+}
+function drawSuggest(items) {
+  selIdx = -1;
+  if (!items.length) { suggest.style.display = "none"; suggest.innerHTML = ""; return; }
+  suggest.innerHTML = items.map((it, i) =>
+    `<button data-i="${i}">${esc(it.label)} <span class="s-sub">${esc(it.sub)}</span></button>`).join("");
+  suggest.style.display = "block";
+  suggest.querySelectorAll("button").forEach(b => b.onclick = () => pickSuggest(items[parseInt(b.dataset.i, 10)]));
+  suggest._items = items;
+}
+function pickSuggest(it) {
+  suggest.style.display = "none";
+  document.getElementById("q").value = it.label;
+  state.q = "";
+  render();
+  if (it.type === "addr") flyToPoi(it.p);
+  else focusCase(it.c);
+}
+const qInput = document.getElementById("q");
+let qT;
+qInput.addEventListener("input", () => {
+  clearTimeout(qT);
+  qT = setTimeout(() => {
+    state.q = qInput.value.toLowerCase().trim();
+    render();
+    drawSuggest(searchMatches(qInput.value));
+  }, 160);
+});
+qInput.addEventListener("keydown", e => {
+  const items = suggest._items || [];
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (!items.length) return;
+    selIdx = (selIdx + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+    suggest.querySelectorAll("button").forEach((b, i) => b.classList.toggle("sel", i === selIdx));
+  } else if (e.key === "Enter") {
+    if (items.length) pickSuggest(items[Math.max(selIdx, 0)]);
+  } else if (e.key === "Escape") {
+    suggest.style.display = "none";
+  }
+});
+document.addEventListener("click", e => { if (!e.target.closest(".searchwrap")) suggest.style.display = "none"; });
+
+/* ---------------- PDF/bilde-viser ---------------- */
+function proxyUrl(url) {
+  if (CFG.pdfProxy) return CFG.pdfProxy + "?url=" + encodeURIComponent(url);
+  if (IS_LOCAL) return "/pdfproxy?url=" + encodeURIComponent(url);
+  return null;
+}
+let pdfjsReady = null;
+function loadPdfJs() {
+  if (pdfjsReady) return pdfjsReady;
+  pdfjsReady = new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      res(window.pdfjsLib);
+    };
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  return pdfjsReady;
+}
+function openFile(a) {
+  const url = a.getAttribute("href");
+  const name = a.dataset.name || "Dokument";
+  if (!IS_HTTP || !proxyUrl(url)) { window.open(url, "_blank"); return false; }
+  showViewer(url, name);
+  return false;
+}
+async function showViewer(url, name) {
+  const v = document.getElementById("viewer");
+  const body = document.getElementById("viewerBody");
+  document.getElementById("viewerTitle").textContent = name;
+  document.getElementById("viewerExt").href = url;
+  body.innerHTML = '<div id="viewerMsg">Laster dokument …</div>';
+  v.classList.add("open");
+  const proxied = proxyUrl(url);
+  const isImg = /\.(jpe?g|png|gif|webp|bmp)(\?|$)/i.test(url);
+  try {
+    if (isImg) { body.innerHTML = `<img src="${esc(proxied)}" alt="${esc(name)}">`; return; }
+    const pdfjs = await loadPdfJs();
+    const pdf = await pdfjs.getDocument({ url: proxied }).promise;
+    body.innerHTML = "";
+    const width = Math.min(document.documentElement.clientWidth - 24, 900);
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const base = page.getViewport({ scale: 1 });
+      const scale = width / base.width;
+      const vp = page.getViewport({ scale: scale * (window.devicePixelRatio || 1) });
+      const canvas = document.createElement("canvas");
+      canvas.width = vp.width; canvas.height = vp.height;
+      canvas.style.width = width + "px";
+      body.appendChild(canvas);
+      await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+    }
+  } catch (err) {
+    body.innerHTML = `<div id="viewerMsg">Kunne ikke vise dokumentet her (${esc(String(err.message || err))}).<br><br>
+      <a href="${esc(url)}" target="_blank" rel="noopener" style="color:#6db2ff">Åpne i egen fane i stedet ↗</a></div>`;
+  }
+}
+function closeViewer() {
+  document.getElementById("viewer").classList.remove("open");
+  document.getElementById("viewerBody").innerHTML = "";
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(); });
+
+/* ---------------- Bunnark-drag (mobil) ---------------- */
+(function () {
+  const grip = document.getElementById("grip");
+  let startY = 0, startH = 0, dragging = false;
+  grip.addEventListener("pointerdown", e => {
+    dragging = true; startY = e.clientY;
+    startH = window.innerHeight - panel.getBoundingClientRect().top;
+    grip.setPointerCapture(e.pointerId);
+    panel.style.transition = "none";
+  });
+  grip.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const h = Math.min(Math.max(startH + (startY - e.clientY), 90), window.innerHeight * 0.88);
+    panel.style.setProperty("--sheet", (h / window.innerHeight * 100) + "dvh");
+  });
+  grip.addEventListener("pointerup", () => {
+    dragging = false;
+    panel.style.transition = "";
+    const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
+    if (frac < 0.25) closePanel();
+    else if (frac < 0.7) panel.style.setProperty("--sheet", "55dvh");
+    else panel.style.setProperty("--sheet", "88dvh");
+  });
+})();
+
+/* ---------------- Automatisk datalast ---------------- */
+async function refreshData() {
+  if (!IS_HTTP) return;
+  try {
+    const r = await fetch("data/cases.json", { cache: "no-store" });
+    if (!r.ok) return;
+    const fresh = await r.json();
+    if (fresh.updated !== DATA.updated) {
+      DATA = fresh;
+      POIS = buildPois();
+      NOGEO = DATA.cases.filter(c => !c.latlon);
+      render();
+      showToasts();
+    }
+  } catch { /* offline er greit */ }
+}
+setInterval(refreshData, 5 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshData(); });
+
+/* ---------------- Kontroller ---------------- */
+document.getElementById("yearSel").onchange = e => { state.years = parseInt(e.target.value, 10); render(); };
+document.getElementById("followBtn").onclick = () => {
+  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+  openFollowList();
+};
+document.getElementById("newsBtn").onclick = openNews;
+
+render();
+showToasts();
+</script>
+</body>
+</html>

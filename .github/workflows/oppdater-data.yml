@@ -1,0 +1,49 @@
+name: Oppdater byggesaksdata
+
+on:
+  schedule:
+    - cron: "0 4 * * *"   # 04:00 UTC ≈ 06:00 norsk tid, hver dag
+  workflow_dispatch: {}    # manuell kjøring fra Actions-fanen
+
+permissions:
+  contents: write
+
+concurrency:
+  group: oppdater-data
+  cancel-in-progress: false
+
+jobs:
+  oppdater:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ta vare på forrige datasett (for varsling)
+        run: cp data/cases.json /tmp/forrige_cases.json || true
+
+      - name: Hent oppdaterte saksdata
+        run: python -X utf8 oppdater_data.py
+
+      - name: Send e-postvarsler (hoppes over uten secrets)
+        if: ${{ always() }}
+        env:
+          VARSLER_API_URL: ${{ secrets.VARSLER_API_URL }}
+          VARSLER_API_SECRET: ${{ secrets.VARSLER_API_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          VARSLER_FRA: ${{ secrets.VARSLER_FRA }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          PREV_CASES: /tmp/forrige_cases.json
+        run: python -X utf8 send_varsler.py
+        continue-on-error: true
+
+      - name: Commit og push oppdaterte data
+        run: |
+          git config user.name "byggesak-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/cases.json data/cases.js data/adresser_4625.json
+          git diff --cached --quiet || git commit -m "Automatisk dataoppdatering $(date -u +%Y-%m-%d)"
+          git push

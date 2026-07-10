@@ -1,0 +1,30 @@
+{
+  "pois": {
+    "Skibbuveien 2B": {
+      "updated": "10.07.2026",
+      "text": "Eiendommen (gnr/bnr 2/122, tidligere også 2/218) har en sammenhengende sakshistorikk fra 2021 til i dag, sentrert rundt sjøboden («skibbua») og kulturmiljøet ved sjøen.\n\n2021: Tiltakshaver søkte om dispensasjon for kombinert bruk/bruksendring av sjøboden (BYGG-21/01845). Etter flere runder med mangelbrev ble dispensasjon for kombinert bruk godkjent.\n\n2024: Matrikkelenhetene 2/218 og 2/122 ble slått sammen (OPPM-24/00160). Samme år ble det søkt om påbygg/kvist og fasadeendring på boligen (BYGG-24/02226). Byantikvaren uttalte seg, tillatelse ble gitt – men etter en endringssøknad utstedte kommunen stoppordre med øyeblikkelig virkning (takopplett/fasadeendring og fjerning av stein i grunnmur). Etter stedlig tilsyn ble saken avsluttet; Statsforvalteren i Agder har senere vært involvert i etterspillet.\n\n2025: Kommunen opprettet ulovlighetssak (ULOV-25/03127) etter riving av skibbua og sprengning av terreng – saken har ingen offentlige dokumenter. Parallelt søkte tiltakshaver om riving og oppføring av ny bod med utgravd kjeller (BYGG-25/03544). Saken utløste en rekke naboinnsigelser, uttalelser fra byantikvaren og Statsforvalteren, og gikk til politisk behandling (ARMU sak 84/26) med befaring 07.05.2026. Etter det politiske vedtaket har kommunen bedt om ny søknad med fasader tilpasset kulturmiljøet.\n\n2026: Ny søknad om rammetillatelse for gjenoppbygging av sjøboden (BYGG-26/02123) er sendt inn av tiltakshaver selv, etter at arkitektfirmaet trakk seg som ansvarlig søker.\n\nMønster: Gjentatt friksjon mellom tiltakshavers byggeplaner og hensynet til kulturmiljøet, med aktiv nabomotstand, én stoppordre, én ulovlighetssak og politisk behandling. Sakskomplekset er fortsatt åpent – gjenoppbyggingen av sjøboden er ikke endelig avgjort."
+    }
+  },
+  "cases": {
+    "BYGG-21/01845": {
+      "updated": "10.07.2026",
+      "text": "Søknad om dispensasjon for kombinert bruk/bruksendring av sjøboden på daværende 2/218. Prosessen krevde flere runder med tilleggsdokumentasjon (mangelbrev), men endte med at kommunen godkjente dispensasjon for kombinert bruk av sjøboden (vedtaksbrev, dok. 9). Avsluttet med positivt vedtak."
+    },
+    "BYGG-24/02226": {
+      "updated": "10.07.2026",
+      "text": "Søknad via ansvarlig søker (Flatnes Bygg Consult) om påbygg/kvist og fasadeendring, inkl. dispensasjon for kvist og kjellerdør. Byantikvaren og Parkvesenet uttalte seg; tillatelse ble gitt og senere endret etter endringssøknad. Kommunen utstedte deretter stoppordre med øyeblikkelig virkning for takopplett/fasadeendring og fjerning av stein i grunnmur, og gjennomførte stedlig tilsyn. Etter avklaringer og en nabohenvendelse ble saken avsluttet hos kommunen; siste dokument er korrespondanse fra Statsforvalteren i Agder (2026), som tyder på et klage-/tilsynsetterspill."
+    },
+    "ULOV-25/03127": {
+      "updated": "10.07.2026",
+      "text": "Ulovlighetssak opprettet etter riving av skibbua (sjøboden) og sprengning av terreng. Ingen dokumenter er offentlig tilgjengelige, så utfallet kan ikke leses direkte – men saken viser at kommunen fulgte opp rivingen/terrenginngrepet som mulig ulovlighet. Må ses i sammenheng med BYGG-25/03544 og BYGG-26/02123 (søknadene om ny bod/gjenoppbygging i etterkant)."
+    },
+    "BYGG-25/03544": {
+      "updated": "10.07.2026",
+      "text": "Søknad om riving av eksisterende sjøbod og oppføring av ny bod med utgravd kjeller, samt sprengning og tilbakeføring av terreng. Sterkt omstridt: nabo har levert en rekke merknader og tilsvar, byantikvaren og Statsforvalteren i Agder har uttalt seg, og saken gikk til politisk behandling (ARMU sak 84/26) med befaring 07.05.2026. Etter det politiske vedtaket har kommunen bedt om ny søknad med fasader tilpasset kulturmiljøet – prosessen er ikke avsluttet."
+    },
+    "BYGG-26/02123": {
+      "updated": "10.07.2026",
+      "text": "Ny søknad om rammetillatelse for gjenoppbygging av sjøboden, sendt inn av tiltakshaver selv etter at arkitektfirmaet meldte fra at de ikke lenger er ansvarlig søker. Saken er i startfasen (kun to offentlige dokumenter) og henger direkte sammen med ulovlighetssaken ULOV-25/03127 og den politisk behandlede BYGG-25/03544."
+    }
+  }
+}
