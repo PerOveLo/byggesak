@@ -117,7 +117,32 @@
     border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
   }
-  @media (max-width: 760px) { .iconbtn .lbl { display: none; } }
+  .only-mobile { display: none !important; }
+  @media (max-width: 760px) {
+    .iconbtn .lbl { display: none; }
+    .only-mobile { display: flex !important; }
+    .m-hide { display: none !important; }
+    #filterWrap { display: none !important; }
+    .topbar { gap: 8px; padding: 8px 12px; }
+    .brand h1 { font-size: 15px; }
+    .brand span { display: none; }
+  }
+  #menuSheet {
+    position: fixed; top: calc(env(safe-area-inset-top, 0px) + 68px); left: 10px; right: 10px; z-index: 1500;
+    display: none; flex-direction: column; gap: 12px; padding: 14px;
+    border-radius: 22px; background: var(--glass-strong);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); box-shadow: var(--shadow), var(--glass-inset);
+  }
+  #menuSheet.open { display: flex; }
+  #menuControls { display: flex; flex-direction: column; gap: 10px; }
+  #menuControls .seg { flex-wrap: wrap; width: 100%; }
+  .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .menu-item { display: flex; align-items: center; gap: 8px; padding: 13px 14px; border-radius: 14px;
+    background: var(--card); font-weight: 600; font-size: 14px; border: 0.5px solid var(--glass-border); }
+  .menu-item:active { transform: scale(.97); }
+  .mbadge { margin-left: auto; background: var(--red); color: #fff; font-size: 11px; font-weight: 700;
+    border-radius: 999px; padding: 2px 7px; display: none; }
   .vizbo { display: flex; align-items: center; margin-left: auto; padding: 0 4px; opacity: .92; transition: opacity .15s; }
   .vizbo:hover { opacity: 1; }
   .vizbo img { height: 30px; display: block; }
@@ -143,13 +168,17 @@
   }
   @media (max-width: 760px) {
     #panel {
-      left: 0; right: 0; bottom: 0; height: 88dvh;
+      left: 0; right: 0; bottom: 0; height: 92dvh;
       border-radius: 26px 26px 0 0; border-top: 1px solid var(--glass-border);
       transform: translateY(100%);
+      background: rgba(238, 241, 246, .94);
     }
     #panel.open { transform: translateY(calc(100% - var(--sheet, 60dvh))); }
-    .sheet-grip { width: 40px; height: 5px; border-radius: 3px; background: var(--ink3);
-      margin: 8px auto 2px; flex-shrink: 0; }
+    .sheet-grip { width: 60px; height: 6px; border-radius: 3px; background: var(--ink3);
+      margin: 10px auto 4px; flex-shrink: 0; }
+    #panelHead { touch-action: none; cursor: grab; }
+    .barrow .b-track { background: rgba(120,120,128,.22); }
+    .barrow { padding: 5px 0; }
   }
   #panelHead { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px 8px; }
   #panelHead .titles { flex: 1; min-width: 0; }
@@ -189,6 +218,9 @@
   }
   @media (prefers-color-scheme: dark) {
     .case { box-shadow: 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1); }
+  }
+  @media (max-width: 760px) and (prefers-color-scheme: dark) {
+    #panel { background: rgba(16, 16, 20, .94); }
   }
   .case-head { padding: 12px 14px 11px; cursor: pointer; }
   .case-head:active { background: var(--fill); }
@@ -381,10 +413,12 @@
     <h1>Byggesaker Kristiansand</h1>
     <span id="updatedTag">–</span>
   </div>
+  <button class="iconbtn only-mobile" id="menuBtn" title="Meny">☰<span class="bubble" id="menuBubble" style="display:none">0</span></button>
   <div class="searchwrap">
     <input id="q" type="search" placeholder="Søk adresse, saksnummer …" autocomplete="off">
     <div id="suggest"></div>
   </div>
+  <span id="filterWrap" style="display:contents">
   <div class="seg" id="typeSeg"></div>
   <select class="pill" id="yearSel" title="Tidsrom">
     <option value="0">Alle år</option>
@@ -393,13 +427,25 @@
     <option value="5" selected>Siste 5 år</option>
     <option value="10">Siste 10 år</option>
   </select>
+  </span>
   <button class="iconbtn" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
-  <button class="iconbtn" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
-  <button class="iconbtn" id="regBtn" title="Reguleringsplaner">📐<span class="lbl">Regulering</span></button>
-  <button class="iconbtn" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
-  <button class="iconbtn" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
-  <a class="vizbo" href="https://vizbo.no" target="_blank" rel="noopener" title="Levert av Vizbo"><img src="vizbo-logo.png" alt="Vizbo"></a>
+  <button class="iconbtn m-hide" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
+  <button class="iconbtn m-hide" id="regBtn" title="Reguleringsplaner">📐<span class="lbl">Regulering</span></button>
+  <button class="iconbtn m-hide" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
+  <button class="iconbtn m-hide" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
+  <a class="vizbo m-hide" href="https://vizbo.no" target="_blank" rel="noopener" title="Levert av Vizbo"><img src="vizbo-logo.png" alt="Vizbo"></a>
 </header>
+
+<div id="menuSheet">
+  <div id="menuControls"></div>
+  <div class="menu-grid">
+    <button class="menu-item" data-menu="nytt">🕐 Nytt <span class="mbadge" id="mbNytt"></span></button>
+    <button class="menu-item" data-menu="regulering">📐 Regulering</button>
+    <button class="menu-item" data-menu="statistikk">📊 Statistikk</button>
+    <button class="menu-item" data-menu="folger">★ Følger <span class="mbadge" id="mbFolger"></span></button>
+  </div>
+  <div class="listnote" style="padding:0"><a href="personvern.html" style="color:var(--blue)">Personvern</a> · Levert av <a href="https://vizbo.no" style="color:var(--blue)">Vizbo</a></div>
+</div>
 
 <aside id="panel">
   <div class="sheet-grip" id="grip"></div>
@@ -837,6 +883,11 @@ function refreshBadges() {
   const nb = document.getElementById("newsBubble");
   nb.style.display = nn ? "flex" : "none";
   nb.textContent = nn;
+  const mb = document.getElementById("menuBubble");
+  if (mb) { const tot = n + nn; mb.style.display = tot ? "flex" : "none"; mb.textContent = tot; }
+  const mbN = document.getElementById("mbNytt"), mbF = document.getElementById("mbFolger");
+  if (mbN) { mbN.style.display = nn ? "inline-block" : "none"; mbN.textContent = nn; }
+  if (mbF) { mbF.style.display = n ? "inline-block" : "none"; mbF.textContent = n; }
 }
 
 /* ---------------- Panel ---------------- */
@@ -910,6 +961,42 @@ function renderPoi(p) {
   fireEvent("poi", p.label);
 }
 
+function openKonto() { navOpen("konto", renderKonto); }
+function renderKonto() {
+  const sess = store.session.get();
+  let html = emailBox();
+  if (sess) {
+    html += `<div class="formrow" style="margin-top:4px">
+      <button class="btn sec" id="gdprExport" style="flex:1">⬇ Last ned mine data</button>
+      <button class="btn sec" id="gdprDelete" style="flex:1;color:var(--red)">Slett kontoen min</button>
+    </div>`;
+  }
+  html += `<div class="listnote"><a href="personvern.html" style="color:var(--blue)">Personvern og skjerming</a></div>`;
+  openPanel("Min konto", sess ? "Innstillinger, varsling og personvern" : "Logg inn eller opprett konto", html);
+  wireEmailBox();
+  const ex = document.getElementById("gdprExport");
+  if (ex) ex.onclick = async () => {
+    try {
+      const data = await api("/me/export");
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "mine-data-byggesaker.json";
+      a.click();
+    } catch (e) { alert("Feil: " + e.message); }
+  };
+  const del = document.getElementById("gdprDelete");
+  if (del) del.onclick = async () => {
+    if (!confirm("Slette kontoen og ALLE dataene dine (følgelister, notater, varsler)? Dette kan ikke angres.")) return;
+    try {
+      await api("/me/delete", { method: "POST" });
+      store.session.set(null);
+      renderAccountState();
+      closePanel();
+    } catch (e) { alert("Feil: " + e.message); }
+  };
+}
+
 function openFollowList() { navOpen("folger", renderFollowList); }
 function renderFollowList() {
   refreshBadges();
@@ -921,7 +1008,9 @@ function renderFollowList() {
   const addrUpd = new Set(updates.filter(u => u.kind === "addr").map(u => addrKey(u.label)));
   const caseUpd = new Set(updates.filter(u => u.kind === "case").map(u => u.c.casenr));
 
-  let html = emailBox();
+  let html = loggedIn() ? "" : `<div class="formbox" style="display:flex;align-items:center;gap:10px">
+    <div style="flex:1"><b>Ikke innlogget</b><div style="font-size:12px;color:var(--ink2)">Logg inn for å synke følgelistene og få varsler på e-post/push.</div></div>
+    <button class="btn" id="tilKonto">Logg inn</button></div>`;
   html += `<div class="sectionlabel">Adresser du følger (${followedAddrs.length})</div>`;
   const LVL = { alt: "Alt", vedtak: "Vedtak/ulovlighet", nye: "Kun nye saker" };
   html += followedAddrs.length ? followedAddrs.map(a => `
@@ -954,6 +1043,8 @@ function renderFollowList() {
 
   html += `<div class="listnote"><a href="personvern.html" style="color:var(--blue)">Personvern og skjerming</a></div>`;
   openPanel("Følger og varsling", "Varsles i appen – og på e-post om aktivert", html);
+  const tk = document.getElementById("tilKonto");
+  if (tk) tk.onclick = openKonto;
   document.querySelectorAll("#panelBody .addrrow").forEach(r => {
     r.addEventListener("click", e => {
       if (e.target.closest(".unfollow")) return;
@@ -993,7 +1084,6 @@ function renderFollowList() {
       if (e) { e.level = s.value; store.addrs.write(f); scheduleSync(); }
     });
   });
-  wireEmailBox();
 }
 
 function openNews() { navOpen("nytt", renderNews); }
@@ -1110,7 +1200,7 @@ function wireEmailBox() {
         store.session.set({ token: res.session, email: res.email, rolle: res.rolle, navn: res.navn || null });
         renderAccountState();
         await pullAccount();
-        renderFollowList();
+        renderKonto();
       } catch (e) { setMsg("Feil: " + e.message, "err"); }
     };
     pwLoginBtn.onclick = doLogin;
@@ -1134,7 +1224,7 @@ function wireEmailBox() {
   if (adminBtn) adminBtn.onclick = openAdmin;
 
   const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) logoutBtn.onclick = () => { store.session.set(null); renderAccountState(); renderFollowList(); };
+  if (logoutBtn) logoutBtn.onclick = () => { store.session.set(null); renderAccountState(); renderKonto(); };
 
   const weeklyChk = document.getElementById("weeklyChk");
   if (weeklyChk) weeklyChk.onchange = () => {
@@ -1854,27 +1944,45 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(
 
 /* ---------------- Bunnark-drag (mobil) ---------------- */
 (function () {
+  const head = document.getElementById("panelHead");
   const grip = document.getElementById("grip");
-  let startY = 0, startH = 0, dragging = false;
-  grip.addEventListener("pointerdown", e => {
-    dragging = true; startY = e.clientY;
+  let startY = 0, startH = 0, dragging = false, moved = false;
+  const down = e => {
+    if (e.target.closest("button, select, input, a")) return;
+    dragging = true; moved = false; startY = e.clientY;
     startH = window.innerHeight - panel.getBoundingClientRect().top;
-    grip.setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
     panel.style.transition = "none";
-  });
-  grip.addEventListener("pointermove", e => {
+  };
+  const move = e => {
     if (!dragging) return;
-    const h = Math.min(Math.max(startH + (startY - e.clientY), 90), window.innerHeight * 0.88);
+    if (Math.abs(e.clientY - startY) > 6) moved = true;
+    if (!moved) return;
+    const h = Math.min(Math.max(startH + (startY - e.clientY), 90), window.innerHeight * 0.92);
     panel.style.setProperty("--sheet", (h / window.innerHeight * 100) + "dvh");
-  });
-  grip.addEventListener("pointerup", () => {
+  };
+  const up = () => {
+    if (!dragging) return;
     dragging = false;
     panel.style.transition = "";
+    if (!moved) return;
     const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
-    if (frac < 0.25) closePanel();
-    else if (frac < 0.7) panel.style.setProperty("--sheet", "55dvh");
-    else panel.style.setProperty("--sheet", "88dvh");
-  });
+    if (frac < 0.22) closePanel();
+    else if (frac < 0.55) panel.style.setProperty("--sheet", "55dvh");
+    else panel.style.setProperty("--sheet", "92dvh");
+  };
+  for (const el of [head, grip]) {
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+  }
+  // Scroller man i innholdet mens arket er halvåpent, løftes det til fullskjerm
+  document.getElementById("panelBody").addEventListener("scroll", function () {
+    if (!IS_MOBILE_MQ.matches) return;
+    const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
+    if (frac < 0.8 && this.scrollTop > 25) panel.style.setProperty("--sheet", "92dvh");
+  }, { passive: true });
 })();
 
 /* ---------------- Automatisk datalast ---------------- */
@@ -1908,10 +2016,32 @@ document.getElementById("followBtn").onclick = () => {
   openFollowList();
 };
 document.getElementById("newsBtn").onclick = openNews;
-document.getElementById("accountBtn").onclick = () => {
-  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
-  openFollowList();
-};
+const menuSheet = document.getElementById("menuSheet");
+const IS_MOBILE_MQ = window.matchMedia("(max-width: 760px)");
+function layoutForViewport() {
+  const fw = document.getElementById("filterWrap");
+  if (IS_MOBILE_MQ.matches) {
+    document.getElementById("menuControls").appendChild(fw);
+    fw.style.display = "flex";
+    fw.style.flexDirection = "column";
+    fw.style.gap = "10px";
+  } else {
+    document.querySelector(".searchwrap").after(fw);
+    fw.style.display = "contents";
+    menuSheet.classList.remove("open");
+  }
+}
+IS_MOBILE_MQ.addEventListener("change", layoutForViewport);
+layoutForViewport();
+document.getElementById("menuBtn").onclick = () => menuSheet.classList.toggle("open");
+document.addEventListener("click", e => {
+  if (!e.target.closest("#menuSheet") && !e.target.closest("#menuBtn")) menuSheet.classList.remove("open");
+});
+document.querySelectorAll(".menu-item").forEach(b => b.addEventListener("click", () => {
+  menuSheet.classList.remove("open");
+  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList })[b.dataset.menu]();
+}));
+document.getElementById("accountBtn").onclick = openKonto;
 document.getElementById("statsBtn").onclick = openStats;
 document.getElementById("regBtn").onclick = openRegulering;
 
@@ -1930,7 +2060,7 @@ if ("serviceWorker" in navigator && IS_HTTP) {
     store.email.set(res.email);
     renderAccountState();
     await pullAccount();
-    openFollowList();
+    openKonto();
     const box = document.getElementById("toasts");
     const el = document.createElement("div");
     el.className = "toast";
