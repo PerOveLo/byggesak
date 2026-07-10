@@ -373,6 +373,7 @@
     <option value="5" selected>Siste 5 år</option>
     <option value="10">Siste 10 år</option>
   </select>
+  <button class="iconbtn" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
   <button class="iconbtn" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
   <button class="iconbtn" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
   <button class="iconbtn" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
@@ -615,6 +616,9 @@ async function pullAccount() {
 function renderAccountState() {
   const b = document.getElementById("followBtn");
   b.style.background = loggedIn() ? "linear-gradient(180deg, rgba(48,209,88,.35), rgba(48,209,88,.15))" : "";
+  const lbl = document.getElementById("accountLbl");
+  const sess = store.session.get();
+  if (lbl) lbl.textContent = sess ? sess.email.split("@")[0] : "Logg inn";
 }
 function poiState(p) {
   return { n: p.cases.length, lastDate: p.cases.map(c => c.lastDate || "").sort().pop() || null };
@@ -1264,6 +1268,27 @@ function wireCards() {
   });
 }
 
+/* ---------------- Saksliste-panel (klikkbar statistikk) ---------------- */
+let LIST_CTX = null;
+function openCaseList(title, sub, cases) {
+  LIST_CTX = { cases, shown: 0 };
+  openPanel(title, `${cases.length} sak${cases.length === 1 ? "" : "er"}${sub ? " · " + sub : ""}`,
+    `<div id="caseList"></div><div class="listnote"><button class="btn sec" id="moreBtn">Vis flere</button></div>`);
+  document.getElementById("moreBtn").onclick = listShowMore;
+  listShowMore();
+}
+function listShowMore() {
+  if (!LIST_CTX) return;
+  const el = document.getElementById("caseList");
+  const next = LIST_CTX.cases.slice(LIST_CTX.shown, LIST_CTX.shown + 50);
+  el.insertAdjacentHTML("beforeend", next.map(caseCard).join(""));
+  LIST_CTX.shown += next.length;
+  const btn = document.getElementById("moreBtn");
+  if (btn) btn.style.display = LIST_CTX.shown >= LIST_CTX.cases.length ? "none" : "";
+  wireCards();
+}
+const byActivity = (a, b) => ((b.lastDate || b.firstDate || "") + b.casenr).localeCompare((a.lastDate || a.firstDate || "") + a.casenr);
+
 /* ---------------- Statistikk ---------------- */
 function median(arr) {
   if (!arr.length) return null;
@@ -1326,27 +1351,58 @@ function openStats() {
 
   const html = `
     <div class="kpis">
-      <div class="kpi"><div class="k-val">${last12.length}</div><div class="k-lbl">nye saker siste 12 måneder</div></div>
-      <div class="kpi"><div class="k-val">${median(durations) ?? "–"}</div><div class="k-lbl">median dager fra første til siste dokument (avgjorte saker)</div></div>
-      <div class="kpi"><div class="k-val">${decided.length ? Math.round(granted / decided.length * 100) + "%" : "–"}</div><div class="k-lbl">innvilget av avgjorte søknader (${granted} av ${decided.length}, ${rejected} avslag)</div></div>
-      <div class="kpi"><div class="k-val">${aktiveUlov}</div><div class="k-lbl">åpne ulovlighetssaker</div></div>
+      <div class="kpi" data-kpi="nye12" style="cursor:pointer"><div class="k-val">${last12.length}</div><div class="k-lbl">nye saker siste 12 måneder</div></div>
+      <div class="kpi" data-kpi="varighet" style="cursor:pointer"><div class="k-val">${median(durations) ?? "–"}</div><div class="k-lbl">median dager fra første til siste dokument (avgjorte saker)</div></div>
+      <div class="kpi" data-kpi="avslag" style="cursor:pointer"><div class="k-val">${decided.length ? Math.round(granted / decided.length * 100) + "%" : "–"}</div><div class="k-lbl">innvilget av avgjorte søknader (${granted} av ${decided.length}, ${rejected} avslag – klikk for avslagene)</div></div>
+      <div class="kpi" data-kpi="ulov" style="cursor:pointer"><div class="k-val">${aktiveUlov}</div><div class="k-lbl">åpne ulovlighetssaker</div></div>
     </div>
-    <div class="sectionlabel">Saker per år</div>${barList(perYear, "#0a84ff")}
-    <div class="sectionlabel">Sakstyper (alle år)</div>${barList(perType)}
-    <div class="sectionlabel">Tiltakstyper (alle år)</div>${topKat.length ? barList(topKat, "#ff9f0a") : '<div class="listnote">Klassifisering kjøres etter datainnhentingen.</div>'}
-    <div class="sectionlabel">Mest aktive gater siste 12 mnd</div>${topStreets.length ? barList(topStreets, "#0a84ff") : '<div class="listnote">Ingen data ennå.</div>'}
-    <div class="sectionlabel">Mest aktive søkerfirma <span style="font-weight:400;text-transform:none">(klikk for saker)</span></div>
+    <div class="listnote">Alt er klikkbart – trykk på et tall eller en rad for å se sakene bak.</div>
+    <div class="sectionlabel">Saker per år</div><div data-list="år">${barList(perYear, "#0a84ff")}</div>
+    <div class="sectionlabel">Sakstyper (alle år)</div><div data-list="type">${barList(perType)}</div>
+    <div class="sectionlabel">Tiltakstyper (alle år)</div><div data-list="kat">${topKat.length ? barList(topKat, "#ff9f0a") : '<div class="listnote">Klassifisering kjøres etter datainnhentingen.</div>'}</div>
+    <div class="sectionlabel">Mest aktive gater siste 12 mnd</div><div data-list="gate">${topStreets.length ? barList(topStreets, "#0a84ff") : '<div class="listnote">Ingen data ennå.</div>'}</div>
+    <div class="sectionlabel">Mest aktive søkerfirma</div>
     <div data-entlist="firma">${topFirms.length ? barList(topFirms, "#bf5af2") : '<div class="listnote">Ingen firmadata funnet.</div>'}</div>
-    <div class="sectionlabel">Saksbehandlere med flest saker <span style="font-weight:400;text-transform:none">(klikk for saker)</span></div>
+    <div class="sectionlabel">Saksbehandlere med flest saker</div>
     <div data-entlist="sb">${topSb.length ? barList(topSb, "#30d158") : '<div class="listnote">Ingen data.</div>'}</div>
-    <div class="sectionlabel">Statusfordeling</div>${barList(topStatus, "#8e8e93")}
+    <div class="sectionlabel">Statusfordeling</div><div data-list="status">${barList(topStatus, "#8e8e93")}</div>
     <div class="listnote">Basert på ${cs.length} saker fra kommunens innsynsløsning. Datoer = journalført dato.</div>`;
   openPanel("Statistikk", "Alle saker i kartet – Kristiansand", html);
+
+  const lists = {
+    "år": lbl => [`Saker i ${lbl}`, cs.filter(c => String(caseYear(c)) === lbl)],
+    "type": lbl => [lbl, cs.filter(c => c.type === lbl)],
+    "kat": lbl => [`Tiltakstype: ${lbl}`, cs.filter(c => (c.kategorier || []).includes(lbl))],
+    "gate": lbl => [`${lbl} – aktivitet siste 12 mnd`, cs.filter(c =>
+      (c.lastDate || "") >= cutoff12 && (c.displayAddress || "").replace(/\s+\d+[A-Za-zæøå]?$/, "").trim() === lbl)],
+    "status": lbl => [`Status: ${lbl}`, cs.filter(c => c.status === lbl)],
+  };
+  document.querySelectorAll('#panelBody [data-list]').forEach(box => {
+    const kind = box.dataset.list;
+    box.querySelectorAll(".barrow").forEach(r => {
+      r.style.cursor = "pointer";
+      r.addEventListener("click", () => {
+        const [title, cases] = lists[kind](r.querySelector(".b-lbl").textContent);
+        openCaseList(title, "", cases.sort(byActivity));
+      });
+    });
+  });
   document.querySelectorAll('#panelBody [data-entlist]').forEach(box => {
     const kind = box.dataset.entlist;
     box.querySelectorAll(".barrow").forEach(r => {
       r.style.cursor = "pointer";
       r.addEventListener("click", () => openEntity(kind, r.querySelector(".b-lbl").textContent));
+    });
+  });
+  document.querySelectorAll('#panelBody [data-kpi]').forEach(k => {
+    k.addEventListener("click", () => {
+      const kind = k.dataset.kpi;
+      if (kind === "nye12") openCaseList("Nye saker siste 12 måneder", "", [...last12].sort(byActivity));
+      else if (kind === "varighet") openCaseList("Avgjorte saker med datoer", "grunnlaget for median-tallet",
+        cs.filter(c => c.firstDate && c.lastDate && /ferdigattest|tillatelse gitt|avslag|avsluttet/i.test(c.status || "")).sort(byActivity));
+      else if (kind === "avslag") openCaseList("Avslag", "", cs.filter(c => /avslag/i.test(c.status || "")).sort(byActivity));
+      else if (kind === "ulov") openCaseList("Åpne ulovlighetssaker", "",
+        cs.filter(c => c.type === "Ulovlighetssak" && !/avsluttet|trukket|avvist/i.test(c.status || "")).sort(byActivity));
     });
   });
 }
@@ -1578,6 +1634,10 @@ document.getElementById("followBtn").onclick = () => {
   openFollowList();
 };
 document.getElementById("newsBtn").onclick = openNews;
+document.getElementById("accountBtn").onclick = () => {
+  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+  openFollowList();
+};
 document.getElementById("statsBtn").onclick = openStats;
 
 /* ---------------- Oppstart ---------------- */
