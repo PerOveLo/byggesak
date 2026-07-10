@@ -1,6 +1,8 @@
-# Byggesakskart Flekkerøy
+# Byggesakskart Flekkerøy og Søm
 
-Interaktivt kart over byggesaker, henvendelser og ulovlighetssaker på Flekkerøy,
+**Live:** https://perovelo.github.io/byggesak/ · **Repo:** https://github.com/PerOveLo/byggesak
+
+Interaktivt kart over byggesaker, henvendelser og ulovlighetssaker på Flekkerøy og Søm,
 hentet fra [Kristiansand kommunes innsynsløsning](https://opengov.360online.com/Cases/KRSANDEBYGG)
 og datert via [kommunens offentlige journal](https://kristiansand.pj.360online.com/).
 
