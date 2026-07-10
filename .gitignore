@@ -6,3 +6,4 @@ data/journal_watermark.json
 .claude/
 data/cases.json
 worker/.api_secret.txt
+worker/.wrangler/
