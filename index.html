@@ -118,9 +118,11 @@
     display: flex; align-items: center; justify-content: center;
   }
   @media (max-width: 760px) { .iconbtn .lbl { display: none; } }
-  .vizbo { display: flex; align-items: center; background: #fff; border-radius: 999px; padding: 5px 12px;
-    border: 1px solid var(--glass-border); box-shadow: var(--glass-inset); }
-  .vizbo img { height: 13px; display: block; }
+  .vizbo { display: flex; align-items: center; margin-left: auto; padding: 0 4px; opacity: .92; transition: opacity .15s; }
+  .vizbo:hover { opacity: 1; }
+  .vizbo img { height: 30px; display: block; }
+  @media (prefers-color-scheme: dark) { .vizbo img { filter: invert(1); } }
+  @media (max-width: 760px) { .vizbo img { height: 22px; } .vizbo { margin-left: 0; } }
 
   /* ---------- Panel ---------- */
   #panel {
