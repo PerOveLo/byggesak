@@ -28,6 +28,9 @@ jobs:
       - name: Hent oppdaterte saksdata
         run: python -X utf8 oppdater_data.py
 
+      - name: Reparer manglende journaldatoer (maks 90 min)
+        run: timeout 90m python -X utf8 oppdater_data.py --dates-retry || true
+
       - name: Send varsler (hoppes over uten secrets)
         if: ${{ always() }}
         env:
