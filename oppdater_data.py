@@ -876,9 +876,52 @@ def main():
         cases.append(case)
         rebuilt_ids.add(cid)
 
-    # Datoberikelse fra offentlig journal (kun nybygde saker)
+    # Saker som skal datoberikes (før gamle saker flettes inn)
     need_dates = [c for c in cases if c["documents"]]
-    log(f"Datoberikelse fra offentlig journal for {len(need_dates)} saker ...")
+
+    # Gjenbruk alle gamle saker som ikke ble bygget på nytt
+    for cid, oc in old_cases.items():
+        if cid not in rebuilt_ids:
+            cases.append(oc)
+
+    summaries = {}
+    if os.path.exists(SUMMARIES_JSON):
+        with open(SUMMARIES_JSON, encoding="utf-8") as f:
+            summaries = json.load(f)
+
+    def flush():
+        for c in cases:
+            ai = summaries.get("cases", {}).get(c["casenr"])
+            if ai:
+                c["aiSummary"] = ai
+            else:
+                c.pop("aiSummary", None)
+        out = {
+            "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "updatedLocal": datetime.now().strftime("%d.%m.%Y %H:%M"),
+            "lastSweep": (last_sweep or now).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "postnumre": sorted(POSTNUMRE),
+            "source": SITE,
+            "poiSummaries": summaries.get("pois", {}),
+            "cases": sorted(cases, key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True),
+        }
+        with open(CASES_JSON, "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False, indent=1)
+        with open(CASES_JS, "w", encoding="utf-8") as f:
+            f.write("window.BYGGESAK_DATA = ")
+            json.dump(out, f, ensure_ascii=False)
+            f.write(";\n")
+        return out
+
+    for c in cases:
+        c.setdefault("summary", None)
+        c["summary"] = c["summary"] or generate_summary(c)
+
+    # Tidlig lagring: nye saker blir synlige i kartet før datoberikelsen er ferdig
+    flush()
+    with_geo = [c for c in cases if c.get("latlon")]
+    log(f"{len(cases)} saker totalt ({dropped} forkastet, {len(cases) - len(with_geo)} uten koordinat) – "
+        f"lagret. Datoberikelse for {len(need_dates)} saker starter ...")
 
     def enrich_one(case):
         jinfo = None
@@ -886,58 +929,22 @@ def main():
             y, s = case["journalKey"].split("-")
             jinfo = (int(y), int(s), case["journalDoc"])
         try:
-            enrich_case_dates(case, jinfo)
+            if enrich_case_dates(case, jinfo):
+                case["summary"] = generate_summary(case)
         except Exception as e:  # noqa: BLE001
             log(f"  journal-feil {case['casenr']}: {e}")
-        return case
 
     for i, case in enumerate(need_dates, 1):
         enrich_one(case)
         if i % 25 == 0:
             dated_n = sum(1 for c in need_dates[:i] if c.get('journalKey'))
-            log(f"  {i}/{len(need_dates)} saker behandlet ({dated_n} datert)")
+            log(f"  {i}/{len(need_dates)} saker behandlet ({dated_n} datert) – lagrer")
+            flush()
         time.sleep(JOURNAL_DELAY)
 
-    for c in cases:
-        c["summary"] = generate_summary(c)
-
-    # Gjenbruk alle gamle saker som ikke ble bygget på nytt
-    for cid, oc in old_cases.items():
-        if cid not in rebuilt_ids:
-            cases.append(oc)
-
-    with_geo = [c for c in cases if c.get("latlon")]
-    dated = [c for c in cases if c.get("lastDate")]
-    log(f"{len(cases)} saker totalt ({dropped} forkastet, {len(cases) - len(with_geo)} uten koordinat, "
-        f"{len(dated)} med datoer).")
-
-    summaries = {}
-    if os.path.exists(SUMMARIES_JSON):
-        with open(SUMMARIES_JSON, encoding="utf-8") as f:
-            summaries = json.load(f)
-    for c in cases:
-        ai = summaries.get("cases", {}).get(c["casenr"])
-        if ai:
-            c["aiSummary"] = ai
-        else:
-            c.pop("aiSummary", None)
-
-    out = {
-        "updated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "updatedLocal": datetime.now().strftime("%d.%m.%Y %H:%M"),
-        "lastSweep": (last_sweep or now).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "postnumre": sorted(POSTNUMRE),
-        "source": SITE,
-        "poiSummaries": summaries.get("pois", {}),
-        "cases": sorted(cases, key=lambda c: (c.get("lastDate") or "", c["casenr"]), reverse=True),
-    }
-    with open(CASES_JSON, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=1)
-    with open(CASES_JS, "w", encoding="utf-8") as f:
-        f.write("window.BYGGESAK_DATA = ")
-        json.dump(out, f, ensure_ascii=False)
-        f.write(";\n")
-    log(f"Skrev {CASES_JSON} og {CASES_JS}")
+    out = flush()
+    dated = [c for c in out["cases"] if c.get("lastDate")]
+    log(f"Ferdig: {len(out['cases'])} saker, {len(dated)} med datoer. Skrev {CASES_JSON} og {CASES_JS}")
     generate_ics(out["cases"])
 
 
