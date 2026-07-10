@@ -1,8 +1,8 @@
-# Byggesakskart Flekkerøy og Søm
+# Byggesaker Kristiansand
 
-**Live:** https://perovelo.github.io/byggesak/ · **Repo:** https://github.com/PerOveLo/byggesak
+**Live:** https://perovelo.github.io/byggesak/ · **Repo:** https://github.com/PerOveLo/byggesak · **Admin:** admin.html
 
-Interaktivt kart over byggesaker, henvendelser og ulovlighetssaker på Flekkerøy og Søm,
+Interaktivt kart over byggesaker, henvendelser og ulovlighetssaker i hele Kristiansand (2020→),
 hentet fra [Kristiansand kommunes innsynsløsning](https://opengov.360online.com/Cases/KRSANDEBYGG)
 og datert via [kommunens offentlige journal](https://kristiansand.pj.360online.com/).
 
@@ -28,6 +28,17 @@ Oppdateringen er **inkrementell**: Ny-saker fanges via hovedlistene, endringer i
 offentlig journals endringsfeed (avdelingsfiltrert). Detaljer og datoer hentes kun for saker med faktisk
 aktivitet. Full gjennomgang av alle gater skjer automatisk maks én gang i uka. Skriptet er ren Python og
 bruker ingen AI-tokens; kun den planlagte Claude-oppgaven bruker tokens når den skriver analyser.
+
+## Arkitektur v3 (MVP, kompatibel med produksjonsplanen)
+
+- **Data**: `data/index.json` (tynn indeks over alle saker – kartet laster denne først) +
+  `data/chunks/<postnr>.json` (fulle saker, lastes ved behov). Skalerer til ~30k saker på statisk hosting.
+- **Innsamling**: sakene enumereres via kommunens sammenhengende kilde-ID-er (komplett dekning uten søkehull);
+  journaldatoer bulk-høstes månedsvis (`--journal-bulk`, resumerbar) og matches lokalt.
+- **Innlogging/admin**: Cloudflare Worker + **D1** (SQL, `worker/schema.sql` speiler fremtidig Postgres-modell):
+  magisk lenke, profiler, notater, push, GDPR-eksport/-sletting og **append-only revisjonslogg**
+  (databasetriggere blokkerer endring/sletting). Adminside: `admin.html` (brukere, tier, sporing, pipeline-helse).
+  Deploy: se `worker/wrangler.toml` (10 min). Admin-tilgang styres av `ADMIN_EPOST`-variabelen.
 
 ## Datakilder og virkemåte
 
