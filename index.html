@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#eef1f6">
-<title>Byggesaker Flekkerøy</title>
+<title>Byggesaker Kristiansand</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="ikon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="ikon.svg">
@@ -118,6 +118,9 @@
     display: flex; align-items: center; justify-content: center;
   }
   @media (max-width: 760px) { .iconbtn .lbl { display: none; } }
+  .vizbo { display: flex; align-items: center; background: #fff; border-radius: 999px; padding: 5px 12px;
+    border: 1px solid var(--glass-border); box-shadow: var(--glass-inset); }
+  .vizbo img { height: 13px; display: block; }
 
   /* ---------- Panel ---------- */
   #panel {
@@ -158,7 +161,12 @@
   .closebtn { width: 30px; height: 30px; border-radius: 50%; background: var(--glass-strong); color: var(--ink2);
     border: 1px solid var(--glass-border); box-shadow: var(--glass-inset);
     font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  #panelBody { flex: 1; overflow-y: auto; padding: 4px 14px calc(env(safe-area-inset-bottom, 0px) + 24px); overscroll-behavior: contain; }
+  #panelBody { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 4px 14px calc(env(safe-area-inset-bottom, 0px) + 24px); overscroll-behavior: contain; }
+  #panel { max-width: 100vw; }
+  #panelHead h2, .case-desc, .doc .d-title, .a-name, .summary { overflow-wrap: anywhere; }
+  .addrrow { flex-wrap: wrap; }
+  .formrow { flex-wrap: wrap; }
+  .kpi { min-width: 0; }
 
   .ai-box {
     background: linear-gradient(135deg, rgba(10,132,255,.10), rgba(191,90,242,.10));
@@ -320,6 +328,14 @@
   .barrow .b-fill { height: 100%; border-radius: 7px; min-width: 3px; }
   .barrow .b-val { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
 
+  .entchip { display: inline-flex; align-items: center; gap: 5px; margin: 2px 6px 2px 0; padding: 4px 10px;
+    background: var(--fill); border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .entchip .entstar { font-size: 13px; opacity: .5; }
+  .entchip .entstar.on { opacity: 1; color: var(--orange); }
+  .filegal { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .filegal .filechip.tegning { background: rgba(48,209,88,.15); color: #1e9e4a; }
+  @media (prefers-color-scheme: dark) { .filegal .filechip.tegning { color: var(--green); } }
+
   /* Notater og endringer */
   .notes textarea { width: 100%; min-height: 60px; border: 0.5px solid var(--glass-border); border-radius: 11px;
     background: var(--fill); color: var(--ink); padding: 9px 11px; font: inherit; font-size: 13px; outline: none; resize: vertical; }
@@ -340,7 +356,7 @@
 
 <header class="topbar">
   <div class="brand">
-    <h1>Byggesaker Flekkerøy</h1>
+    <h1>Byggesaker Kristiansand</h1>
     <span id="updatedTag">–</span>
   </div>
   <div class="searchwrap">
@@ -358,6 +374,7 @@
   <button class="iconbtn" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
   <button class="iconbtn" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
   <button class="iconbtn" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
+  <a class="vizbo" href="https://vizbo.no" target="_blank" rel="noopener" title="Levert av Vizbo"><img src="vizbo-logo.png" alt="Vizbo"></a>
 </header>
 
 <aside id="panel">
@@ -435,6 +452,28 @@ function caseDesc(c) {
   return d ? d[0].toUpperCase() + d.slice(1) : c.title;
 }
 const addrKey = a => (a || "").toLowerCase().trim();
+const docSeqJs = t => { const m = /^[A-ZÆØÅ]+-\d{2}\/\d+-(\d+)/.exec(t || ""); return m ? +m[1] : 0; };
+const INTERNAL_RE = /byggesak|plan og bygg|oppmåling|eiendom|kristiansand kommune|tilsyn|byantikvar|statsforvalter|parkvesen|by- og stedsutvikling|innbygger|stab/i;
+function caseSoker(c) {
+  if (c._soker !== undefined) return c._soker;
+  let r = null, fallback = null;
+  const docs = [...(c.documents || [])].sort((a, b) => docSeqJs(a.title) - docSeqJs(b.title));
+  for (const d of docs) {
+    const f = (d.from || "").trim();
+    if (!f || INTERNAL_RE.test(f)) continue;
+    if ((d.type || "").trim() === "Søknad") r = f;
+    else if (/dokument inn/i.test(d.type || "") && /søknad om/i.test(d.title) &&
+             !/kommentar|merknad|uttalelse|tilsvar|svar på|nabo|klage/i.test(d.title)) fallback = fallback || f;
+  }
+  c._soker = r || fallback;
+  return c._soker;
+}
+function displayAddr(c) {
+  if (c.displayAddress) return c.displayAddress;
+  const m = /^[-–\s]*(.+?)\s+\d{1,3}\s*\//.exec(c.title || "");
+  if (m && m[1].trim().length > 2) return m[1].trim();
+  return c.matrikkel ? "gnr/bnr " + c.matrikkel : "Ukjent adresse";
+}
 
 /* ---------------- Følge-lagring (saker + adresser) ---------------- */
 const store = {
@@ -462,7 +501,39 @@ const store = {
     read() { try { return JSON.parse(localStorage.getItem("bsPrefs") || "{}"); } catch { return {}; } },
     write(v) { localStorage.setItem("bsPrefs", JSON.stringify(v)); },
   },
+  ents: {  // fulgte firmaer og saksbehandlere: nøkkel "firma:x" / "sb:x"
+    read() { try { return JSON.parse(localStorage.getItem("bsFollowEnt") || "{}"); } catch { return {}; } },
+    write(v) { localStorage.setItem("bsFollowEnt", JSON.stringify(v)); },
+  },
 };
+
+/* ---------------- Firma/saksbehandler-entiteter ---------------- */
+const entKey = (kind, name) => kind + ":" + (name || "").toLowerCase().trim();
+function entCases(kind, name) {
+  const n = (name || "").toLowerCase().trim();
+  return DATA.cases.filter(c => kind === "sb"
+    ? (c.saksbehandler || "").toLowerCase().trim() === n
+    : (caseSoker(c) || "").toLowerCase().trim() === n);
+}
+function entState(kind, name) {
+  const cs = entCases(kind, name);
+  return { n: cs.length, lastDate: cs.map(c => c.lastDate || "").sort().pop() || null };
+}
+function isFollowedEnt(kind, name) { return !!store.ents.read()[entKey(kind, name)]; }
+function toggleFollowEnt(kind, name) {
+  const f = store.ents.read();
+  const k = entKey(kind, name);
+  if (f[k]) delete f[k];
+  else f[k] = { ...entState(kind, name), label: name, kind };
+  store.ents.write(f);
+  refreshBadges();
+  scheduleSync();
+}
+function markSeenEnt(kind, name) {
+  const f = store.ents.read();
+  const k = entKey(kind, name);
+  if (f[k]) { f[k] = { ...entState(kind, name), label: name, kind }; store.ents.write(f); refreshBadges(); }
+}
 
 /* ---------------- Konto-API og synkronisering ---------------- */
 async function api(path, opts = {}) {
@@ -485,7 +556,8 @@ function scheduleSync() {
   syncT = setTimeout(async () => {
     try {
       const prefs = store.prefs.read();
-      const addresses = Object.values(store.addrs.read()).map(a => ({ label: a.label, level: a.level || "alt" }));
+      const addresses = Object.values(store.addrs.read()).map(a => ({ label: a.label, level: a.level || "alt" }))
+        .concat(Object.values(store.ents.read()).map(e => ({ label: (e.kind === "sb" ? "sb:" : "firma:") + e.label, level: "alt" })));
       await api("/me", { method: "PUT", body: JSON.stringify({ addresses, radius: prefs.radius || null, weekly: !!prefs.weekly }) });
       await api("/notes", { method: "PUT", body: JSON.stringify({ notes: store.notes.read() }) });
     } catch (e) { console.warn("Synk feilet:", e.message); }
@@ -496,12 +568,20 @@ async function pullAccount() {
   try {
     const me = await api("/me");
     const fa = store.addrs.read();
+    const fe = store.ents.read();
     for (const a of me.addresses || []) {
+      const em = /^(firma|sb):(.+)$/.exec(a.label);
+      if (em) {
+        const kind = em[1], name = em[2];
+        fe[entKey(kind, name)] = { ...(fe[entKey(kind, name)] || entState(kind, name)), label: name, kind };
+        continue;
+      }
       const k = addrKey(a.label);
       const p = POIS.find(p => addrKey(p.label) === k);
       fa[k] = { ...(fa[k] || (p ? poiState(p) : { n: 0, lastDate: null })), label: a.label, level: a.level || "alt" };
     }
     store.addrs.write(fa);
+    store.ents.write(fe);
     const prefs = store.prefs.read();
     prefs.weekly = !!me.weekly;
     if (me.radius) prefs.radius = me.radius;
@@ -575,6 +655,12 @@ function followUpdates() {
       out.push({ kind: "addr", p, label: p.label, newCases: Math.max(st.n - (e.n || 0), 0) });
     }
   }
+  for (const [k, e] of Object.entries(store.ents.read())) {
+    const st = entState(e.kind, e.label);
+    if (st.n > (e.n || 0) || (st.lastDate && e.lastDate && st.lastDate > e.lastDate)) {
+      out.push({ kind: "ent", entKind: e.kind, label: e.label, newCases: Math.max(st.n - (e.n || 0), 0) });
+    }
+  }
   return out;
 }
 
@@ -605,7 +691,7 @@ function buildPois() {
   }
   for (const p of m.values()) {
     p.cases.sort((a, b) => ((b.lastDate || "") + b.casenr).localeCompare((a.lastDate || "") + a.casenr));
-    p.label = p.cases[0].displayAddress || p.cases[0].listAddress || p.cases[0].title.split(",")[0];
+    p.label = p.cases[0].displayAddress || p.cases[0].listAddress || displayAddr(p.cases[0]);
   }
   return [...m.values()];
 }
@@ -777,6 +863,18 @@ function openFollowList() {
     </div>`).join("")
     : `<div class="listnote">Ingen fulgte adresser. Åpne en adresse i kartet og trykk ☆ øverst i panelet.</div>`;
 
+  const ents = Object.values(store.ents.read());
+  const entUpd = new Set(updates.filter(u => u.kind === "ent").map(u => entKey(u.entKind, u.label)));
+  html += `<div class="sectionlabel">Firmaer og saksbehandlere du følger (${ents.length})</div>`;
+  html += ents.length ? ents.map(e => `
+    <div class="addrrow" data-entrow="${e.kind}|${esc(e.label)}">
+      <span>${e.kind === "sb" ? "👤" : "🏢"}</span>
+      <div style="flex:1;min-width:0"><div class="a-name">${esc(e.label)} ${entUpd.has(entKey(e.kind, e.label)) ? '<span class="newbadge">NYTT</span>' : ""}</div>
+      <div class="a-sub">${e.n || 0} sak(er)${e.lastDate ? " · sist aktivitet " + fmtDate(e.lastDate) : ""}</div></div>
+      <button class="unfollow" data-entun="${e.kind}|${esc(e.label)}">Fjern</button>
+    </div>`).join("")
+    : `<div class="listnote">Trykk 🏢/👤-merket i et sakskort for å følge et søkerfirma eller en saksbehandler.</div>`;
+
   html += `<div class="sectionlabel">Enkeltsaker du følger (${followedCases.length})</div>`;
   html += followedCases.length ? followedCases.map(caseCard).join("")
     : `<div class="listnote">Ingen fulgte saker. Trykk ☆ på en sak.</div>`;
@@ -797,6 +895,20 @@ function openFollowList() {
       scheduleSync();
       openFollowList();
       render();
+    });
+  });
+  document.querySelectorAll("#panelBody [data-entrow]").forEach(r => {
+    r.addEventListener("click", e => {
+      if (e.target.closest(".unfollow")) return;
+      const [kind, name] = r.dataset.entrow.split("|");
+      openEntity(kind, name);
+    });
+  });
+  document.querySelectorAll("#panelBody [data-entun]").forEach(b => {
+    b.addEventListener("click", () => {
+      const [kind, name] = b.dataset.entun.split("|");
+      toggleFollowEnt(kind, name);
+      openFollowList();
     });
   });
   document.querySelectorAll("#panelBody .lvlsel").forEach(s => {
@@ -840,6 +952,24 @@ function openNews() {
 
 function openNogeo() {
   openPanel("Uten kartfeste", `${NOGEO.length} saker som ikke kunne plasseres på kartet`, NOGEO.filter(caseVisible).map(caseCard).join(""));
+}
+
+function openEntity(kind, name) {
+  const cs = entCases(kind, name).sort((a, b) => ((b.lastDate || "") + b.casenr).localeCompare((a.lastDate || "") + a.casenr));
+  const followed = isFollowedEnt(kind, name);
+  const ico = kind === "sb" ? "👤" : "🏢";
+  const label = kind === "sb" ? "saksbehandler" : "søkerfirma";
+  let html = `<div class="formbox" style="display:flex;align-items:center;gap:10px">
+    <div style="flex:1"><b>${ico} ${esc(name)}</b><div style="font-size:12px;color:var(--ink2)">${cs.length} sak(er) som ${label}</div></div>
+    <button class="btn ${followed ? "sec" : ""}" id="entFollowBtn">${followed ? "★ Følger" : "☆ Følg"}</button>
+  </div>`;
+  html += cs.map(caseCard).join("");
+  openPanel(name, `Alle saker der ${esc(name)} er ${label}`, html);
+  markSeenEnt(kind, name);
+  document.getElementById("entFollowBtn").onclick = () => {
+    toggleFollowEnt(kind, name);
+    openEntity(kind, name);
+  };
 }
 
 /* ---------------- Konto, varsling og innlogging ---------------- */
@@ -985,17 +1115,38 @@ function caseCard(c) {
         <button class="followbtn ${isFollowedCase(c.casenr) ? "on" : ""}" data-follow="${esc(c.casenr)}" title="Følg saken">${isFollowedCase(c.casenr) ? "★" : "☆"}</button>
       </div>
       <div class="case-desc">${esc(caseDesc(c))}</div>
-      <div class="case-addr">${esc(c.displayAddress || "")}${c.displayAddress ? " · " : ""}${esc(c.casenr)}</div>
+      <div class="case-addr">${esc(displayAddr(c))} · ${esc(c.casenr)}</div>
     </div>
     <div class="case-body">
       <div class="summary">${c.aiSummary ? "🧠 " : ""}${esc(summary)}</div>
-      <div class="meta">${c.saksbehandler ? "Saksbehandler: " + esc(c.saksbehandler) + "<br>" : ""}${(c.documents || []).length} dokument(er)${c.matrikkel ? " · gnr/bnr " + esc(c.matrikkel) : ""}</div>
+      <div class="meta">
+        ${entChip("firma", caseSoker(c))}${entChip("sb", c.saksbehandler)}
+        <div style="margin-top:4px">${(c.documents || []).length} dokument(er)${c.matrikkel ? " · gnr/bnr " + esc(c.matrikkel) : ""}</div>
+      </div>
+      ${fileGallery(c)}
       ${docs ? `<div class="tl">${docs}</div>` : '<div class="listnote">Ingen offentlig tilgjengelige dokumenter.</div>'}
       ${endringerHtml(c)}
       ${notesHtml(c)}
       <a class="extlink" href="${esc(c.url)}" target="_blank" rel="noopener">Åpne i kommunens innsynsløsning ↗</a>
     </div>
   </div>`;
+}
+function entChip(kind, name) {
+  if (!name) return "";
+  const ico = kind === "sb" ? "👤" : "🏢";
+  const on = isFollowedEnt(kind, name);
+  return `<span class="entchip" data-entkind="${kind}" data-entname="${esc(name)}" title="Vis alle saker for ${esc(name)}">
+    ${ico} ${esc(name)} <span class="entstar ${on ? "on" : ""}">${on ? "★" : "☆"}</span></span>`;
+}
+function fileGallery(c) {
+  const isDrawing = n => /tegning|fasade|snitt|situasjonsplan|situasjonskart|plantegn|kart|foto|bilde|illustrasjon|perspektiv|3d/i.test(n);
+  const files = (c.documents || []).flatMap(d => (d.files || []).map(f => ({ ...f, drawing: isDrawing(f.name) })));
+  if (!files.length) return "";
+  files.sort((a, b) => (b.drawing ? 1 : 0) - (a.drawing ? 1 : 0));
+  return `<div class="sectionlabel" style="margin-top:2px">Vedlegg (${files.length})</div>
+    <div class="filegal">${files.map(f =>
+      `<a class="filechip ${f.drawing ? "tegning" : ""}" href="${esc(f.url)}" data-name="${esc(f.name)}" onclick="return openFile(this)">${f.drawing ? "📐" : "📄"} ${esc(f.name.slice(0, 42))}${f.name.length > 42 ? "…" : ""}</a>`).join("")}
+    </div>`;
 }
 function endringerHtml(c) {
   const e = c.endringer || [];
@@ -1023,8 +1174,30 @@ function wireCards() {
       card.classList.toggle("open");
       if (card.classList.contains("open")) {
         const c = DATA.cases.find(x => x.casenr === card.dataset.nr);
-        if (c) markSeenCase(c);
+        if (c) {
+          markSeenCase(c);
+          if (c.latlon) {  // zoom alltid inn på saken når den åpnes
+            const d = map.getCenter().distanceTo(L.latLng(c.latlon));
+            if (d > 60 || map.getZoom() < 16) map.flyTo(c.latlon, Math.max(map.getZoom(), 16), { duration: 0.7 });
+          }
+        }
       }
+    });
+  });
+  document.querySelectorAll("#panelBody .entchip").forEach(ch => {
+    if (ch.dataset.wired) return;
+    ch.dataset.wired = "1";
+    ch.addEventListener("click", e => {
+      const kind = ch.dataset.entkind, name = ch.dataset.entname;
+      if (e.target.closest(".entstar")) {
+        toggleFollowEnt(kind, name);
+        const star = ch.querySelector(".entstar");
+        const on = isFollowedEnt(kind, name);
+        star.textContent = on ? "★" : "☆";
+        star.classList.toggle("on", on);
+        return;
+      }
+      openEntity(kind, name);
     });
   });
   document.querySelectorAll("#panelBody .followbtn").forEach(b => {
@@ -1108,6 +1281,14 @@ function openStats() {
   for (const c of cs) statusCount[c.status || "?"] = (statusCount[c.status || "?"] || 0) + 1;
   const topStatus = Object.entries(statusCount).sort((a, b) => b[1] - a[1]).slice(0, 7)
     .map(([k, v]) => ({ k, v }));
+  const firmCount = {}, sbCount = {};
+  for (const c of cs) {
+    const f = caseSoker(c);
+    if (f) firmCount[f] = (firmCount[f] || 0) + 1;
+    if (c.saksbehandler) sbCount[c.saksbehandler] = (sbCount[c.saksbehandler] || 0) + 1;
+  }
+  const topFirms = Object.entries(firmCount).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => ({ k, v }));
+  const topSb = Object.entries(sbCount).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => ({ k, v }));
 
   const html = `
     <div class="kpis">
@@ -1119,9 +1300,20 @@ function openStats() {
     <div class="sectionlabel">Saker per år</div>${barList(perYear, "#0a84ff")}
     <div class="sectionlabel">Sakstyper (alle år)</div>${barList(perType)}
     <div class="sectionlabel">Mest aktive gater siste 12 mnd</div>${topStreets.length ? barList(topStreets, "#0a84ff") : '<div class="listnote">Ingen data ennå.</div>'}
+    <div class="sectionlabel">Mest aktive søkerfirma <span style="font-weight:400;text-transform:none">(klikk for saker)</span></div>
+    <div data-entlist="firma">${topFirms.length ? barList(topFirms, "#bf5af2") : '<div class="listnote">Ingen firmadata funnet.</div>'}</div>
+    <div class="sectionlabel">Saksbehandlere med flest saker <span style="font-weight:400;text-transform:none">(klikk for saker)</span></div>
+    <div data-entlist="sb">${topSb.length ? barList(topSb, "#30d158") : '<div class="listnote">Ingen data.</div>'}</div>
     <div class="sectionlabel">Statusfordeling</div>${barList(topStatus, "#8e8e93")}
     <div class="listnote">Basert på ${cs.length} saker fra kommunens innsynsløsning. Datoer = journalført dato.</div>`;
-  openPanel("Statistikk", "Flekkerøy og Søm – alle saker i kartet", html);
+  openPanel("Statistikk", "Alle saker i kartet (Flekkerøy og Søm)", html);
+  document.querySelectorAll('#panelBody [data-entlist]').forEach(box => {
+    const kind = box.dataset.entlist;
+    box.querySelectorAll(".barrow").forEach(r => {
+      r.style.cursor = "pointer";
+      r.addEventListener("click", () => openEntity(kind, r.querySelector(".b-lbl").textContent));
+    });
+  });
 }
 
 /* ---------------- Varsler (toasts) ---------------- */
@@ -1134,20 +1326,23 @@ function showToasts() {
     t.className = "toast";
     const sub = u.kind === "addr"
       ? (u.newCases ? `${u.newCases} ny(e) sak(er) på adressen` : "Ny aktivitet på adressen")
-      : `${u.newDocs ? u.newDocs + " nye dokumenter" : "Ny aktivitet"} · ${esc(u.c.casenr)}`;
+      : u.kind === "ent"
+        ? (u.newCases ? `${u.newCases} ny(e) sak(er) fra ${u.entKind === "sb" ? "saksbehandleren" : "firmaet"}` : "Ny aktivitet")
+        : `${u.newDocs ? u.newDocs + " nye dokumenter" : "Ny aktivitet"} · ${esc(u.c.casenr)}`;
     t.innerHTML = `<span class="emoji">🔔</span><div><div class="t-title">${esc(u.label)}</div>
       <div class="t-sub">${sub}</div></div><span class="t-x">✕</span>`;
     t.querySelector(".t-x").onclick = e => { e.stopPropagation(); t.remove(); };
     t.onclick = () => {
       t.remove();
       if (u.kind === "addr") flyToPoi(u.p);
+      else if (u.kind === "ent") openEntity(u.entKind, u.label);
       else focusCase(u.c);
     };
     box.appendChild(t);
     setTimeout(() => t.remove(), 14000);
   }
   if (ups.length && "Notification" in window && Notification.permission === "granted" && document.hidden) {
-    new Notification("Byggesaker Flekkerøy", {
+    new Notification("Byggesaker Kristiansand", {
       body: ups.map(u => `${u.label}: ny aktivitet`).join("\n"),
     });
   }

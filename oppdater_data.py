@@ -562,7 +562,12 @@ def display_address(case, street_names_lower, gnrbnr_addr):
         if key in gnrbnr_addr:
             return gnrbnr_addr[key]
     head = re.sub(r'^[\s\-–]*', '', case.get("addressHead") or case["title"].split(",")[0])
-    return head.strip() or case["casenr"]
+    head = re.sub(r'\s*\d{1,3}\s*/\s*\d+(\s*/\s*\d+)*\s*$', '', head).strip()  # fjern matrikkel-hale
+    if head and len(head) > 2:
+        return head
+    if gb:
+        return f"gnr/bnr {gb[0]}/{gb[1]}"
+    return case["casenr"]
 
 
 def split_title(title):
@@ -688,7 +693,7 @@ def generate_ics(cases):
                     })
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//byggesak-flekkeroy//NO",
-             "CALSCALE:GREGORIAN", "X-WR-CALNAME:Byggesaker Flekkerøy og Søm"]
+             "CALSCALE:GREGORIAN", "X-WR-CALNAME:Byggesaker Kristiansand"]
     seen = set()
     for e in events:
         if e["uid"] in seen:

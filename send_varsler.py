@@ -39,6 +39,32 @@ CASES = os.path.join(ROOT, "data", "cases.json")
 
 VEDTAK_MARKERS = ("vedtak", "tillatelse", "avslag", "pålegg", "stoppordre", "tvangsmulkt",
                   "overtredelsesgebyr", "ferdigattest", "dispensasjon")
+import re as _re
+_INTERNAL = _re.compile(r'byggesak|plan og bygg|oppmåling|eiendom|kristiansand kommune|tilsyn|'
+                        r'byantikvar|statsforvalter|parkvesen|by- og stedsutvikling|innbygger|stab', _re.I)
+
+
+def _doc_seq(t):
+    m = _re.match(r'[A-ZÆØÅ]+-\d{2}/\d+-(\d+)', t or "")
+    return int(m.group(1)) if m else 0
+
+
+def case_soker(c):
+    """Søkerfirma = avsender av dokumenter med type «Søknad» (ikke interne avdelinger)."""
+    r = None
+    fallback = None
+    for d in sorted(c.get("documents") or [], key=lambda x: _doc_seq(x.get("title"))):
+        f = (d.get("from") or "").strip()
+        if not f or _INTERNAL.search(f):
+            continue
+        dtype = (d.get("type") or "").strip()
+        title = (d.get("title") or "").lower()
+        if dtype == "Søknad":
+            r = f
+        elif fallback is None and "dokument inn" in dtype.lower() and "søknad om" in title and \
+                not _re.search(r'kommentar|merknad|uttalelse|tilsvar|svar på|nabo|klage', title):
+            fallback = f
+    return r or fallback
 
 
 def addr_key(a):
@@ -88,8 +114,11 @@ def collect_changes(new, prev):
                 entry["items"].append(f"{c['casenr']}: {n_new - n_old} nye dokument(er) – " + "; ".join(titles[:3]))
                 if is_vedtak_change(titles):
                     entry["isVedtak"] = True
-        if entry and c.get("type") == "Ulovlighetssak":
-            entry["isUlovlighet"] = True
+        if entry:
+            if c.get("type") == "Ulovlighetssak":
+                entry["isUlovlighet"] = True
+            entry["soker"] = (case_soker(c) or "").lower()
+            entry["sb"] = (c.get("saksbehandler") or "").lower().strip()
     return changes
 
 
@@ -109,10 +138,21 @@ def user_hits(user, changes):
     for a in user.get("addresses", []):
         label = a.get("label") if isinstance(a, dict) else a
         level = a.get("level", "alt") if isinstance(a, dict) else "alt"
-        ch = changes.get(addr_key(label))
-        if ch and level_match(ch, level) and id(ch) not in seen:
-            hits.append(ch)
-            seen.add(id(ch))
+        if label.startswith("firma:"):
+            navn = label[6:].lower().strip()
+            for ch in changes.values():
+                if ch.get("soker") == navn and level_match(ch, level) and id(ch) not in seen:
+                    hits.append(ch); seen.add(id(ch))
+        elif label.startswith("sb:"):
+            navn = label[3:].lower().strip()
+            for ch in changes.values():
+                if ch.get("sb") == navn and level_match(ch, level) and id(ch) not in seen:
+                    hits.append(ch); seen.add(id(ch))
+        else:
+            ch = changes.get(addr_key(label))
+            if ch and level_match(ch, level) and id(ch) not in seen:
+                hits.append(ch)
+                seen.add(id(ch))
     r = user.get("radius")
     if r and r.get("lat") is not None:
         for ch in changes.values():
