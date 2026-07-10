@@ -87,11 +87,14 @@
   <div id="loginView">
     <div class="card" id="loginCard">
       <h3 style="margin-top:0">Logg inn</h3>
-      <p style="font-size:13px;color:var(--ink2)">Adminsiden krever innlogging med en konto som har admin-rolle
-        (styres av <code>ADMIN_EPOST</code> i workeren). Du får en magisk lenke på e-post.</p>
+      <p style="font-size:13px;color:var(--ink2)">Adminsiden krever en konto med admin-rolle
+        (styres av <code>ADMIN_EPOST</code> i workeren). Superadmin logger inn med det delte adminpassordet.</p>
       <div class="row">
-        <input id="email" type="email" placeholder="din@epost.no" style="flex:1">
-        <button class="btn" id="loginBtn">Send lenke</button>
+        <input id="email" type="email" placeholder="din@epost.no" style="flex:1 1 100%" autocomplete="username">
+      </div>
+      <div class="row">
+        <input id="pw" type="password" placeholder="Adminpassord" style="flex:1" autocomplete="current-password">
+        <button class="btn" id="loginBtn">Logg inn</button>
       </div>
       <div class="msg" id="loginMsg"></div>
     </div>
@@ -188,11 +191,20 @@ function show(loggedIn, email) {
 document.getElementById("loginBtn").onclick = async () => {
   const msg = document.getElementById("loginMsg");
   try {
-    await api("/login", { method: "POST", body: JSON.stringify({ email: document.getElementById("email").value.trim() }) });
-    msg.textContent = "Lenke sendt – sjekk e-posten din. Lenken åpner kartet; kom deretter tilbake hit.";
-    msg.className = "msg ok";
+    const res = await api("/login-passord", { method: "POST", body: JSON.stringify({
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("pw").value }) });
+    if (res.rolle !== "admin") {
+      msg.textContent = `Innlogget som ${res.email}, men kontoen mangler admin-rolle.`;
+      msg.className = "msg err";
+      return;
+    }
+    store.set({ token: res.session, email: res.email, rolle: res.rolle });
+    show(true, res.email);
+    loadStats();
   } catch (e) { msg.textContent = "Feil: " + e.message; msg.className = "msg err"; }
 };
+document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("loginBtn").click(); });
 document.getElementById("logoutBtn").onclick = () => { store.set(null); show(false); };
 
 document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => {
@@ -213,7 +225,14 @@ async function loadStats() {
       [s.auditRader, "rader i revisjonslogg"],
     ].map(([v, l]) => `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
     document.getElementById("tierCard").innerHTML = "<b>Abonnement:</b> " +
-      (s.perTier || []).map(t => `${esc(t.tier)}: ${t.n}`).join(" · ");
+      (s.perTier || []).map(t => `${esc(t.tier)}: ${t.n}`).join(" · ") +
+      ` · <b>Hendelser siste 7 d:</b> ${s.hendelser7d ?? 0}` +
+      `<h3 style="font-size:14px;margin:14px 0 6px">🔥 Mest åpnede saker (30 d)</h3>` +
+      ((s.toppSaker || []).map(r => `<div style="font-size:13px;padding:3px 0">${esc(r.objekt)} <b style="float:right">${r.n}</b></div>`).join("") || '<span class="msg">Ingen hendelser ennå.</span>') +
+      `<h3 style="font-size:14px;margin:14px 0 6px">📍 Mest åpnede adresser (30 d)</h3>` +
+      ((s.toppAdresser || []).map(r => `<div style="font-size:13px;padding:3px 0">${esc(r.objekt)} <b style="float:right">${r.n}</b></div>`).join("") || '<span class="msg">Ingen hendelser ennå.</span>') +
+      `<h3 style="font-size:14px;margin:14px 0 6px">⭐ Mest fulgte (alle brukere)</h3>` +
+      ((s.toppFulgte || []).map(r => `<div style="font-size:13px;padding:3px 0"><span class="pill">${esc(r.slag)}</span> ${esc(r.verdi)} <b style="float:right">${r.n}</b></div>`).join("") || '<span class="msg">Ingen følgere ennå.</span>');
   } catch (e) { document.getElementById("kpis").textContent = "Feil: " + e.message; }
 }
 

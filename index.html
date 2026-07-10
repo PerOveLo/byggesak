@@ -263,6 +263,9 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.35); border: 2.5px solid rgba(255,255,255,.95); }
   .poi.pulse::after { content: ""; position: absolute; inset: -7px; border-radius: 50%;
     border: 3px solid var(--red); animation: pulse 1.6s ease-out infinite; }
+  .hl-pulse { width: 52px; height: 52px; border-radius: 50%;
+    border: 3px solid #ff453a; box-shadow: 0 0 0 3px rgba(255,69,58,.25), 0 0 24px rgba(255,69,58,.5);
+    animation: pulse 1.4s ease-out infinite; }
   @keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
   .cluster {
     background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.68));
@@ -383,6 +386,7 @@
 <aside id="panel">
   <div class="sheet-grip" id="grip"></div>
   <div id="panelHead">
+    <button class="headbtn" id="panelBack" style="display:none" title="Tilbake">‹</button>
     <div class="titles"><h2 id="panelTitle"></h2><div class="sub" id="panelSub"></div></div>
     <button class="headbtn" id="panelFollow" style="display:none">☆</button>
     <button class="closebtn" onclick="closePanel()">✕</button>
@@ -565,6 +569,17 @@ async function api(path, opts = {}) {
   return r.json();
 }
 const loggedIn = () => !!store.session.get();
+function fireEvent(type, objekt) {
+  if (!CFG.apiBase) return;
+  try {
+    const sess = store.session.get();
+    fetch(CFG.apiBase.replace(/\/$/, "") + "/hendelse", {
+      method: "POST", keepalive: true,
+      headers: { "Content-Type": "application/json", ...(sess ? { Authorization: "Bearer " + sess.token } : {}) },
+      body: JSON.stringify({ type, objekt }),
+    }).catch(() => {});
+  } catch { /* ignorér */ }
+}
 
 let syncT;
 function scheduleSync() {
@@ -807,6 +822,19 @@ function refreshBadges() {
 
 /* ---------------- Panel ---------------- */
 const panel = document.getElementById("panel");
+let PANEL_STACK = [], PANEL_CUR = null;
+function navOpen(key, thunk) {
+  if (PANEL_CUR && PANEL_CUR.key !== key) {
+    PANEL_STACK.push(PANEL_CUR);
+    if (PANEL_STACK.length > 25) PANEL_STACK.shift();
+  }
+  PANEL_CUR = { key, thunk };
+  thunk();
+}
+document.getElementById("panelBack").onclick = () => {
+  const prev = PANEL_STACK.pop();
+  if (prev) { PANEL_CUR = prev; prev.thunk(); }
+};
 function openPanel(title, sub, bodyHtml, followPoi) {
   document.getElementById("panelTitle").textContent = title;
   document.getElementById("panelSub").innerHTML = sub;
@@ -825,12 +853,18 @@ function openPanel(title, sub, bodyHtml, followPoi) {
   } else {
     fb.style.display = "none";
   }
+  document.getElementById("panelBack").style.display = PANEL_STACK.length ? "flex" : "none";
   panel.classList.add("open");
   panel.style.setProperty("--sheet", "60dvh");
   document.getElementById("panelBody").scrollTop = 0;
   wireCards();
 }
-function closePanel() { panel.classList.remove("open"); }
+function closePanel() {
+  panel.classList.remove("open");
+  PANEL_STACK = [];
+  PANEL_CUR = null;
+  clearHighlight();
+}
 
 function poiAi(p) {
   const keys = Object.keys(DATA.poiSummaries || {});
@@ -842,7 +876,8 @@ function poiAi(p) {
   return null;
 }
 
-function openPoi(p) {
+function openPoi(p) { navOpen("poi:" + addrKey(p.label), () => renderPoi(p)); }
+function renderPoi(p) {
   const vis = p.cases.filter(caseVisible);
   const show = vis.length ? vis : p.cases;
   const ai = poiAi(p);
@@ -853,9 +888,11 @@ function openPoi(p) {
   const mtr = p.cases.find(c => c.matrikkel)?.matrikkel;
   openPanel(p.label, `${show.length} sak${show.length > 1 ? "er" : ""}${mtr ? " · gnr/bnr " + esc(mtr) : ""}`, html, p);
   markSeenAddr(p);
+  fireEvent("poi", p.label);
 }
 
-function openFollowList() {
+function openFollowList() { navOpen("folger", renderFollowList); }
+function renderFollowList() {
   refreshBadges();
   const fa = store.addrs.read();
   const followedAddrs = Object.values(fa);
@@ -940,7 +977,8 @@ function openFollowList() {
   wireEmailBox();
 }
 
-function openNews() {
+function openNews() { navOpen("nytt", renderNews); }
+function renderNews() {
   refreshBadges();
   const day = newsCases(1), week = newsCases(7);
   const seg = (id, label, n) => `<button data-days="${id}">${label} (${n})</button>`;
@@ -968,11 +1006,13 @@ function openNews() {
   draw(7);
 }
 
-function openNogeo() {
+function openNogeo() { navOpen("nogeo", renderNogeo); }
+function renderNogeo() {
   openPanel("Uten kartfeste", `${NOGEO.length} saker som ikke kunne plasseres på kartet`, NOGEO.filter(caseVisible).map(caseCard).join(""));
 }
 
-function openEntity(kind, name) {
+function openEntity(kind, name) { navOpen("ent:" + kind + ":" + name, () => renderEntity(kind, name)); }
+function renderEntity(kind, name) {
   const cs = entCases(kind, name).sort((a, b) => ((b.lastDate || "") + b.casenr).localeCompare((a.lastDate || "") + a.casenr));
   const followed = isFollowedEnt(kind, name);
   const ico = kind === "sb" ? "👤" : "🏢";
@@ -986,7 +1026,7 @@ function openEntity(kind, name) {
   markSeenEnt(kind, name);
   document.getElementById("entFollowBtn").onclick = () => {
     toggleFollowEnt(kind, name);
-    openEntity(kind, name);
+    renderEntity(kind, name);
   };
 }
 
@@ -1014,13 +1054,17 @@ function emailBox() {
     </div>`;
   }
   return `<div class="formbox">
-    <h4>📮 Logg inn for varsling</h4>
-    <p>Få e-post (og push) når adresser du følger får aktivitet. Skriv e-posten din, så sender vi en innloggingslenke – ingen passord.</p>
+    <h4>👤 Logg inn</h4>
+    <p>Følg saker, adresser og firmaer, få varsler og lagre notater. Ny her? Skriv e-post og velg et passord – kontoen opprettes automatisk.</p>
     <div class="formrow">
-      <input id="emailInput" type="email" placeholder="din@epost.no" value="${esc(store.email.get())}">
-      <button class="btn" id="loginBtn">Send lenke</button>
+      <input id="emailInput" type="email" placeholder="din@epost.no" value="${esc(store.email.get())}" autocomplete="username" style="flex:1 1 100%">
     </div>
-    <div class="formmsg" id="emailMsg">${CFG.apiBase ? "" : "⚠️ Varslings-API er ikke konfigurert ennå – følgelisten lagres lokalt i nettleseren og kobles til kontoen din når APIet er på plass (se README)."}</div>
+    <div class="formrow" style="margin-top:8px">
+      <input id="pwInput" type="password" placeholder="Passord (minst 8 tegn)" autocomplete="current-password" style="flex:1">
+      <button class="btn" id="pwLoginBtn">Logg inn</button>
+    </div>
+    <div class="formmsg" id="emailMsg">${CFG.apiBase ? "" : "⚠️ Innloggings-APIet er ikke konfigurert ennå – følgelisten lagres lokalt i nettleseren og kobles til kontoen din når APIet er på plass (se README)."}</div>
+    <p style="margin-top:8px" class="a-sub"><a href="#" id="loginBtn" style="color:var(--blue)">… eller få tilsendt innloggingslenke på e-post</a></p>
     <p style="margin-top:10px">📅 <a href="data/kalender.ics" style="color:var(--blue)">Kalenderfeed (iCal)</a> – nye saker og befaringer rett i kalenderen din.</p>
   </div>`;
 }
@@ -1029,20 +1073,42 @@ function wireEmailBox() {
   const msg = document.getElementById("emailMsg");
   const setMsg = (t, cls) => { if (msg) { msg.textContent = t; msg.className = "formmsg " + (cls || ""); } };
 
+  const pwLoginBtn = document.getElementById("pwLoginBtn");
+  if (pwLoginBtn) {
+    const doLogin = async () => {
+      const email = document.getElementById("emailInput").value.trim().toLowerCase();
+      const password = document.getElementById("pwInput").value;
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setMsg("Ugyldig e-postadresse.", "err");
+      if (!password || password.length < 8) return setMsg("Passordet må ha minst 8 tegn.", "err");
+      store.email.set(email);
+      if (!CFG.apiBase) return setMsg("Innloggings-APIet er ikke satt opp ennå (se README).", "err");
+      try {
+        const res = await api("/login-passord", { method: "POST", body: JSON.stringify({ email, password }) });
+        store.session.set({ token: res.session, email: res.email, rolle: res.rolle });
+        renderAccountState();
+        await pullAccount();
+        renderFollowList();
+      } catch (e) { setMsg("Feil: " + e.message, "err"); }
+    };
+    pwLoginBtn.onclick = doLogin;
+    document.getElementById("pwInput").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  }
+
   const loginBtn = document.getElementById("loginBtn");
-  if (loginBtn) loginBtn.onclick = async () => {
+  if (loginBtn) loginBtn.onclick = async (e) => {
+    e.preventDefault();
     const email = document.getElementById("emailInput").value.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setMsg("Ugyldig e-postadresse.", "err");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setMsg("Skriv e-postadressen i feltet først.", "err");
     store.email.set(email);
-    if (!CFG.apiBase) return setMsg("Lagret lokalt – innlogging aktiveres når varslings-APIet er satt opp.", "ok");
+    if (!CFG.apiBase) return setMsg("Lagret lokalt – innlogging aktiveres når APIet er satt opp.", "ok");
     try {
       await api("/login", { method: "POST", body: JSON.stringify({ email }) });
       setMsg("Innloggingslenke sendt! Sjekk e-posten din (gyldig i 15 min).", "ok");
-    } catch (e) { setMsg("Feil: " + e.message, "err"); }
+    } catch (e2) { setMsg("Feil: " + e2.message, "err"); }
   };
 
   const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) logoutBtn.onclick = () => { store.session.set(null); renderAccountState(); openFollowList(); };
+  if (logoutBtn) logoutBtn.onclick = () => { store.session.set(null); renderAccountState(); renderFollowList(); };
 
   const weeklyChk = document.getElementById("weeklyChk");
   if (weeklyChk) weeklyChk.onchange = () => {
@@ -1211,9 +1277,11 @@ function wireCards() {
         if (c) {
           markSeenCase(c);
           fillCaseBody(card, c);
-          if (c.latlon) {  // zoom alltid inn på saken når den åpnes
+          fireEvent("sak", c.casenr);
+          if (c.latlon) {  // zoom helt inn og markér eiendommen
+            highlightCase(c);
             const d = map.getCenter().distanceTo(L.latLng(c.latlon));
-            if (d > 60 || map.getZoom() < 16) map.flyTo(c.latlon, Math.max(map.getZoom(), 16), { duration: 0.7 });
+            if (d > 40 || map.getZoom() < 18) map.flyTo(c.latlon, 18, { duration: 0.7 });
           }
         }
       }
@@ -1270,7 +1338,8 @@ function wireCards() {
 
 /* ---------------- Saksliste-panel (klikkbar statistikk) ---------------- */
 let LIST_CTX = null;
-function openCaseList(title, sub, cases) {
+function openCaseList(title, sub, cases) { navOpen("list:" + title, () => renderCaseList(title, sub, cases)); }
+function renderCaseList(title, sub, cases) {
   LIST_CTX = { cases, shown: 0 };
   openPanel(title, `${cases.length} sak${cases.length === 1 ? "" : "er"}${sub ? " · " + sub : ""}`,
     `<div id="caseList"></div><div class="listnote"><button class="btn sec" id="moreBtn">Vis flere</button></div>`);
@@ -1305,7 +1374,8 @@ function barList(rows, color) {
       <div class="b-val">${r.v}</div>
     </div>`).join("") + `</div>`;
 }
-function openStats() {
+function openStats() { navOpen("statistikk", renderStats); }
+function renderStats() {
   const now = new Date();
   const yr = now.getFullYear();
   const cutoff12 = new Date(now - 365 * 864e5).toISOString().slice(0, 10);
@@ -1405,6 +1475,18 @@ function openStats() {
         cs.filter(c => c.type === "Ulovlighetssak" && !/avsluttet|trukket|avvist/i.test(c.status || "")).sort(byActivity));
     });
   });
+}
+
+/* ---------------- Eiendomsmarkering ---------------- */
+let hlLayer = null;
+function clearHighlight() { if (hlLayer) { map.removeLayer(hlLayer); hlLayer = null; } }
+function highlightCase(c) {
+  clearHighlight();
+  if (!c.latlon) return;
+  hlLayer = L.layerGroup([
+    L.circle(c.latlon, { radius: 16, color: "#ff453a", weight: 2.5, fillColor: "#ff453a", fillOpacity: 0.12, dashArray: "4 5" }),
+    L.marker(c.latlon, { interactive: false, icon: L.divIcon({ className: "", iconSize: [52, 52], iconAnchor: [26, 26], html: '<div class="hl-pulse"></div>' }) }),
+  ]).addTo(map);
 }
 
 /* ---------------- Varsler (toasts) ---------------- */

@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS brukere (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   epost TEXT UNIQUE NOT NULL,
+  passord_hash TEXT,                        -- salt$pbkdf2 (passordinnlogging)
   rolle TEXT NOT NULL DEFAULT 'bruker',     -- bruker | admin
   tier TEXT NOT NULL DEFAULT 'gratis',      -- gratis | privat | bedrift
   opprettet TEXT NOT NULL,
@@ -75,3 +76,14 @@ CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit_log
 BEGIN SELECT RAISE(ABORT, 'audit_log er append-only'); END;
 CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit_log
 BEGIN SELECT RAISE(ABORT, 'audit_log er append-only'); END;
+
+-- Brukshendelser (anonym-vennlig sporing: hvilke saker/adresser folk ser på)
+CREATE TABLE IF NOT EXISTS hendelser (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts TEXT NOT NULL,
+  bruker TEXT,               -- NULL for anonyme
+  type TEXT NOT NULL,        -- sak | poi | sok | liste
+  objekt TEXT
+);
+CREATE INDEX IF NOT EXISTS hendelser_type_obj ON hendelser(type, objekt);
+CREATE INDEX IF NOT EXISTS hendelser_ts ON hendelser(ts);

@@ -59,6 +59,21 @@ async function getSession(req, env) {
   return row || null;
 }
 
+async function hashPassword(pw, salt) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: enc.encode(salt), iterations: 100000, hash: "SHA-256" }, key, 256);
+  return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function makeSession(env, user) {
+  const s = token();
+  await env.DB.prepare("INSERT INTO sesjoner (token, bruker_id, opprettet, utloper) VALUES (?,?,?,?)")
+    .bind(s, user.id, now(), new Date(Date.now() + 90 * 86400 * 1000).toISOString()).run();
+  return s;
+}
+
 async function upsertUser(env, epost) {
   const admins = (env.ADMIN_EPOST || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
   const rolle = admins.includes(epost) ? "admin" : "bruker";
@@ -146,6 +161,54 @@ export default {
         return json({ ok: true });
       }
 
+      // Passordinnlogging: superadmin bruker delt adminpassord (env.ADMIN_PASSORD);
+      // vanlige brukere registreres automatisk med eget passord første gang.
+      if (p === "/login-passord" && req.method === "POST") {
+        const { email, password } = await req.json();
+        const e = (email || "").toLowerCase().trim();
+        if (!EMAIL_RE.test(e)) return err("Ugyldig e-postadresse", 400);
+        if (!password || password.length < 8) return err("Passord må ha minst 8 tegn", 400);
+        const admins = (env.ADMIN_EPOST || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
+        let user;
+        if (admins.includes(e)) {
+          if (!env.ADMIN_PASSORD || password !== env.ADMIN_PASSORD) {
+            await audit(env, req, e, null, "innlogging_feilet", null, "feil adminpassord");
+            return err("Feil passord", 401);
+          }
+          user = await upsertUser(env, e);
+        } else {
+          user = await env.DB.prepare("SELECT * FROM brukere WHERE epost = ?").bind(e).first();
+          if (user && user.passord_hash) {
+            const [salt, hash] = user.passord_hash.split("$");
+            if ((await hashPassword(password, salt)) !== hash) {
+              await audit(env, req, e, null, "innlogging_feilet", null, null);
+              return err("Feil passord", 401);
+            }
+            await env.DB.prepare("UPDATE brukere SET sist_innlogget = ? WHERE id = ?").bind(now(), user.id).run();
+          } else {
+            // ny bruker (eller eksisterende uten passord): sett passordet nå
+            const salt = crypto.randomUUID();
+            const ph = salt + "$" + (await hashPassword(password, salt));
+            user = await upsertUser(env, e);
+            await env.DB.prepare("UPDATE brukere SET passord_hash = ? WHERE id = ?").bind(ph, user.id).run();
+            await audit(env, req, e, user.rolle, "bruker_registrert", null, null);
+          }
+        }
+        const s = await makeSession(env, user);
+        await audit(env, req, e, user.rolle, "innlogging", null, "passord");
+        return json({ session: s, email: user.epost, rolle: user.rolle, tier: user.tier });
+      }
+
+      // Brukshendelser (anonymt OK) – gir adminstatistikk over hva folk ser på
+      if (p === "/hendelse" && req.method === "POST") {
+        const { type, objekt } = await req.json();
+        if (!["sak", "poi", "sok", "liste"].includes(type)) return err("Ugyldig type", 400);
+        const sess = await getSession(req, env);
+        await env.DB.prepare("INSERT INTO hendelser (ts, bruker, type, objekt) VALUES (?,?,?,?)")
+          .bind(now(), sess ? sess.epost : null, type, String(objekt || "").slice(0, 120)).run();
+        return json({ ok: true });
+      }
+
       if (p === "/verify" && req.method === "GET") {
         const t = url.searchParams.get("token") || "";
         const row = await env.DB.prepare("SELECT * FROM login_tokens WHERE token = ? AND utloper > ?")
@@ -153,10 +216,8 @@ export default {
         if (!row) return err("Lenken er utløpt eller ugyldig", 401);
         await env.DB.prepare("DELETE FROM login_tokens WHERE token = ?").bind(t).run();
         const user = await upsertUser(env, row.epost);
-        const s = token();
-        await env.DB.prepare("INSERT INTO sesjoner (token, bruker_id, opprettet, utloper) VALUES (?,?,?,?)")
-          .bind(s, user.id, now(), new Date(Date.now() + 90 * 86400 * 1000).toISOString()).run();
-        await audit(env, req, user.epost, user.rolle, "innlogging", null, null);
+        const s = await makeSession(env, user);
+        await audit(env, req, user.epost, user.rolle, "innlogging", null, "magisk lenke");
         return json({ session: s, email: user.epost, rolle: user.rolle, tier: user.tier });
       }
 
@@ -254,6 +315,16 @@ export default {
             push: await q("SELECT COUNT(*) n FROM push_abonnement"),
             auditRader: await q("SELECT COUNT(*) n FROM audit_log"),
             perTier: (await env.DB.prepare("SELECT tier, COUNT(*) n FROM brukere GROUP BY tier").all()).results,
+            hendelser7d: await q("SELECT COUNT(*) n FROM hendelser WHERE ts > datetime('now','-7 days')"),
+            toppSaker: (await env.DB.prepare(
+              `SELECT objekt, COUNT(*) n FROM hendelser WHERE type = 'sak' AND ts > datetime('now','-30 days')
+               GROUP BY objekt ORDER BY n DESC LIMIT 12`).all()).results,
+            toppAdresser: (await env.DB.prepare(
+              `SELECT objekt, COUNT(*) n FROM hendelser WHERE type = 'poi' AND ts > datetime('now','-30 days')
+               GROUP BY objekt ORDER BY n DESC LIMIT 12`).all()).results,
+            toppFulgte: (await env.DB.prepare(
+              `SELECT slag, verdi, COUNT(*) n FROM folger WHERE slag != 'omraade'
+               GROUP BY slag, verdi ORDER BY n DESC LIMIT 15`).all()).results,
           };
           await audit(env, req, sess.epost, "admin", "admin_stats", null, null);
           return json(stats);
