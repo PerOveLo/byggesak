@@ -797,7 +797,7 @@ function buildPois() {
     m.get(key).cases.push(c);
   }
   for (const p of m.values()) {
-    p.cases.sort((a, b) => ((b.lastDate || "") + b.casenr).localeCompare((a.lastDate || "") + a.casenr));
+    p.cases.sort(byActivity);
     p.label = p.cases[0].displayAddress || p.cases[0].listAddress || displayAddr(p.cases[0]);
   }
   return [...m.values()];
@@ -1130,7 +1130,7 @@ function renderNogeo() {
 
 function openEntity(kind, name) { navOpen("ent:" + kind + ":" + name, () => renderEntity(kind, name)); }
 function renderEntity(kind, name) {
-  const cs = entCases(kind, name).sort((a, b) => ((b.lastDate || "") + b.casenr).localeCompare((a.lastDate || "") + a.casenr));
+  const cs = entCases(kind, name).sort(byActivity);
   const followed = isFollowedEnt(kind, name);
   const ico = kind === "sb" ? "👤" : "🏢";
   const label = kind === "sb" ? "saksbehandler" : "søkerfirma";
@@ -1301,7 +1301,10 @@ function startRadiusPick() {
 /* ---------------- Sakskort (hode fra indeks, innhold lastes ved åpning) ---------------- */
 function caseCard(c) {
   const caseUpd = new Set(followUpdates().filter(u => u.kind === "case").map(u => u.c.casenr));
-  const range = c.firstDate ? (fmtMonth(c.firstDate) === fmtMonth(c.lastDate) ? fmtMonth(c.firstDate) : `${fmtMonth(c.firstDate)} – ${fmtMonth(c.lastDate)}`) : "";
+  const range = c.firstDate
+    ? (fmtMonth(c.firstDate) === fmtMonth(c.lastDate) ? fmtMonth(c.firstDate) : `${fmtMonth(c.firstDate)} – ${fmtMonth(c.lastDate)}`)
+    : (caseYear(c) || "");
+  const rangeTitle = c.firstDate ? `Første dokument ${fmtDate(c.firstDate)} · siste ${fmtDate(c.lastDate)}` : "Saksår fra saksnummeret – journaldatoer hentes inn";
   return `<div class="case" data-nr="${esc(c.casenr)}">
     <div class="case-head">
       <div class="case-top">
@@ -1310,7 +1313,7 @@ function caseCard(c) {
         <span class="pill ${c.type}">${c.type}</span>
         ${c.planfase ? `<span class="fase ${esc(c.planfase.replace(/[^A-Za-zÆØÅæøå]/g, ""))}">${esc(c.planfase)}</span>` : ""}
         ${caseUpd.has(c.casenr) ? '<span class="newbadge">NYTT</span>' : ""}
-        <span class="case-date">${range}</span>
+        <span class="case-date" title="${esc(rangeTitle)}">${range}</span>
         <button class="followbtn ${isFollowedCase(c.casenr) ? "on" : ""}" data-follow="${esc(c.casenr)}" title="Følg saken">${isFollowedCase(c.casenr) ? "★" : "☆"}</button>
       </div>
       <div class="case-desc">${esc(c.description || displayAddr(c))}</div>
@@ -1646,7 +1649,9 @@ function listShowMore() {
   if (btn) btn.style.display = LIST_CTX.shown >= LIST_CTX.cases.length ? "none" : "";
   wireCards();
 }
-const byActivity = (a, b) => ((b.lastDate || b.firstDate || "") + b.casenr).localeCompare((a.lastDate || a.firstDate || "") + a.casenr);
+function effDate(c) { return c.lastDate || c.firstDate || String(caseYear(c) || ""); }
+function caseRecency(c) { const m = /^[A-ZÆØÅ]+-(\d{2})\/(\d+)/.exec(c.casenr); return m ? (+m[1]) * 100000 + (+m[2]) : 0; }
+const byActivity = (a, b) => effDate(b).localeCompare(effDate(a)) || (caseRecency(b) - caseRecency(a));
 
 /* ---------------- Statistikk ---------------- */
 function median(arr) {
