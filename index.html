@@ -124,6 +124,25 @@
     display: flex; align-items: center; justify-content: center;
   }
   .only-mobile { display: none !important; }
+  /* Desktop: kompakt topplinje – ikonknapper med tooltip og filterknapper uten antall
+     (antallene står i tegnforklaringen), så alt alltid får plass på én rad */
+  @media (min-width: 761px) {
+    .topbar { gap: 6px; }
+    #typeSeg .tcnt { display: none; }
+    .iconbtn .lbl { display: none; }
+    .iconbtn { padding: 0 9px; height: 36px; min-width: 38px; }
+    .searchwrap { max-width: 260px; }
+  }
+  /* Smal desktop: krymp resten også */
+  @media (min-width: 761px) and (max-width: 1550px) {
+    .brand span { display: none; }
+    .brand h1 { font-size: 14px; }
+    .iconbtn { padding: 0 6px; min-width: 34px; }
+    .searchwrap { max-width: 200px; }
+    #typeSeg button { padding: 5px 6px; font-size: 12px; }
+    select.pill { padding: 7px 8px; font-size: 12px; }
+    .topbar .vizbo img { height: 22px; }
+  }
   @media (max-width: 760px) {
     .iconbtn .lbl { display: none; }
     .only-mobile { display: flex !important; }
@@ -138,11 +157,15 @@
     #typeSeg button { background: var(--glass-strong); border: 1px solid var(--glass-border);
       padding: 5px 11px; font-size: 12px; box-shadow: var(--glass-inset); opacity: .55; }
     #typeSeg button.on { opacity: 1; box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.5); }
-    .topbar { gap: 8px; padding: 8px 12px; }
+    .topbar { gap: 6px; padding: 8px 10px; }
     #bellBtn { margin-left: auto; order: 0; }
     #menuBtn { margin-left: 0; order: 1; }
-    .brand h1 { font-size: 15px; }
+    #bellBtn, #menuBtn { height: 34px; min-width: 34px; padding: 0 7px; }
+    /* rad 1 = tittel + logo + 🔔 + ☰: tittelen får «…» fremfor at raden brekker */
+    .brand { flex-shrink: 1; min-width: 0; margin-right: 0; max-width: calc(100vw - 206px); }
+    .brand h1 { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .brand span { display: none; }
+    .topbar .vizbo-m img { height: 16px; }
   }
   #menuSheet {
     position: fixed; top: calc(env(safe-area-inset-top, 0px) + 68px); left: 10px; right: 10px; z-index: 1500;
@@ -973,7 +996,7 @@ function renderSeg(counts) {
   for (const t of TYPES) {
     const b = document.createElement("button");
     b.className = state.types.has(t) ? "on" : "";
-    b.innerHTML = `<span class="dot" style="background:${COLORS[t]}"></span>${TYPE_LABEL[t]}${counts ? " " + counts[t] : ""}`;
+    b.innerHTML = `<span class="dot" style="background:${COLORS[t]}"></span>${TYPE_LABEL[t]}${counts ? `<span class="tcnt"> ${counts[t]}</span>` : ""}`;
     b.onclick = () => { state.types.has(t) ? state.types.delete(t) : state.types.add(t); render(); };
     seg.appendChild(b);
   }
