@@ -738,6 +738,43 @@ def case_by_id(chunks):
 # ICS
 # ---------------------------------------------------------------------------
 
+KLAGE_RE = re.compile(r'klage|innsigelse|merknad|protest', re.I)
+KLAGE_EKSKLUDER = re.compile(r'klagefrist|uten merknad|ingen merknad', re.I)
+
+
+def klage_kategori(tittel):
+    t = tittel.lower()
+    if "innsigelse" in t:
+        return "innsigelse"
+    if "klage" in t:
+        return "klage"
+    return "merknad"
+
+
+def generate_klager(chunks):
+    """Samler alle klage-/merknads-/innsigelsesdokumenter til data/klager.json."""
+    ut = []
+    for c in all_cases(chunks):
+        for d in c.get("documents") or []:
+            ren = re.sub(r'^[A-ZÆØÅ]+-\d{2}/\d+-\d+\s*-\s*', '', d["title"])
+            if not KLAGE_RE.search(ren) or KLAGE_EKSKLUDER.search(ren):
+                continue
+            fil = (d.get("files") or [{}])[0]
+            ut.append({
+                "c": c["casenr"], "i": c["id"],
+                "a": c.get("displayAddress") or "", "p": c.get("postnr") or "",
+                "d": d.get("date"), "t": ren[:150],
+                "k": klage_kategori(ren),
+                "fra": (d.get("from") or "")[:60],
+                "url": fil.get("url"),
+                "st": c.get("type", "")[:1],
+            })
+    ut.sort(key=lambda x: (x["d"] or "", x["c"]), reverse=True)
+    with open(os.path.join(DATA_DIR, "klager.json"), "w", encoding="utf-8") as f:
+        json.dump(ut, f, ensure_ascii=False)
+    log(f"klager.json: {len(ut)} dokumenter")
+
+
 def generate_ics(chunks):
     today = datetime.now().strftime("%Y-%m-%d")
     cutoff = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
@@ -825,6 +862,7 @@ def backfill(chunks, lookups, keep_prefixes=None):
                 touched = set()
     save_store(chunks, None, summaries)
     generate_ics(chunks)
+    generate_klager(chunks)
     log(f"Backfill ferdig: {processed} id-er, {kept} nye saker, totalt {sum(len(v) for v in chunks.values())}.")
 
 
@@ -925,6 +963,7 @@ def journal_match(chunks):
                 unmatched += 1
     save_store(chunks, touched)
     generate_ics(chunks)
+    generate_klager(chunks)
     log(f"Journal-match: {matched} saker datert, {ambiguous} tvetydige, {unmatched} uten treff.")
 
 
@@ -986,6 +1025,7 @@ def incremental(chunks, lookups):
 
     save_store(chunks, touched)
     generate_ics(chunks)
+    generate_klager(chunks)
     log(f"Inkrementell ferdig: {len(new_ids)} nye, {len(changed)} oppdaterte.")
 
 
@@ -1015,6 +1055,7 @@ def main():
                 c["soker"] = plan_soker(c)
         save_store(chunks)
         generate_ics(chunks)
+        generate_klager(chunks)
         log("Reindeksert (med klassifisering).")
     else:
         incremental(chunks, lookups)

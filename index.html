@@ -436,6 +436,18 @@
 
   .listnote { text-align: center; font-size: 12px; color: var(--ink2); padding: 10px 0 4px; }
 
+  .klagerow { background: var(--card); border: .5px solid var(--glass-border); border-radius: 14px;
+    padding: 11px 13px; margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(15,20,40,.06), inset 0 1px 0 rgba(255,255,255,.4); }
+  .klagerow .kr-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .klagerow .kr-tittel { font-size: 13.5px; font-weight: 600; margin: 5px 0 2px; line-height: 1.4; overflow-wrap: anywhere; }
+  .klagerow .kr-meta { font-size: 12px; color: var(--ink2); }
+  .klagerow .kr-akt { display: flex; gap: 6px; margin-top: 7px; }
+  .pill.merknad { background: rgba(255,159,10,.16); color: #c77700; }
+  .pill.klage { background: rgba(255,69,58,.14); color: var(--red); }
+  .pill.innsigelse { background: rgba(191,90,242,.15); color: var(--purple); }
+  @media (prefers-color-scheme: dark) { .pill.merknad { color: var(--orange); } }
+
   /* Sammenligning */
   .cmp-wrap { overflow-x: auto; margin: 0 -14px; padding: 0 14px; }
   .cmp-table { display: grid; gap: 6px; min-width: min-content; }
@@ -512,6 +524,7 @@
   <button class="iconbtn m-hide" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
   <button class="iconbtn m-hide" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
   <button class="iconbtn m-hide" id="regBtn" title="Reguleringsplaner">📐<span class="lbl">Regulering</span></button>
+  <button class="iconbtn m-hide" id="klagerBtn" title="Klager og merknader">🗣<span class="lbl">Klager</span></button>
   <button class="iconbtn m-hide" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
   <button class="iconbtn m-hide" id="followBtn" title="Følger og varsling">★<span class="lbl">Følger</span><span class="bubble" id="followBubble" style="display:none">0</span></button>
   <a class="vizbo m-hide" href="https://vizbo.no" target="_blank" rel="noopener" title="Levert av Vizbo"><img src="vizbo-logo.png" alt="Vizbo"></a>
@@ -523,6 +536,7 @@
     <button class="menu-item" data-menu="konto" style="grid-column: span 2">👤 <span id="mKontoLbl">Logg inn / Min konto</span></button>
     <button class="menu-item" data-menu="nytt">🕐 Nytt <span class="mbadge" id="mbNytt"></span></button>
     <button class="menu-item" data-menu="regulering">📐 Regulering</button>
+    <button class="menu-item" data-menu="klager">🗣 Klager</button>
     <button class="menu-item" data-menu="statistikk">📊 Statistikk</button>
     <button class="menu-item" data-menu="folger">★ Følger <span class="mbadge" id="mbFolger"></span></button>
   </div>
@@ -1803,6 +1817,78 @@ async function renderAdmin(tab) {
   }
 }
 
+/* ---------------- Klager og merknader ---------------- */
+let KLAGER = null;
+function openKlager() { navOpen("klager", renderKlager); }
+async function renderKlager(aktivKat, filter) {
+  openPanel("🗣 Klager og merknader", "Nabomerknader, klager og innsigelser – nyeste først",
+    '<div class="listnote">Laster …</div>');
+  if (!KLAGER) {
+    try { KLAGER = await fetch("data/klager.json", { cache: "no-cache" }).then(r => r.json()); }
+    catch { KLAGER = []; }
+  }
+  const kats = [["alle", "Alle"], ["merknad", "Merknader"], ["klage", "Klager"], ["innsigelse", "Innsigelser"]];
+  const cnt = k => k === "alle" ? KLAGER.length : KLAGER.filter(e => e.k === k).length;
+  document.getElementById("panelBody").innerHTML = `
+    <div class="seg" id="klSeg" style="margin:6px 0 10px; flex-wrap:wrap">
+      ${kats.map(([k, l]) => `<button data-k="${k}" class="${(aktivKat || "alle") === k ? "on" : ""}">${l} (${cnt(k)})</button>`).join("")}
+    </div>
+    <div class="formrow" style="margin-bottom:10px">
+      <input id="klFilter" placeholder="Filtrer på adresse, avsender, tekst …" style="flex:1" value="${esc(filter || "")}">
+    </div>
+    <div id="klBody"></div>
+    <div class="listnote"><button class="btn sec" id="klMer">Vis flere</button></div>`;
+
+  let shown = 0;
+  const liste = () => {
+    const f = (document.getElementById("klFilter").value || "").toLowerCase().trim();
+    const k = document.querySelector("#klSeg button.on")?.dataset.k || "alle";
+    return KLAGER.filter(e =>
+      (k === "alle" || e.k === k) &&
+      (!f || (e.t + " " + e.a + " " + e.fra + " " + e.c).toLowerCase().includes(f)));
+  };
+  const draw = mer => {
+    const rows = liste();
+    if (!mer) { shown = 0; document.getElementById("klBody").innerHTML = ""; }
+    const neste = rows.slice(shown, shown + 50);
+    shown += neste.length;
+    document.getElementById("klBody").insertAdjacentHTML("beforeend", neste.map(e => `
+      <div class="klagerow">
+        <div class="kr-top">
+          <span class="pill ${e.k}">${e.k}</span>
+          <span class="pill ${TYPE_FULL[e.st] || ""}">${TYPE_FULL[e.st] || ""}</span>
+          <span class="case-date">${e.d ? fmtDate(e.d) : ""}</span>
+        </div>
+        <div class="kr-tittel">${esc(e.t)}</div>
+        <div class="kr-meta">${e.fra ? "Fra " + esc(e.fra) + " · " : ""}${esc(e.a)} · ${esc(e.c)}</div>
+        <div class="kr-akt">
+          ${e.url ? `<a class="filechip" href="${esc(e.url)}" data-name="${esc(e.t)}" onclick="return openFile(this)">📄 Les dokumentet</a>` : ""}
+          <button class="filechip" data-sak="${esc(e.c)}" style="border:none;cursor:pointer">🗺 Åpne saken</button>
+        </div>
+      </div>`).join(""));
+    document.getElementById("klMer").style.display = shown >= rows.length ? "none" : "";
+    document.querySelectorAll("#klBody [data-sak]").forEach(b => {
+      if (b.dataset.w) return;
+      b.dataset.w = "1";
+      b.onclick = () => {
+        const c = DATA.cases.find(x => x.casenr === b.dataset.sak);
+        if (c) focusCase(c);
+      };
+    });
+  };
+  document.querySelectorAll("#klSeg button").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("#klSeg button").forEach(x => x.classList.toggle("on", x === b));
+    draw(false);
+  }));
+  let fT;
+  document.getElementById("klFilter").addEventListener("input", () => {
+    clearTimeout(fT);
+    fT = setTimeout(() => draw(false), 200);
+  });
+  document.getElementById("klMer").onclick = () => draw(true);
+  draw(false);
+}
+
 /* ---------------- Reguleringsoversikt ---------------- */
 const BANNER_CACHE = new Map();
 function pickBannerFile(full) {
@@ -2570,11 +2656,12 @@ document.addEventListener("click", e => {
 });
 document.querySelectorAll(".menu-item").forEach(b => b.addEventListener("click", () => {
   menuSheet.classList.remove("open");
-  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto })[b.dataset.menu]();
+  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto, klager: openKlager })[b.dataset.menu]();
 }));
 document.getElementById("accountBtn").onclick = openKonto;
 document.getElementById("statsBtn").onclick = openStats;
 document.getElementById("regBtn").onclick = openRegulering;
+document.getElementById("klagerBtn").onclick = openKlager;
 
 /* ---------------- Oppstart ---------------- */
 if ("serviceWorker" in navigator && IS_HTTP) {
