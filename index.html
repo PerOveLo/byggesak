@@ -72,6 +72,11 @@
     box-shadow: var(--glass-inset);
   }
   .searchwrap input:focus { border-color: var(--blue); }
+  .searchwrap input { padding-right: 36px; }
+  .searchwrap .clearbtn { position: absolute; right: 7px; top: 15px; transform: translateY(-50%);
+    width: 24px; height: 24px; border-radius: 50%; background: var(--fill2); color: var(--ink2);
+    font-size: 11px; font-weight: 700; display: none; align-items: center; justify-content: center; }
+  .searchwrap.has-text .clearbtn { display: flex; }
   .searchwrap::before { content: "🔍"; position: absolute; left: 9px; top: 15px; transform: translateY(-50%); font-size: 12px; opacity: .55; }
   #suggest {
     position: absolute; top: 40px; left: 0; right: 0; z-index: 1500;
@@ -126,7 +131,9 @@
     input, select, textarea { font-size: 16px !important; }
     .m-hide { display: none !important; }
     #typeSeg { order: 6; width: 100%; justify-content: center; background: transparent;
-      padding: 0; gap: 6px; box-shadow: none; }
+      padding: 0; gap: 6px; box-shadow: none; display: none; flex-wrap: wrap; }
+    .topbar.search-active #typeSeg { display: flex; }
+    .searchwrap .clearbtn { width: 30px; height: 30px; font-size: 13px; right: 8px; }
     #typeSeg button { background: var(--glass-strong); border: 1px solid var(--glass-border);
       padding: 5px 11px; font-size: 12px; box-shadow: var(--glass-inset); opacity: .55; }
     #typeSeg button.on { opacity: 1; box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.5); }
@@ -464,7 +471,8 @@
   <a class="vizbo-m only-mobile" href="https://vizbo.no" target="_blank" rel="noopener"><img src="vizbo-logo.png" alt="Vizbo"></a>
   <button class="iconbtn only-mobile" id="menuBtn" title="Meny">☰<span class="bubble" id="menuBubble" style="display:none">0</span></button>
   <div class="searchwrap">
-    <input id="q" type="search" placeholder="Søk adresse, saksnummer …" autocomplete="off">
+    <input id="q" type="search" placeholder="Søk adresse, firma, «basseng» …" autocomplete="off">
+    <button class="clearbtn" id="qClear" title="Tøm søket (filtre beholdes)">✕</button>
     <div id="suggest"></div>
   </div>
   <span id="filterWrap" style="display:contents">
@@ -576,7 +584,8 @@ const TYPE_LABEL = { Byggesak: "Bygg", Plansak: "Plan", Henvendelse: "Henv.", Ul
 const COLORS = { Byggesak: "#0a84ff", Plansak: "#bf5af2", Henvendelse: "#ff9f0a", Ulovlighetssak: "#ff453a" };
 const IS_HTTP = /^https?:$/.test(location.protocol);
 const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
-const state = { types: new Set(TYPES), years: 5, q: "", view: null };
+const state = { types: new Set(TYPES), years: 5, q: "", view: null, bbox: false };
+let RENDER_BOUNDS = null;
 
 /* ---------------- Hjelpere ---------------- */
 const esc = t => (t || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -864,6 +873,7 @@ let NOGEO = DATA.cases.filter(c => !c.latlon);
 
 function caseVisible(c) {
   if (!state.types.has(c.type)) return false;
+  if (RENDER_BOUNDS && c.latlon && !RENDER_BOUNDS.contains(c.latlon)) return false;
   if (state.years > 0) {
     const y = caseYear(c);
     if (y && y < new Date().getFullYear() - state.years + 1) return false;
@@ -882,6 +892,7 @@ function poiColor(cs) {
 }
 
 function render() {
+  RENDER_BOUNDS = state.bbox ? map.getBounds() : null;
   cluster.clearLayers();
   const counts = { Byggesak: 0, Henvendelse: 0, Ulovlighetssak: 0 };
   const caseUpd = new Set(), addrUpd = new Set();
@@ -914,7 +925,14 @@ function renderSeg(counts) {
     b.onclick = () => { state.types.has(t) ? state.types.delete(t) : state.types.add(t); render(); };
     seg.appendChild(b);
   }
+  const bb = document.createElement("button");
+  bb.className = state.bbox ? "on" : "";
+  bb.innerHTML = "🗺 I kartet";
+  bb.title = "Vis kun saker i synlig kartutsnitt";
+  bb.onclick = () => { state.bbox = !state.bbox; render(); };
+  seg.appendChild(bb);
 }
+map.on("moveend", () => { if (state.bbox) render(); });
 function renderLegend(counts) {
   document.getElementById("legend").innerHTML =
     TYPES.map(t => `<div><span class="dot" style="background:${COLORS[t]}"></span>${t} <b>${counts[t]}</b></div>`).join("") +
@@ -2078,6 +2096,14 @@ function searchMatches(q) {
                sub: `${n} sak(er) som ${kind === "firma" ? "søker" : "saksbehandler"}` });
   });
 
+  // Tiltakstyper («basseng», «garasje» …)
+  const kats = new Map();
+  for (const c of DATA.cases) for (const k of (c.kategorier || [])) {
+    if (k.toLowerCase().includes(q)) kats.set(k, (kats.get(k) || 0) + 1);
+  }
+  [...kats.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).forEach(([k, n]) =>
+    res.push({ type: "kat", name: k, label: "🏷 " + k, sub: `${n} saker – vis alle` }));
+
   const nr = DATA.cases.find(c => c.casenr.toLowerCase().includes(q) && c.latlon);
   if (nr) res.unshift({ type: "case", c: nr, label: nr.casenr, sub: nr.displayAddress || "" });
   return res.slice(0, 8);
@@ -2098,11 +2124,20 @@ function pickSuggest(it) {
   render();
   if (it.type === "addr") flyToPoi(it.p);
   else if (it.type === "ent") openEntity(it.kind, it.name);
+  else if (it.type === "kat") openCaseList("Tiltakstype: " + it.name,
+    "", DATA.cases.filter(c => (c.kategorier || []).includes(it.name)).sort(byActivity));
   else focusCase(it.c);
 }
 const qInput = document.getElementById("q");
+const topbarEl = document.querySelector(".topbar");
+const searchwrapEl = document.querySelector(".searchwrap");
+function syncSearchUi() {
+  searchwrapEl.classList.toggle("has-text", !!qInput.value);
+  if (qInput.value || document.activeElement === qInput) topbarEl.classList.add("search-active");
+}
 let qT;
 qInput.addEventListener("input", () => {
+  syncSearchUi();
   clearTimeout(qT);
   qT = setTimeout(() => {
     state.q = qInput.value.toLowerCase().trim();
@@ -2110,6 +2145,18 @@ qInput.addEventListener("input", () => {
     drawSuggest(searchMatches(qInput.value));
   }, 160);
 });
+qInput.addEventListener("focus", syncSearchUi);
+qInput.addEventListener("blur", () => {
+  setTimeout(() => { if (!qInput.value) topbarEl.classList.remove("search-active"); }, 250);
+});
+document.getElementById("qClear").onclick = () => {
+  qInput.value = "";
+  state.q = "";
+  syncSearchUi();
+  drawSuggest([]);
+  render();
+  qInput.focus();
+};
 qInput.addEventListener("keydown", e => {
   const items = suggest._items || [];
   if (e.key === "ArrowDown" || e.key === "ArrowUp") {
