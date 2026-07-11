@@ -873,7 +873,10 @@ L.control.layers({ "Kart": topo, "OpenStreetMap": osm, "Flyfoto": foto }, null, 
 new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById("map"));
 
 const cluster = L.markerClusterGroup({
-  maxClusterRadius: 44, disableClusteringAtZoom: 17, showCoverageOnHover: false, chunkedLoading: true,
+  // Klynging aktiv på ALLE zoomnivåer: da virtualiserer markercluster til synlig
+  // utsnitt (disableClusteringAtZoom la 21k DOM-markører i minnet -> mobilkrasj).
+  // Liten radius på høy zoom gir samme visuelle resultat som avslått klynging.
+  maxClusterRadius: z => (z >= 16 ? 10 : 44), showCoverageOnHover: false, chunkedLoading: true,
   iconCreateFunction: cl => L.divIcon({ className: "", iconSize: [34, 34],
     html: `<div class="cluster" style="width:34px;height:34px">${cl.getChildCount()}</div>` }),
 });
