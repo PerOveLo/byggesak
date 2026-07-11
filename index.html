@@ -1247,7 +1247,12 @@ function renderNews() {
 
 function openNogeo() { navOpen("nogeo", renderNogeo); }
 function renderNogeo() {
-  openPanel("Uten kartfeste", `${NOGEO.length} saker som ikke kunne plasseres på kartet`, NOGEO.filter(caseVisible).map(caseCard).join(""));
+  const cases = NOGEO.filter(caseVisible).sort(byActivity);
+  openPanel("Uten kartfeste", `${cases.length} saker uten kartplassering`,
+    `<div id="caseList"></div><div class="listnote"><button class="btn sec" id="moreBtn">Vis flere</button></div>`);
+  LIST_CTX = { cases, shown: 0 };
+  document.getElementById("moreBtn").onclick = listShowMore;
+  listShowMore();
 }
 
 function openEntity(kind, name) { navOpen("ent:" + kind + ":" + name, () => renderEntity(kind, name)); }
@@ -2197,9 +2202,15 @@ function flyToPoi(p) {
   setTimeout(() => openPoi(p), 850);
 }
 function focusCase(c) {
-  if (!c.latlon) { openNogeo(); return; }
-  const p = POIS.find(p => p.cases.includes(c));
-  if (!p) return;
+  const p = c.latlon ? POIS.find(x => x.cases.includes(c)) : null;
+  if (!c.latlon || !p) {
+    openCaseList(displayAddr(c), "saken mangler kartplassering", [c]);
+    setTimeout(() => {
+      const card = document.querySelector(`.case[data-nr="${CSS.escape(c.casenr)}"]`);
+      if (card) { card.classList.add("open"); fillCaseBody(card, c); }
+    }, 150);
+    return;
+  }
   // setView uten animasjon: robust ved oppstart (dyplenker) og skånsomt på mobil
   map.setView(c.latlon, 17, { animate: false });
   highlightCase(c);
