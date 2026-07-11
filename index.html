@@ -517,6 +517,18 @@
   #obNews .nw-date { font-size: 11.5px; color: var(--ink2); margin-bottom: 8px; }
   #obNews li { font-size: 12.5px; line-height: 1.5; color: var(--ink); margin-bottom: 5px; }
   #obNews ul { margin: 0; padding-left: 4px; list-style: none; }
+  .admrow { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+    background: var(--card); border: .5px solid var(--glass-border); border-radius: 12px;
+    padding: 8px 11px; margin-bottom: 5px; font-size: 12.5px; }
+  .admrow[data-sak]:hover, .admrow[data-akt]:hover { background: var(--fill); }
+  .admrow .ar-t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .admrow .ar-sub { display: block; font-size: 11px; color: var(--ink2); margin-top: 1px; }
+  .admrow b { font-variant-numeric: tabular-nums; }
+  .actbars { display: flex; align-items: flex-end; gap: 4px; padding: 6px 2px 0; }
+  .ab-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+  .ab-bar { width: 100%; max-width: 22px; border-radius: 4px 4px 2px 2px;
+    background: linear-gradient(180deg, var(--blue), rgba(10,132,255,.45)); }
+  .ab-lbl { font-size: 9.5px; color: var(--ink3); }
   .emptystate { text-align: center; color: var(--ink2); padding: 46px 20px; font-size: 14px; }
   .emptystate .big { font-size: 40px; margin-bottom: 10px; }
 </style>
@@ -1273,7 +1285,7 @@ async function loadMeldinger() {
 }
 const meldingSett = () => localStorage.getItem("bsMeldingSett") || "";
 const MTYPE = { info: "ℹ️", nyhet: "✨", betaling: "💳", drift: "🛠" };
-function openVarsler() { navOpen("varsler", renderVarsler); }
+function openVarsler() { fireEvent("side", "varsler"); navOpen("varsler", renderVarsler); }
 function renderVarsler() {
   const ups = followUpdates();
   const sett = meldingSett();
@@ -1310,7 +1322,7 @@ function renderVarsler() {
 }
 
 /* ---------------- Uka – ukesoppsummering ---------------- */
-function openUka() { navOpen("uka", renderUka); }
+function openUka() { fireEvent("side", "uka"); navOpen("uka", renderUka); }
 async function renderUka() {
   if (!KLAGER) {
     try { KLAGER = await fetch("data/klager.json", { cache: "no-cache" }).then(r => r.json()); }
@@ -1375,7 +1387,7 @@ async function renderUka() {
   draw(0);
 }
 
-function openNews() { navOpen("nytt", renderNews); }
+function openNews() { fireEvent("side", "nytt"); navOpen("nytt", renderNews); }
 function renderNews() {
   refreshBadges();
   const day = newsCases(1), week = newsCases(7);
@@ -1906,28 +1918,54 @@ async function renderAdmin(tab) {
     if (tab === "oversikt") {
       const s = await api("/admin/stats");
       const row = (t, v) => `<div class="barrow" style="grid-template-columns:1fr 40px"><div class="b-lbl" style="text-align:left">${esc(t)}</div><div class="b-val">${v}</div></div>`;
+      const sakRow = r => `<button class="admrow" data-sak="${esc(r.objekt)}"><span class="ar-t">${esc(r.objekt)}</span><b>${r.n}</b></button>`;
+      const txtRow = (r, ico) => `<div class="admrow" style="cursor:default"><span class="ar-t">${ico} ${esc(r.objekt)}</span><b>${r.n}</b></div>`;
+      const brukerRow = r => `<button class="admrow" data-akt="${esc(r.bruker)}">
+        <span class="ar-t">${esc(r.bruker)}<span class="ar-sub">${r.saker || 0} saker · ${r.dok || 0} dok · sist ${esc((r.sist || "").slice(5, 16).replace("T", " kl. "))}</span></span><b>${r.n}</b></button>`;
+      // aktivitet per dag, siste 14 dager (fyll hull med 0)
+      const days = [];
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+        const r = (s.perDag || []).find(x => x.d === d);
+        days.push({ d, n: r ? r.n : 0, b: r ? r.b : 0 });
+      }
+      const dmax = Math.max(...days.map(x => x.n), 1);
+      const tot30 = (s.innlogget30d || 0) + (s.anonyme30d || 0);
+      const innAndel = tot30 ? Math.round((s.innlogget30d || 0) / tot30 * 100) : 0;
       body.innerHTML = `
         <div class="kpis">
           <div class="kpi"><div class="k-val">${s.brukere}</div><div class="k-lbl">brukere</div></div>
-          <div class="kpi"><div class="k-val">${s.innloggetSiste7d}</div><div class="k-lbl">aktive siste 7 d</div></div>
+          <div class="kpi"><div class="k-val">${s.innloggetSiste7d}</div><div class="k-lbl">innlogget siste 7 d</div></div>
           <div class="kpi"><div class="k-val">${s.hendelser7d ?? 0}</div><div class="k-lbl">hendelser siste 7 d</div></div>
-          <div class="kpi"><div class="k-val">${s.folger}</div><div class="k-lbl">følge-oppføringer</div></div>
+          <div class="kpi"><div class="k-val">${s.dok7d ?? 0}</div><div class="k-lbl">dokumenter åpnet 7 d</div></div>
         </div>
+        <div class="sectionlabel">📈 Aktivitet siste 14 dager</div>
+        <div class="actbars">${days.map(x => `<div class="ab-col" title="${x.d}: ${x.n} hendelser, ${x.b} innloggede">
+          <div class="ab-bar" style="height:${Math.max(Math.round(x.n / dmax * 52), x.n ? 3 : 1)}px"></div>
+          <div class="ab-lbl">${+x.d.slice(8)}.</div></div>`).join("")}</div>
+        <div class="listnote" style="text-align:left;padding-top:2px">Trafikk siste 30 d: <b>${innAndel} %</b> fra innloggede (${s.innlogget30d || 0} av ${tot30}).</div>
+        <div class="sectionlabel">👥 Mest aktive brukere (30 d) – trykk for detaljer</div>
+        ${(s.aktiveBrukere || []).map(brukerRow).join("") || '<div class="listnote">Ingen innloggede hendelser ennå.</div>'}
         <div class="sectionlabel">🔥 Mest åpnede saker (30 d)</div>
-        ${(s.toppSaker || []).map(r => row(r.objekt, r.n)).join("") || '<div class="listnote">Ingen hendelser ennå.</div>'}
+        ${(s.toppSaker || []).map(sakRow).join("") || '<div class="listnote">Ingen hendelser ennå.</div>'}
+        <div class="sectionlabel">📄 Mest åpnede dokumenter (30 d)</div>
+        ${(s.toppDok || []).map(r => txtRow(r, "📄")).join("") || '<div class="listnote">Ingen dokumentåpninger ennå.</div>'}
+        <div class="sectionlabel">🔍 Vanligste søk (30 d)</div>
+        ${(s.toppSok || []).map(r => txtRow(r, "🔍")).join("") || '<div class="listnote">Ingen søk registrert ennå.</div>'}
         <div class="sectionlabel">📍 Mest åpnede adresser (30 d)</div>
         ${(s.toppAdresser || []).map(r => row(r.objekt, r.n)).join("") || '<div class="listnote">Ingen hendelser ennå.</div>'}
         <div class="sectionlabel">⭐ Mest fulgte</div>
         ${(s.toppFulgte || []).map(r => row(`[${r.slag}] ${r.verdi}`, r.n)).join("") || '<div class="listnote">Ingen følgere ennå.</div>'}`;
+      wireAdminRows(body);
     } else if (tab === "brukere") {
       body.innerHTML = `<div class="formrow"><input id="admQ" placeholder="Søk e-post …" style="flex:1"><button class="btn sec" id="admSok">Søk</button></div><div id="admUsers"></div>`;
       const loadUsers = async () => {
         const rows = await api("/admin/users?q=" + encodeURIComponent(document.getElementById("admQ").value.trim()));
         document.getElementById("admUsers").innerHTML = rows.map(u => `
           <div class="addrrow" style="border-radius:16px">
-            <div style="flex:1;min-width:0">
+            <div style="flex:1;min-width:0;cursor:pointer" data-akt="${esc(u.epost)}" title="Vis aktivitet">
               <div class="a-name">${esc(u.navn || u.epost)} ${u.rolle === "admin" ? '<span class="newbadge" style="background:var(--purple)">ADMIN</span>' : ""}</div>
-              <div class="a-sub">${esc(u.epost)} · ${u.folger} følger · ${u.notater} notater · sist: ${u.sist_innlogget ? esc(u.sist_innlogget.slice(0, 16).replace("T", " ")) : "–"}</div>
+              <div class="a-sub">${esc(u.epost)} · <b>${u.hendelser30 ?? 0} hendelser 30 d</b> · ${u.folger} følger · ${u.notater} notater · sist: ${u.sist_innlogget ? esc(u.sist_innlogget.slice(0, 16).replace("T", " ")) : "–"}</div>
             </div>
             <select class="lvlsel" data-uid="${u.id}">${["gratis", "privat", "bedrift"].map(t => `<option ${t === u.tier ? "selected" : ""}>${t}</option>`).join("")}</select>
             <button class="unfollow" data-del="${u.id}" data-epost="${esc(u.epost)}">Slett</button>
@@ -1935,6 +1973,7 @@ async function renderAdmin(tab) {
         document.querySelectorAll("#admUsers .lvlsel").forEach(s => s.onchange = async () => {
           await api("/admin/user", { method: "PUT", body: JSON.stringify({ id: +s.dataset.uid, tier: s.value }) });
         });
+        wireAdminRows(document.getElementById("admUsers"));
         document.querySelectorAll("#admUsers [data-del]").forEach(b => b.onclick = async () => {
           if (!confirm(`Slette ${b.dataset.epost} og alle data (GDPR)?`)) return;
           await api("/admin/user/delete", { method: "POST", body: JSON.stringify({ id: +b.dataset.del }) });
@@ -1997,9 +2036,52 @@ async function renderAdmin(tab) {
   }
 }
 
+function wireAdminRows(root) {
+  root.querySelectorAll("[data-sak]").forEach(b => b.onclick = () => {
+    const c = DATA.cases.find(x => x.casenr === b.dataset.sak);
+    if (c) focusCase(c);
+  });
+  root.querySelectorAll("[data-akt]").forEach(b => b.onclick = () => openAdminBruker(b.dataset.akt));
+}
+const HTYPE = { sak: ["🏠", "Åpnet sak"], poi: ["📍", "Åpnet adresse"], dok: ["📄", "Leste dokument"],
+                sok: ["🔍", "Søkte på"], liste: ["📋", "Åpnet liste"], side: ["🧭", "Åpnet side"] };
+function openAdminBruker(epost) { navOpen("admbruker:" + epost, () => renderAdminBruker(epost)); }
+async function renderAdminBruker(epost) {
+  openPanel("👤 " + epost, "Brukeraktivitet · oppslaget logges i sporingsloggen", '<div class="listnote">Laster …</div>');
+  try {
+    const a = await api("/admin/bruker-aktivitet?epost=" + encodeURIComponent(epost));
+    const s = a.sum || {};
+    const folgChips = (a.folger || []).map(f =>
+      `<span class="entchip" style="cursor:default">${{ adresse: "📍", sak: "🏠", firma: "🏢", sb: "👤", omraade: "🎯" }[f.slag] || "⭐"} ${esc(f.verdi)}</span>`).join(" ");
+    const html = `
+      <div class="kpis">
+        <div class="kpi"><div class="k-val">${s.n || 0}</div><div class="k-lbl">hendelser 30 d</div></div>
+        <div class="kpi"><div class="k-val">${s.saker || 0}</div><div class="k-lbl">unike saker</div></div>
+        <div class="kpi"><div class="k-val">${s.dok || 0}</div><div class="k-lbl">dokumenter</div></div>
+        <div class="kpi"><div class="k-val">${s.sok || 0}</div><div class="k-lbl">søk</div></div>
+      </div>
+      ${folgChips ? `<div class="sectionlabel">⭐ Følger</div><div style="display:flex;flex-wrap:wrap;gap:6px">${folgChips}</div>` : ""}
+      <div class="sectionlabel">🔥 Mest åpnede saker (totalt)</div>
+      ${(a.toppSaker || []).map(r => `<button class="admrow" data-sak="${esc(r.objekt)}"><span class="ar-t">${esc(r.objekt)}</span><b>${r.n}</b></button>`).join("")
+        || '<div class="listnote">Ingen saksåpninger.</div>'}
+      <div class="sectionlabel">🕐 Siste aktivitet</div>
+      ${(a.siste || []).map(h => {
+        const [ico, lbl] = HTYPE[h.type] || ["•", h.type];
+        const sakbar = h.type === "sak" ? ` data-sak="${esc(h.objekt)}"` : "";
+        return `<${h.type === "sak" ? "button" : "div"} class="admrow"${sakbar} ${h.type !== "sak" ? 'style="cursor:default"' : ""}>
+          <span class="ar-t">${ico} ${lbl} <b>${esc(h.objekt || "")}</b><span class="ar-sub">${esc((h.ts || "").slice(0, 16).replace("T", " kl. "))}</span></span>
+        </${h.type === "sak" ? "button" : "div"}>`;
+      }).join("") || '<div class="listnote">Ingen aktivitet registrert.</div>'}`;
+    openPanel("👤 " + epost, "Brukeraktivitet · oppslaget logges i sporingsloggen", html);
+    wireAdminRows(document.getElementById("panelBody"));
+  } catch (e) {
+    document.getElementById("panelBody").innerHTML = `<div class="listnote">Feil: ${esc(e.message)}</div>`;
+  }
+}
+
 /* ---------------- Klager og merknader ---------------- */
 let KLAGER = null;
-function openKlager() { navOpen("klager", renderKlager); }
+function openKlager() { fireEvent("side", "klager"); navOpen("klager", renderKlager); }
 async function renderKlager(aktivKat, filter) {
   openPanel("🗣 Klager og merknader", "Nabomerknader, klager og innsigelser – nyeste først",
     '<div class="listnote">Laster …</div>');
@@ -2124,7 +2206,7 @@ function planCard(c) {
   </div>`;
 }
 
-function openRegulering() { navOpen("regulering", renderRegulering); }
+function openRegulering() { fireEvent("side", "regulering"); navOpen("regulering", renderRegulering); }
 function renderRegulering() {
   const plans = DATA.cases.filter(c => c.type === "Plansak").sort(byActivity);
   const grupper = [
@@ -2230,7 +2312,7 @@ function barList(rows, color) {
       <div class="b-val">${r.v}</div>
     </div>`).join("") + `</div>`;
 }
-function openStats() { navOpen("statistikk", renderStats); }
+function openStats() { fireEvent("side", "statistikk"); navOpen("statistikk", renderStats); }
 function renderStats() {
   const now = new Date();
   const yr = now.getFullYear();
@@ -2583,6 +2665,8 @@ function drawSuggest(items) {
 }
 function pickSuggest(it) {
   suggest.style.display = "none";
+  const sokTekst = (it.type === "alle" ? it.q : document.getElementById("q").value).trim();
+  if (sokTekst.length > 1) fireEvent("sok", sokTekst);
   if (it.type !== "alle") {
     document.getElementById("q").value = it.raw || it.name || (it.type === "case" ? it.c.casenr : it.label);
     state.q = "";
@@ -2666,6 +2750,8 @@ function loadPdfJs() {
 function openFile(a) {
   const url = a.getAttribute("href");
   const name = a.dataset.name || "Dokument";
+  const caseNr = a.closest(".case")?.dataset.nr || "";
+  fireEvent("dok", (caseNr ? caseNr + " · " : "") + name);
   if (!IS_HTTP || !proxyUrl(url)) { window.open(url, "_blank"); return false; }
   showViewer(url, name);
   return false;

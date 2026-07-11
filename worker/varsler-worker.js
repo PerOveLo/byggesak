@@ -26,6 +26,7 @@
  *   PUT  /admin/user {id,tier?,rolle?}
  *   POST /admin/user/delete {id}
  *   GET  /admin/audit?bruker=&handling=&fra=&til=&limit=
+ *   GET  /admin/bruker-aktivitet?epost=   hva en bruker har sett på (audit-logges)
  */
 
 const CORS = {
@@ -220,7 +221,7 @@ export default {
       // Brukshendelser (anonymt OK) – gir adminstatistikk over hva folk ser på
       if (p === "/hendelse" && req.method === "POST") {
         const { type, objekt } = await req.json();
-        if (!["sak", "poi", "sok", "liste"].includes(type)) return err("Ugyldig type", 400);
+        if (!["sak", "poi", "sok", "liste", "dok", "side"].includes(type)) return err("Ugyldig type", 400);
         const sess = await getSession(req, env);
         await env.DB.prepare("INSERT INTO hendelser (ts, bruker, type, objekt) VALUES (?,?,?,?)")
           .bind(now(), sess ? sess.epost : null, type, String(objekt || "").slice(0, 120)).run();
@@ -296,16 +297,19 @@ export default {
       if (p === "/me/export" && req.method === "GET") {
         const sess = await getSession(req, env);
         if (!sess) return err("Ikke innlogget", 401);
-        const [prof, notes, push, logg] = await Promise.all([
+        const [prof, notes, push, logg, bruk] = await Promise.all([
           readProfile(env, sess.id),
           env.DB.prepare("SELECT * FROM notater WHERE bruker_id = ?").bind(sess.id).all(),
           env.DB.prepare("SELECT endpoint, opprettet FROM push_abonnement WHERE bruker_id = ?").bind(sess.id).all(),
           env.DB.prepare("SELECT ts, handling, objekt, ip FROM audit_log WHERE bruker = ? ORDER BY ts DESC LIMIT 1000")
             .bind(sess.epost).all(),
+          env.DB.prepare("SELECT ts, type, objekt FROM hendelser WHERE bruker = ? ORDER BY ts DESC LIMIT 5000")
+            .bind(sess.epost).all(),
         ]);
         await audit(env, req, sess.epost, sess.rolle, "gdpr_eksport", null, null);
         return json({ epost: sess.epost, tier: sess.tier, profil: prof,
-                      notater: notes.results, push: push.results, aktivitetslogg: logg.results });
+                      notater: notes.results, push: push.results, aktivitetslogg: logg.results,
+                      bruksstatistikk: bruk.results });
       }
 
       if (p === "/me/delete" && req.method === "POST") {
@@ -315,6 +319,7 @@ export default {
           await env.DB.prepare(`DELETE FROM ${t} WHERE bruker_id = ?`).bind(sess.id).run();
         }
         await env.DB.prepare("DELETE FROM brukere WHERE id = ?").bind(sess.id).run();
+        await env.DB.prepare("UPDATE hendelser SET bruker = NULL WHERE bruker = ?").bind(sess.epost).run();
         await audit(env, req, sess.epost, sess.rolle, "gdpr_sletting", "bruker:" + sess.id, null);
         return json({ ok: true });
       }
@@ -342,15 +347,32 @@ export default {
             auditRader: await q("SELECT COUNT(*) n FROM audit_log"),
             perTier: (await env.DB.prepare("SELECT tier, COUNT(*) n FROM brukere GROUP BY tier").all()).results,
             hendelser7d: await q("SELECT COUNT(*) n FROM hendelser WHERE ts > datetime('now','-7 days')"),
+            dok7d: await q("SELECT COUNT(*) n FROM hendelser WHERE type = 'dok' AND ts > datetime('now','-7 days')"),
+            perDag: (await env.DB.prepare(
+              `SELECT substr(ts,1,10) d, COUNT(*) n, COUNT(DISTINCT bruker) b FROM hendelser
+               WHERE ts > datetime('now','-14 days') GROUP BY d ORDER BY d`).all()).results,
             toppSaker: (await env.DB.prepare(
               `SELECT objekt, COUNT(*) n FROM hendelser WHERE type = 'sak' AND ts > datetime('now','-30 days')
                GROUP BY objekt ORDER BY n DESC LIMIT 12`).all()).results,
+            toppDok: (await env.DB.prepare(
+              `SELECT objekt, COUNT(*) n FROM hendelser WHERE type = 'dok' AND ts > datetime('now','-30 days')
+               GROUP BY objekt ORDER BY n DESC LIMIT 10`).all()).results,
+            toppSok: (await env.DB.prepare(
+              `SELECT objekt, COUNT(*) n FROM hendelser WHERE type = 'sok' AND ts > datetime('now','-30 days')
+               GROUP BY objekt ORDER BY n DESC LIMIT 10`).all()).results,
             toppAdresser: (await env.DB.prepare(
               `SELECT objekt, COUNT(*) n FROM hendelser WHERE type = 'poi' AND ts > datetime('now','-30 days')
                GROUP BY objekt ORDER BY n DESC LIMIT 12`).all()).results,
             toppFulgte: (await env.DB.prepare(
               `SELECT slag, verdi, COUNT(*) n FROM folger WHERE slag != 'omraade'
                GROUP BY slag, verdi ORDER BY n DESC LIMIT 15`).all()).results,
+            aktiveBrukere: (await env.DB.prepare(
+              `SELECT bruker, COUNT(*) n, MAX(ts) sist,
+                      SUM(type = 'sak') saker, SUM(type = 'dok') dok
+               FROM hendelser WHERE bruker IS NOT NULL AND ts > datetime('now','-30 days')
+               GROUP BY bruker ORDER BY n DESC LIMIT 10`).all()).results,
+            anonyme30d: await q(`SELECT COUNT(*) n FROM hendelser WHERE bruker IS NULL AND ts > datetime('now','-30 days')`),
+            innlogget30d: await q(`SELECT COUNT(*) n FROM hendelser WHERE bruker IS NOT NULL AND ts > datetime('now','-30 days')`),
           };
           await audit(env, req, sess.epost, "admin", "admin_stats", null, null);
           return json(stats);
@@ -362,7 +384,8 @@ export default {
           const rows = (await env.DB.prepare(
             `SELECT b.id, b.epost, b.navn, b.rolle, b.tier, b.opprettet, b.sist_innlogget,
                     (SELECT COUNT(*) FROM folger f WHERE f.bruker_id = b.id) folger,
-                    (SELECT COUNT(*) FROM notater n WHERE n.bruker_id = b.id) notater
+                    (SELECT COUNT(*) FROM notater n WHERE n.bruker_id = b.id) notater,
+                    (SELECT COUNT(*) FROM hendelser h WHERE h.bruker = b.epost AND h.ts > datetime('now','-30 days')) hendelser30
              FROM brukere b WHERE b.epost LIKE ? ORDER BY b.sist_innlogget DESC LIMIT ?`)
             .bind(`%${q}%`, limit).all()).results;
           await audit(env, req, sess.epost, "admin", "admin_brukersok", null, q || "(alle)");
@@ -386,8 +409,28 @@ export default {
             await env.DB.prepare(`DELETE FROM ${t} WHERE bruker_id = ?`).bind(id).run();
           }
           await env.DB.prepare("DELETE FROM brukere WHERE id = ?").bind(id).run();
+          await env.DB.prepare("UPDATE hendelser SET bruker = NULL WHERE bruker = ?").bind(u.epost).run();
           await audit(env, req, sess.epost, "admin", "admin_bruker_slettet", "bruker:" + id, u.epost);
           return json({ ok: true });
+        }
+
+        // Per-bruker aktivitet: hva har vedkommende sett på? (oppslaget audit-logges)
+        if (p === "/admin/bruker-aktivitet" && req.method === "GET") {
+          const e = (url.searchParams.get("epost") || "").toLowerCase().trim();
+          if (!e) return err("Mangler epost", 400);
+          const sum = await env.DB.prepare(
+            `SELECT COUNT(*) n, COUNT(DISTINCT CASE WHEN type = 'sak' THEN objekt END) saker,
+                    SUM(type = 'dok') dok, SUM(type = 'sok') sok, MAX(ts) sist
+             FROM hendelser WHERE bruker = ? AND ts > datetime('now','-30 days')`).bind(e).first();
+          const toppSaker = (await env.DB.prepare(
+            `SELECT objekt, COUNT(*) n FROM hendelser WHERE bruker = ? AND type = 'sak'
+             GROUP BY objekt ORDER BY n DESC LIMIT 10`).bind(e).all()).results;
+          const siste = (await env.DB.prepare(
+            `SELECT ts, type, objekt FROM hendelser WHERE bruker = ? ORDER BY ts DESC LIMIT 60`).bind(e).all()).results;
+          const folger = (await env.DB.prepare(
+            `SELECT f.slag, f.verdi FROM folger f JOIN brukere b ON b.id = f.bruker_id WHERE b.epost = ? LIMIT 30`).bind(e).all()).results;
+          await audit(env, req, sess.epost, "admin", "admin_brukeraktivitet", "bruker:" + e, null);
+          return json({ epost: e, sum, toppSaker, siste, folger });
         }
 
         if (p === "/admin/melding" && req.method === "POST") {
