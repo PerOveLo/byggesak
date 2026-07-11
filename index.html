@@ -368,6 +368,11 @@
     border: 3px solid #ff453a; box-shadow: 0 0 0 3px rgba(255,69,58,.25), 0 0 24px rgba(255,69,58,.5);
     animation: pulse 1.4s ease-out infinite; }
   @keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
+  .nb-dot { width: 13px; height: 13px; margin: 2.5px; border-radius: 50%;
+    background: var(--c, #0a84ff); border: 2px solid rgba(255,255,255,.95);
+    box-shadow: 0 0 10px var(--c, #0a84ff);
+    animation: nbblink 1.5s ease-in-out infinite; }
+  @keyframes nbblink { 0%, 100% { opacity: .3; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.2); } }
   .cluster {
     background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.68));
     backdrop-filter: blur(6px) saturate(1.6); color: #1c1c1e;
@@ -1125,6 +1130,7 @@ function closePanel() {
   PANEL_STACK = [];
   PANEL_CUR = null;
   clearHighlight();
+  clearNabolag();
 }
 
 function poiAi(p) {
@@ -1157,6 +1163,27 @@ function nabolag(p) {
   const topp = Object.entries(kat).sort((a, b) => b[1] - a[1]).slice(0, 3);
   return { saker: saker.sort(byActivity), aktive, vedtak12, ulov, planer, hoering, topp };
 }
+let naboLayer = null;
+function clearNabolag() { if (naboLayer) { map.removeLayer(naboLayer); naboLayer = null; } }
+function showNabolag(p, cases, fit) {
+  clearNabolag();
+  const ring = L.circle(p.latlon, { radius: NABO_RADIUS, color: "#0a84ff", weight: 2,
+    dashArray: "6 6", fillColor: "#0a84ff", fillOpacity: 0.05, interactive: false });
+  const seen = new Set();
+  const dots = [];
+  for (const c of cases) {
+    if (!c.latlon) continue;
+    const k = c.latlon.join(",");
+    if (seen.has(k)) continue;
+    seen.add(k);
+    dots.push(L.marker(c.latlon, { interactive: false, icon: L.divIcon({ className: "",
+      iconSize: [18, 18], iconAnchor: [9, 9],
+      html: `<div class="nb-dot" style="--c:${COLORS[c.type] || "#0a84ff"};animation-delay:${(dots.length % 5) * 0.13}s"></div>` }) }));
+    if (dots.length >= 300) break;
+  }
+  naboLayer = L.layerGroup([ring, ...dots]).addTo(map);
+  if (fit) map.fitBounds(ring.getBounds(), { padding: [36, 36], animate: false });
+}
 function nabolagHtml(n) {
   if (!n) return "";
   return `<div class="sectionlabel">🏘 Nabolaget – innen ${NABO_RADIUS} m</div>
@@ -1176,7 +1203,9 @@ function wireNabolag(p, n) {
                   plan: ["Plansaker", n.planer], ulov: ["Åpne ulovlighetssaker", n.ulov], alle: ["Nabolaget", n.saker] };
   document.querySelectorAll("#panelBody [data-nabo]").forEach(b => b.onclick = () => {
     const [t, cs] = lists[b.dataset.nabo];
-    if (cs.length) openCaseList(t, lbl, [...cs]);
+    if (!cs.length) return;
+    showNabolag(p, cs, true);   // blink akkurat disse sakene og zoom så hele ringen synes
+    openCaseList(t, lbl, [...cs]);
   });
 }
 
@@ -1193,6 +1222,8 @@ function renderPoi(p) {
   const mtr = p.cases.find(c => c.matrikkel)?.matrikkel;
   openPanel(p.label, `${show.length} sak${show.length > 1 ? "er" : ""}${mtr ? " · gnr/bnr " + esc(mtr) : ""}`, html, p);
   wireNabolag(p, nabo);
+  if (nabo) showNabolag(p, nabo.saker);   // vis ring + blinkende nabolagssaker (uten å endre zoom)
+  else clearNabolag();
   setPanelShare(`adresse=${encodeURIComponent(p.label)}@${p.latlon[0].toFixed(5)},${p.latlon[1].toFixed(5)},17`, p.label);
   markSeenAddr(p);
   fireEvent("poi", p.label);
