@@ -2183,7 +2183,10 @@ qInput.addEventListener("keydown", e => {
     selIdx = (selIdx + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
     suggest.querySelectorAll("button").forEach((b, i) => b.classList.toggle("sel", i === selIdx));
   } else if (e.key === "Enter") {
-    if (items.length) pickSuggest(items[Math.max(selIdx, 0)]);
+    if (!items.length) return;
+    if (selIdx >= 0) { pickSuggest(items[selIdx]); return; }   // eksplisitt valgt med piltast
+    const alle = items.find(i => i.type === "alle");           // ellers: hele trefflisten
+    pickSuggest(alle || items[0]);
   } else if (e.key === "Escape") {
     suggest.style.display = "none";
   }
