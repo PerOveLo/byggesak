@@ -529,6 +529,23 @@
   .ab-bar { width: 100%; max-width: 22px; border-radius: 4px 4px 2px 2px;
     background: linear-gradient(180deg, var(--blue), rgba(10,132,255,.45)); }
   .ab-lbl { font-size: 9.5px; color: var(--ink3); }
+  /* Saksgang-tidslinje */
+  .sg { position: relative; padding: 2px 0 2px 4px; }
+  .sg-step { display: flex; align-items: flex-start; gap: 9px; position: relative; padding: 0 0 12px; }
+  .sg-step:not(:last-child)::before { content: ""; position: absolute; left: 12px; top: 24px; bottom: -2px;
+    width: 2px; background: var(--glass-border); }
+  .sg-dot { width: 25px; height: 25px; border-radius: 50%; background: var(--card);
+    border: .5px solid var(--glass-border); display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex-shrink: 0; z-index: 1; }
+  .sg-lbl { font-size: 12.5px; padding-top: 3px; }
+  .sg-date { display: block; font-size: 11px; color: var(--ink2); }
+  .sg-hopp .sg-lbl { color: var(--ink3); font-size: 11.5px; padding-top: 5px; }
+  .sg-hopp .sg-dot { height: 12px; width: 12px; margin: 6px 6.5px; border-style: dashed; }
+  /* Presedens */
+  .pres { background: var(--card); border: .5px solid var(--glass-border); border-radius: 14px; padding: 11px 13px; }
+  .pres-hode { font-size: 13px; line-height: 1.45; }
+  .pres-tall { font-size: 19px; font-weight: 750; margin-right: 2px; }
+  .pres-meta { font-size: 11.5px; color: var(--ink2); }
   .emptystate { text-align: center; color: var(--ink2); padding: 46px 20px; font-size: 14px; }
   .emptystate .big { font-size: 40px; margin-bottom: 10px; }
 </style>
@@ -1753,6 +1770,87 @@ function caseCard(c) {
   </div>`;
 }
 
+/* ---------------- Saksgang: milepæler fra dokumenttype + tittel ---------------- */
+function klassifiserDok(d) {
+  const type = d.type || "", t = d.title || "";
+  // Dokumenttypen fra arkivet er mest pålitelig
+  if (/vedtaksbrev|politisk vedtak/i.test(type)) {
+    if (/avslag|avslå/i.test(t)) return ["⛔", "Avslag"];
+    if (/ferdigattest/i.test(t)) return ["🏁", "Ferdigattest"];
+    if (/brukstillatelse/i.test(t)) return ["🔑", "Brukstillatelse"];
+    if (/igangsetting/i.test(t)) return ["🚧", "Igangsettingstillatelse"];
+    if (/rammetillatelse/i.test(t)) return ["✅", "Rammetillatelse"];
+    if (/dispensasjon/i.test(t)) return ["📜", "Dispensasjon"];
+    return ["✅", "Vedtak"];
+  }
+  if (/^søknad/i.test(type)) return ["📨", "Søknad"];
+  if (/komplettering/i.test(type)) return ["✏️", "Komplettering"];
+  if (/mangelbrev/i.test(type)) return ["✉️", "Mangelbrev"];
+  if (/internt notat|dok-analyse|oversendelsesbrev|referat|bekreftelse på mottatt|sentral godkjenning/i.test(type)) return null;
+  // Fallback på tittelen (Dokument inn/ut m.m.)
+  if (/klage|innsigelse/i.test(t)) return ["⚖️", "Klage"];
+  if (/trukket|trekker søknad/i.test(t)) return ["↩️", "Søknad trukket"];
+  if (/nabovarsel|nabomerknad|merknad|protest|kommentar til/i.test(t)) return ["🏘", "Nabovarsel/merknad"];
+  if (/befaring|tilsyn/i.test(t)) return ["🔎", "Befaring/tilsyn"];
+  if (/mangel|etterspør|foreløpig svar/i.test(t)) return ["✉️", "Mangelbrev"];
+  if (/søknad om|^søknad/i.test(t)) return ["📨", "Søknad"];
+  if (/ferdigattest/i.test(t)) return ["🏁", "Ferdigattest"];
+  if (/brukstillatelse/i.test(t)) return ["🔑", "Brukstillatelse"];
+  if (/igangsettingstillatelse/i.test(t)) return ["🚧", "Igangsettingstillatelse"];
+  return null;
+}
+function saksgangHtml(full) {
+  const dated = (full.documents || []).filter(d => d.date);
+  if (dated.length < 2) return "";
+  const steg = [];
+  for (const d of [...dated].sort((a, b) => a.date.localeCompare(b.date))) {
+    const m = klassifiserDok(d);
+    if (!m) continue;
+    if (steg.length && steg[steg.length - 1].lbl === m[1]) { steg[steg.length - 1].n++; continue; }
+    steg.push({ dato: d.date, ico: m[0], lbl: m[1], n: 1 });
+  }
+  if (steg.length < 2) return "";
+  const vist = steg.length > 9 ? steg.slice(0, 2).concat([{ hopp: steg.length - 8 }], steg.slice(-7)) : steg;
+  return `<div class="sectionlabel" style="margin-top:10px">📅 Saksgang</div><div class="sg">` +
+    vist.map(s => s.hopp
+      ? `<div class="sg-step sg-hopp"><span class="sg-dot"></span><span class="sg-lbl">… ${s.hopp} hendelser til …</span></div>`
+      : `<div class="sg-step"><span class="sg-dot">${s.ico}</span>
+           <span class="sg-lbl"><b>${s.lbl}</b>${s.n > 1 ? ` ×${s.n}` : ""}<span class="sg-date">${fmtDate(s.dato)}</span></span></div>`).join("") +
+    `</div>`;
+}
+
+/* ---------------- Presedens: lignende saker i nærområdet ---------------- */
+const INNVILGET_RE = /ferdigattest|tillatelse gitt|rammetillatelse|igangsetting|brukstillatelse/i;
+function presedens(c) {
+  const kat = (c.kategorier || [])[0];
+  if (!kat || !c.latlon) return null;
+  const her = L.latLng(c.latlon);
+  const finn = radius => DATA.cases.filter(x => x !== c && x.latlon && (x.kategorier || []).includes(kat)
+    && her.distanceTo(L.latLng(x.latlon)) <= radius);
+  let radius = 800, naboer = finn(radius);
+  if (naboer.length < 3) { radius = 2000; naboer = finn(radius); }
+  if (naboer.length < 3) return null;
+  const innv = naboer.filter(x => INNVILGET_RE.test(x.status || "")).length;
+  const avslag = naboer.filter(x => /avslag/i.test(x.status || "")).length;
+  const avgjort = innv + avslag;
+  const dager = naboer.filter(x => x.firstDate && x.lastDate && (INNVILGET_RE.test(x.status || "") || /avslag|avsluttet/i.test(x.status || "")))
+    .map(x => Math.round((new Date(x.lastDate) - new Date(x.firstDate)) / 864e5)).filter(d => d >= 0);
+  return { kat, radius, naboer: naboer.sort(byActivity), innv, avslag, avgjort,
+           andel: avgjort ? Math.round(innv / avgjort * 100) : null, median: median(dager) };
+}
+function presedensHtml(p) {
+  if (!p) return "";
+  return `<div class="sectionlabel" style="margin-top:10px">📊 Presedens i nærområdet</div>
+    <div class="pres">
+      <div class="pres-hode">${p.avgjort
+        ? `<span class="pres-tall">${p.innv} av ${p.avgjort}</span> avgjorte søknader om <b>${esc(p.kat)}</b> innen ${p.radius >= 1000 ? (p.radius / 1000) + " km" : p.radius + " m"} ble innvilget${p.andel !== null ? ` (${p.andel} %)` : ""}`
+        : `${p.naboer.length} saker om <b>${esc(p.kat)}</b> innen ${p.radius >= 1000 ? (p.radius / 1000) + " km" : p.radius + " m"} – ingen avgjort ennå`}</div>
+      ${p.avgjort ? `<div class="cmp-bar" style="margin:7px 0 5px"><i style="width:${p.andel ?? 0}%"></i></div>` : ""}
+      <div class="pres-meta">${p.avslag ? `⛔ ${p.avslag} avslag · ` : ""}${p.median !== null ? `⏱ median behandlingstid ${p.median} dager · ` : ""}${p.naboer.length} saker totalt</div>
+      <button class="btn sec pres-alle" style="margin-top:8px">Vis alle ${p.naboer.length} lignende saker</button>
+    </div>`;
+}
+
 async function fillCaseBody(card, c) {
   if (card.dataset.filled) return;
   card.dataset.filled = "1";
@@ -1776,17 +1874,23 @@ async function fillCaseBody(card, c) {
       ${files}</div>`;
   }).join("");
   const summary = full.aiSummary ? (full.aiSummary.text || full.aiSummary) : full.summary;
+  const pres = presedens(c);
   body.innerHTML = `
     <div class="summary">${full.aiSummary ? "🧠 " : ""}${esc(summary)}</div>
     <div class="meta">
       ${entChip("firma", c.soker)}${entChip("sb", c.saksbehandler)}
       <div style="margin-top:4px">${(full.documents || []).length} dokument(er)${c.matrikkel ? " · gnr/bnr " + esc(c.matrikkel) : ""}</div>
     </div>
+    ${saksgangHtml(full)}
+    ${presedensHtml(pres)}
     ${fileGallery(full)}
     ${docs ? `<div class="tl">${docs}</div>` : '<div class="listnote">Ingen offentlig tilgjengelige dokumenter.</div>'}
     ${endringerHtml(full)}
     ${notesHtml(c)}
     <a class="extlink" href="${esc(c.url)}" target="_blank" rel="noopener">Åpne i kommunens innsynsløsning ↗</a>`;
+  const pa = body.querySelector(".pres-alle");
+  if (pa) pa.onclick = () => openCaseList("Presedens: " + pres.kat,
+    `innen ${pres.radius >= 1000 ? (pres.radius / 1000) + " km" : pres.radius + " m"} fra ${displayAddr(c)}`, pres.naboer);
   wireCards();
 }
 function entChip(kind, name) {
