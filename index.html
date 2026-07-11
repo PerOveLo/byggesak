@@ -83,6 +83,7 @@
     background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
     border-radius: 18px; box-shadow: var(--shadow), var(--glass-inset);
     border: 1px solid var(--glass-border); overflow: hidden; display: none;
+    max-height: 55dvh; overflow-y: auto;
   }
   #suggest button { display: block; width: 100%; text-align: left; padding: 9px 13px; font-size: 13.5px; }
   #suggest button:hover, #suggest button.sel { background: var(--fill); }
@@ -871,17 +872,22 @@ function buildPois() {
 let POIS = buildPois();
 let NOGEO = DATA.cases.filter(c => !c.latlon);
 
-function caseVisible(c) {
+function matchesFilters(c) {
   if (!state.types.has(c.type)) return false;
   if (RENDER_BOUNDS && c.latlon && !RENDER_BOUNDS.contains(c.latlon)) return false;
   if (state.years > 0) {
     const y = caseYear(c);
     if (y && y < new Date().getFullYear() - state.years + 1) return false;
   }
-  if (state.q) {
-    const hay = ((c.title || "") + " " + c.casenr + " " + (c.displayAddress || "") + " " + (c.status || "") + " " + (c.description || "") + " " + (c.soker || "") + " " + (c.saksbehandler || "") + " " + (c.kategorier || []).join(" ")).toLowerCase();
-    if (!hay.includes(state.q)) return false;
-  }
+  return true;
+}
+function hayHit(c, q) {
+  const hay = ((c.title || "") + " " + c.casenr + " " + (c.displayAddress || "") + " " + (c.status || "") + " " + (c.description || "") + " " + (c.soker || "") + " " + (c.saksbehandler || "") + " " + (c.kategorier || []).join(" ")).toLowerCase();
+  return hay.includes(q);
+}
+function caseVisible(c) {
+  if (!matchesFilters(c)) return false;
+  if (state.q && !hayHit(c, state.q)) return false;
   return true;
 }
 function poiColor(cs) {
@@ -2070,6 +2076,9 @@ let selIdx = -1;
 function searchMatches(q) {
   q = q.toLowerCase().trim();
   if (q.length < 2) return [];
+  // Sakstreff (respekterer aktive filtre: sakstype, år, kartutsnitt)
+  const hits = DATA.cases.filter(c => matchesFilters(c) && hayHit(c, q));
+  hits.sort(byActivity);
   const out = [];
   for (const p of POIS) {
     const l = p.label.toLowerCase();
@@ -2104,9 +2113,15 @@ function searchMatches(q) {
   [...kats.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).forEach(([k, n]) =>
     res.push({ type: "kat", name: k, label: "🏷 " + k, sub: `${n} saker – vis alle` }));
 
-  const nr = DATA.cases.find(c => c.casenr.toLowerCase().includes(q) && c.latlon);
-  if (nr) res.unshift({ type: "case", c: nr, label: nr.casenr, sub: nr.displayAddress || "" });
-  return res.slice(0, 8);
+  const res2 = res.slice(0, 5);
+  // Toppsaker direkte i listen
+  hits.slice(0, 4).forEach(c => res2.push({
+    type: "case", c,
+    label: "📄 " + (c.description || displayAddr(c)).slice(0, 60),
+    sub: `${displayAddr(c)} · ${c.casenr}${c.lastDate ? " · " + fmtMonth(c.lastDate) : ""}`,
+  }));
+  if (hits.length) res2.push({ type: "alle", q, hits, label: `📋 Vis alle ${hits.length} treff`, sub: "åpner som liste – filtrene dine gjelder" });
+  return res2;
 }
 function drawSuggest(items) {
   selIdx = -1;
@@ -2119,13 +2134,16 @@ function drawSuggest(items) {
 }
 function pickSuggest(it) {
   suggest.style.display = "none";
-  document.getElementById("q").value = it.raw || it.name || it.label;
-  state.q = "";
-  render();
+  if (it.type !== "alle") {
+    document.getElementById("q").value = it.raw || it.name || (it.type === "case" ? it.c.casenr : it.label);
+    state.q = "";
+    render();
+  }
   if (it.type === "addr") flyToPoi(it.p);
   else if (it.type === "ent") openEntity(it.kind, it.name);
   else if (it.type === "kat") openCaseList("Tiltakstype: " + it.name,
     "", DATA.cases.filter(c => (c.kategorier || []).includes(it.name)).sort(byActivity));
+  else if (it.type === "alle") openCaseList(`Søk: «${it.q}»`, "med aktive filtre", it.hits);
   else focusCase(it.c);
 }
 const qInput = document.getElementById("q");
