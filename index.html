@@ -1873,6 +1873,7 @@ function renderRegulering() {
       const n = plans.filter(c => (c.kategorier || []).includes(k)).length;
       return n ? `<button data-g="${k}">${l.split(" ")[0]} (${n})</button>` : "";
     }).join("")}
+    <button data-g="firmaer">🏢 Firmaer</button>
   </div>`;
   const html = (plans.length ? seg : "") + `<div id="regBody">` +
     (plans.length ? "" : `<div class="emptystate"><div class="big">📐</div>Ingen reguleringssaker i datasettet ennå.<br>Plansakene hentes inn i natt – kom tilbake i morgen!</div>`) +
@@ -1880,10 +1881,37 @@ function renderRegulering() {
   openPanel("Regulering", "Område- og detaljreguleringer i Kristiansand", html);
   const body = document.getElementById("regBody");
   const draw = g => {
+    document.querySelectorAll("#regSeg button").forEach(b => b.classList.toggle("on", b.dataset.g === g));
+    if (g === "firmaer") {
+      // Forslagsstillere/plankonsulenter med antall planer og faser
+      const byFirm = new Map();
+      for (const c of plans) {
+        if (!c.soker) continue;
+        const e = byFirm.get(c.soker) || { n: 0, vedtatt: 0, aktiv: 0 };
+        e.n++;
+        if (c.planfase === "Vedtatt") e.vedtatt++;
+        else if (c.planfase && c.planfase !== "Under arbeid") e.aktiv++;
+        byFirm.set(c.soker, e);
+      }
+      const rows = [...byFirm.entries()].sort((a, b) => b[1].n - a[1].n).slice(0, 25);
+      body.innerHTML = `<div class="listnote">Firmaer som fremmer reguleringsplaner (forslagsstillere).
+        Klikk for alle sakene deres – ⚖ i panelet sammenligner.</div>` +
+        rows.map(([navn, s]) => `
+        <div class="addrrow" data-firm="${esc(navn)}">
+          <span>🏢</span>
+          <div style="flex:1;min-width:0">
+            <div class="a-name">${esc(navn)}</div>
+            <div class="a-sub">${s.n} plan${s.n > 1 ? "er" : ""} · ${s.vedtatt} vedtatt · ${s.aktiv} i prosess</div>
+          </div>
+          <span class="cmp-val" style="font-size:15px">${s.n}</span>
+        </div>`).join("");
+      body.querySelectorAll("[data-firm]").forEach(r =>
+        r.addEventListener("click", () => openEntity("firma", r.dataset.firm)));
+      return;
+    }
     const list = g === "alle" ? plans : plans.filter(c => (c.kategorier || []).includes(g));
     body.innerHTML = list.slice(0, 40).map(planCard).join("") +
       (list.length > 40 ? `<div class="listnote">Viser 40 av ${list.length} – bruk søkefeltet for å finne flere.</div>` : "");
-    document.querySelectorAll("#regSeg button").forEach(b => b.classList.toggle("on", b.dataset.g === g));
     wireCards();
     document.querySelectorAll("#regBody .planbanner").forEach(el => {
       const c = plans.find(x => x.id === el.dataset.banner);

@@ -463,6 +463,18 @@ def plan_fase(case):
     return "Under arbeid"
 
 
+def plan_soker(case):
+    """Forslagsstiller/plankonsulent = første eksterne avsender i plansaken."""
+    for d in sorted(case.get("documents") or [], key=lambda x: doc_seq(x.get("title"))):
+        f = (d.get("from") or "").strip()
+        if not f or INTERNAL_RE.search(f):
+            continue
+        dtype = (d.get("type") or "").lower()
+        if "dokument inn" in dtype or "søknad" in dtype or "planinitiativ" in dtype:
+            return f
+    return None
+
+
 def fmt_no_date(iso):
     if not iso:
         return ""
@@ -587,6 +599,8 @@ def build_case(cid, det, lookups, old_case=None, announce_new=False):
     case["status"] = infer_status(case["documents"])
     case["soker"] = case_soker(case)
     case["kategorier"] = klassifiser(case)
+    if case["type"] == "Plansak" and not case["soker"]:
+        case["soker"] = plan_soker(case)
     if case["type"] == "Plansak":
         hay = (case["title"] + " " + " ".join(d["title"] for d in case["documents"][:4])).lower()
         plankat = []
@@ -997,6 +1011,8 @@ def main():
         for c in all_cases(chunks):
             if not c.get("kategorier"):
                 c["kategorier"] = klassifiser(c)
+            if c.get("type") == "Plansak" and not c.get("soker"):
+                c["soker"] = plan_soker(c)
         save_store(chunks)
         generate_ics(chunks)
         log("Reindeksert (med klassifisering).")
