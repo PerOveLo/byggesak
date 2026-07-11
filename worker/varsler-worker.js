@@ -173,11 +173,19 @@ export default {
         const { email, password } = await req.json();
         const e = (email || "").toLowerCase().trim();
         if (!EMAIL_RE.test(e)) return err("Ugyldig e-postadresse", 400);
-        if (!password || password.length < 8) return err("Passord må ha minst 8 tegn", 400);
+        if (!password) return err("Oppgi passord", 400);
         const admins = (env.ADMIN_EPOST || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean);
         let user;
         if (admins.includes(e)) {
-          if (!env.ADMIN_PASSORD || password !== env.ADMIN_PASSORD) {
+          // Superadmin: personlig passord (om satt) ELLER det delte adminpassordet
+          const eks = await env.DB.prepare("SELECT * FROM brukere WHERE epost = ?").bind(e).first();
+          let ok = false;
+          if (eks && eks.passord_hash) {
+            const [salt, hash] = eks.passord_hash.split("$");
+            ok = (await hashPassword(password, salt)) === hash;
+          }
+          if (!ok && env.ADMIN_PASSORD && password === env.ADMIN_PASSORD) ok = true;
+          if (!ok) {
             await audit(env, req, e, null, "innlogging_feilet", null, "feil adminpassord");
             return err("Feil passord", 401);
           }
@@ -193,6 +201,7 @@ export default {
             await env.DB.prepare("UPDATE brukere SET sist_innlogget = ? WHERE id = ?").bind(now(), user.id).run();
           } else {
             // ny bruker (eller eksisterende uten passord): sett passordet nå
+            if (password.length < 8) return err("Passord må ha minst 8 tegn", 400);
             const salt = crypto.randomUUID();
             const ph = salt + "$" + (await hashPassword(password, salt));
             user = await upsertUser(env, e);
