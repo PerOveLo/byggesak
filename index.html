@@ -139,6 +139,8 @@
       padding: 5px 11px; font-size: 12px; box-shadow: var(--glass-inset); opacity: .55; }
     #typeSeg button.on { opacity: 1; box-shadow: 0 2px 8px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.5); }
     .topbar { gap: 8px; padding: 8px 12px; }
+    #bellBtn { margin-left: auto; order: 0; }
+    #menuBtn { margin-left: 0; order: 1; }
     .brand h1 { font-size: 15px; }
     .brand span { display: none; }
   }
@@ -521,8 +523,10 @@
     <option value="10">Siste 10 år</option>
   </select>
   </span>
+  <button class="iconbtn" id="bellBtn" title="Varsler">🔔<span class="bubble" id="bellBubble" style="display:none">0</span></button>
   <button class="iconbtn m-hide" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
   <button class="iconbtn m-hide" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
+  <button class="iconbtn m-hide" id="ukaBtn" title="Ukas oppsummering">📰<span class="lbl">Uka</span></button>
   <button class="iconbtn m-hide" id="regBtn" title="Reguleringsplaner">📐<span class="lbl">Regulering</span></button>
   <button class="iconbtn m-hide" id="klagerBtn" title="Klager og merknader">🗣<span class="lbl">Klager</span></button>
   <button class="iconbtn m-hide" id="statsBtn" title="Statistikk">📊<span class="lbl">Statistikk</span></button>
@@ -535,6 +539,7 @@
   <div class="menu-grid">
     <button class="menu-item" data-menu="konto" style="grid-column: span 2">👤 <span id="mKontoLbl">Logg inn / Min konto</span></button>
     <button class="menu-item" data-menu="nytt">🕐 Nytt <span class="mbadge" id="mbNytt"></span></button>
+    <button class="menu-item" data-menu="uka">📰 Uka</button>
     <button class="menu-item" data-menu="regulering">📐 Regulering</button>
     <button class="menu-item" data-menu="klager">🗣 Klager</button>
     <button class="menu-item" data-menu="statistikk">📊 Statistikk</button>
@@ -941,7 +946,7 @@ function poiColor(cs) {
 function render() {
   RENDER_BOUNDS = state.bbox ? map.getBounds() : null;
   cluster.clearLayers();
-  const counts = { Byggesak: 0, Henvendelse: 0, Ulovlighetssak: 0 };
+  const counts = { Byggesak: 0, Plansak: 0, Henvendelse: 0, Ulovlighetssak: 0 };
   const caseUpd = new Set(), addrUpd = new Set();
   for (const u of followUpdates()) (u.kind === "case" ? caseUpd.add(u.c.casenr) : addrUpd.add(addrKey(u.label)));
   for (const c of DATA.cases) if (caseVisible(c)) counts[c.type]++;
@@ -1015,6 +1020,9 @@ function refreshBadges() {
   nb.textContent = nn;
   const mb = document.getElementById("menuBubble");
   if (mb) { const tot = n + nn; mb.style.display = tot ? "flex" : "none"; mb.textContent = tot; }
+  const um = MELDINGER.filter(m => m.ts > meldingSett()).length;
+  const bb = document.getElementById("bellBubble");
+  if (bb) { const t = um + n; bb.style.display = t ? "flex" : "none"; bb.textContent = t; }
   const mbN = document.getElementById("mbNytt"), mbF = document.getElementById("mbFolger");
   if (mbN) { mbN.style.display = nn ? "inline-block" : "none"; mbN.textContent = nn; }
   if (mbF) { mbF.style.display = n ? "inline-block" : "none"; mbF.textContent = n; }
@@ -1228,6 +1236,120 @@ function renderFollowList() {
       if (e) { e.level = s.value; store.addrs.write(f); scheduleSync(); }
     });
   });
+}
+
+/* ---------------- Varselsenter (🔔) ---------------- */
+let MELDINGER = [];
+async function loadMeldinger() {
+  if (!CFG.apiBase) return;
+  try {
+    MELDINGER = await fetch(CFG.apiBase.replace(/\/$/, "") + "/meldinger").then(r => r.json());
+    if (!Array.isArray(MELDINGER)) MELDINGER = [];
+  } catch { /* uendret */ }
+  refreshBadges();
+}
+const meldingSett = () => localStorage.getItem("bsMeldingSett") || "";
+const MTYPE = { info: "ℹ️", nyhet: "✨", betaling: "💳", drift: "🛠" };
+function openVarsler() { navOpen("varsler", renderVarsler); }
+function renderVarsler() {
+  const ups = followUpdates();
+  const sett = meldingSett();
+  let html = `<div class="sectionlabel">Dine varsler (${ups.length})</div>`;
+  html += ups.length ? ups.map((u, i) => `
+    <button class="addrrow" data-u="${i}" style="width:100%;text-align:left;border-radius:16px">
+      <div style="flex:1;min-width:0">
+        <div class="a-name">${u.kind === "case" ? "📄" : u.kind === "addr" ? "📍" : (u.entKind === "sb" ? "👤" : "🏢")} ${esc(u.label)}</div>
+        <div class="a-sub">${u.kind === "case" ? `${u.newDocs || "Nye"} nye dokument(er) i saken` : `${u.newCases || "Ny"} ny(e) sak(er) / aktivitet`}</div>
+      </div><span class="newbadge">NYTT</span>
+    </button>`).join("")
+    : `<div class="listnote">Ingen nye oppdateringer på det du følger. Følg saker, adresser eller firmaer med ☆, så dukker endringene opp her.</div>`;
+  html += `<div class="sectionlabel">Fra oss (${MELDINGER.length})</div>`;
+  html += MELDINGER.length ? MELDINGER.map(m => `
+    <div class="formbox" style="margin-bottom:8px">
+      <div style="display:flex;align-items:baseline;gap:7px">
+        <b style="flex:1">${MTYPE[m.type] || "ℹ️"} ${esc(m.tittel)}</b>
+        ${m.ts > sett ? '<span class="newbadge">NY</span>' : ""}
+      </div>
+      <div style="font-size:13px;color:var(--ink2);margin-top:4px;line-height:1.45">${esc(m.tekst)}</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:6px">${esc((m.ts || "").slice(0, 10))} · Vizbo</div>
+    </div>`).join("")
+    : `<div class="listnote">Ingen meldinger ennå.</div>`;
+  openPanel("🔔 Varsler", "Oppdateringer på det du følger og meldinger fra oss", html);
+  document.querySelectorAll("#panelBody [data-u]").forEach(b => b.onclick = () => {
+    const u = ups[+b.dataset.u];
+    if (u.kind === "case") focusCase(u.c);
+    else openFollowList();
+  });
+  if (MELDINGER.length && MELDINGER[0].ts > sett) {
+    localStorage.setItem("bsMeldingSett", MELDINGER[0].ts);
+    refreshBadges();
+  }
+}
+
+/* ---------------- Uka – ukesoppsummering ---------------- */
+function openUka() { navOpen("uka", renderUka); }
+async function renderUka() {
+  if (!KLAGER) {
+    try { KLAGER = await fetch("data/klager.json", { cache: "no-cache" }).then(r => r.json()); }
+    catch { KLAGER = []; }
+  }
+  openPanel("📰 Uka", "Ukens byggesaksaktivitet i Kristiansand",
+    `<div class="seg" id="ukaSeg" style="margin:6px 0 12px">
+      <button data-w="0" class="on">Denne uka</button><button data-w="1">Forrige uke</button>
+    </div><div id="ukaBody"></div>`);
+  const body = document.getElementById("ukaBody");
+  const VEDTAK_RE = /ferdigattest|tillatelse gitt|rammetillatelse|igangsetting|brukstillatelse|avslag/i;
+  const draw = w => {
+    const d = new Date(); const dow = (d.getDay() + 6) % 7;
+    const mon = new Date(d); mon.setDate(d.getDate() - dow - 7 * w); mon.setHours(0, 0, 0, 0);
+    const end = new Date(mon); end.setDate(mon.getDate() + 7);
+    const fra = mon.toISOString().slice(0, 10), til = end.toISOString().slice(0, 10);
+    const per = `${fmtDate(fra)} – ${fmtDate(new Date(end - 864e5).toISOString().slice(0, 10))}`;
+    const nye = DATA.cases.filter(c => c.firstDate && c.firstDate >= fra && c.firstDate < til).sort(byActivity);
+    const aktive = DATA.cases.filter(c => c.lastDate && c.lastDate >= fra && c.lastDate < til && c.firstDate < fra);
+    const vedtak = aktive.filter(c => VEDTAK_RE.test(c.status || "")).sort(byActivity);
+    const klagerU = (KLAGER || []).filter(k => k.d && k.d >= fra && k.d < til);
+    const planer = nye.concat(aktive).filter(c => c.type === "Plansak").sort(byActivity);
+    const kat = {};
+    for (const c of nye) for (const k of (c.kategorier || [])) kat[k] = (kat[k] || 0) + 1;
+    const toppKat = Object.entries(kat).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const kmax = toppKat[0]?.[1] || 1;
+    body.innerHTML = `
+      <div class="listnote" style="padding-top:0">${per}</div>
+      <div class="kpis">
+        <button class="kpi" data-k="nye"><div class="k-val">${nye.length}</div><div class="k-lbl">nye saker</div></button>
+        <button class="kpi" data-k="vedtak"><div class="k-val">${vedtak.length}</div><div class="k-lbl">vedtak fattet</div></button>
+        <button class="kpi" data-k="klager"><div class="k-val">${klagerU.length}</div><div class="k-lbl">klager/merknader</div></button>
+        <button class="kpi" data-k="plan"><div class="k-val">${planer.length}</div><div class="k-lbl">plansaker i sving</div></button>
+      </div>
+      ${toppKat.length ? `<div class="sectionlabel">Ukas tiltak (nye saker)</div>` +
+        toppKat.map(([k, n]) => `<div class="barrow" style="grid-template-columns:110px 1fr 30px">
+          <div class="b-lbl">${esc(k)}</div>
+          <div class="b-track"><div class="b-fill" style="width:${Math.round(n / kmax * 100)}%"></div></div>
+          <div class="b-val">${n}</div></div>`).join("") : ""}
+      <div class="sectionlabel">Nye saker (${nye.length})</div>
+      ${nye.slice(0, 8).map(caseCard).join("") || '<div class="listnote">Ingen nye saker denne perioden – journaldata kan henge noen dager etter.</div>'}
+      ${nye.length > 8 ? `<div class="listnote"><button class="btn sec" id="ukaAlleNye">Vis alle ${nye.length} nye</button></div>` : ""}
+      <div class="sectionlabel">Ukas vedtak (${vedtak.length})</div>
+      ${vedtak.slice(0, 8).map(caseCard).join("") || '<div class="listnote">Ingen registrerte vedtak i perioden.</div>'}
+      ${vedtak.length > 8 ? `<div class="listnote"><button class="btn sec" id="ukaAlleVedtak">Vis alle ${vedtak.length} vedtak</button></div>` : ""}`;
+    wireCards();
+    const lists = { nye: ["Nye saker", `uke ${per}`, nye], vedtak: ["Ukas vedtak", `uke ${per}`, vedtak], plan: ["Plansaker med aktivitet", `uke ${per}`, planer] };
+    body.querySelectorAll(".kpi[data-k]").forEach(b => b.onclick = () => {
+      if (b.dataset.k === "klager") return openKlager();
+      const [t, s, cs] = lists[b.dataset.k];
+      if (cs.length) openCaseList(t, s, cs);
+    });
+    const an = document.getElementById("ukaAlleNye");
+    if (an) an.onclick = () => openCaseList("Nye saker", `uke ${per}`, nye);
+    const av = document.getElementById("ukaAlleVedtak");
+    if (av) av.onclick = () => openCaseList("Ukas vedtak", `uke ${per}`, vedtak);
+    document.querySelectorAll("#ukaSeg button").forEach(b =>
+      b.className = parseInt(b.dataset.w, 10) === w ? "on" : "");
+  };
+  document.querySelectorAll("#ukaSeg button").forEach(b =>
+    b.addEventListener("click", () => draw(parseInt(b.dataset.w, 10))));
+  draw(0);
 }
 
 function openNews() { navOpen("nytt", renderNews); }
@@ -1751,7 +1873,7 @@ async function renderAdmin(tab) {
   const sess = store.session.get();
   if (!sess || sess.rolle !== "admin") { openFollowList(); return; }
   const seg = `<div class="seg" id="admSeg" style="margin:6px 0 12px">
-    ${[["oversikt", "Oversikt"], ["brukere", "Brukere"], ["sporing", "Sporing"]].map(([k, l]) =>
+    ${[["oversikt", "Oversikt"], ["brukere", "Brukere"], ["meldinger", "Meldinger"], ["sporing", "Sporing"]].map(([k, l]) =>
       `<button data-t="${k}" class="${k === tab ? "on" : ""}">${l}</button>`).join("")}
   </div><div id="admBody"><div class="listnote">Laster …</div></div>`;
   openPanel("Adminpanel", `Innlogget som ${esc(sess.navn || sess.email)} · all bruk logges`, seg);
@@ -1798,6 +1920,41 @@ async function renderAdmin(tab) {
       };
       document.getElementById("admSok").onclick = loadUsers;
       loadUsers();
+    } else if (tab === "meldinger") {
+      body.innerHTML = `<div class="formbox">
+        <div class="formrow"><input id="mldT" placeholder="Tittel …" style="flex:1"></div>
+        <div class="formrow"><textarea id="mldTx" placeholder="Meldingstekst – vises til alle i 🔔-varselsenteret" style="flex:1;min-height:74px;padding:9px 12px;border-radius:14px;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink);resize:vertical"></textarea></div>
+        <div class="formrow">
+          <select id="mldType" class="pill">${["info", "nyhet", "betaling", "drift"].map(t => `<option>${t}</option>`).join("")}</select>
+          <button class="btn" id="mldPub" style="margin-left:auto">📣 Publiser</button>
+        </div></div><div id="mldList"></div>`;
+      const loadMld = async () => {
+        const rows = await api("/meldinger");
+        document.getElementById("mldList").innerHTML = rows.map(m => `
+          <div class="addrrow" style="border-radius:16px">
+            <div style="flex:1;min-width:0">
+              <div class="a-name">${MTYPE[m.type] || "ℹ️"} ${esc(m.tittel)}</div>
+              <div class="a-sub">${esc(m.ts.slice(0, 16).replace("T", " "))} · ${esc(m.tekst.slice(0, 90))}${m.tekst.length > 90 ? "…" : ""}</div>
+            </div>
+            <button class="unfollow" data-mdel="${m.id}">Slett</button>
+          </div>`).join("") || '<div class="listnote">Ingen meldinger publisert.</div>';
+        document.querySelectorAll("#mldList [data-mdel]").forEach(b => b.onclick = async () => {
+          if (!confirm("Slette meldingen for alle brukere?")) return;
+          await api("/admin/melding/slett", { method: "POST", body: JSON.stringify({ id: +b.dataset.mdel }) });
+          await loadMeldinger();
+          loadMld();
+        });
+      };
+      document.getElementById("mldPub").onclick = async () => {
+        const tittel = document.getElementById("mldT").value.trim();
+        const tekst = document.getElementById("mldTx").value.trim();
+        if (!tittel || !tekst) return alert("Fyll ut tittel og tekst.");
+        await api("/admin/melding", { method: "POST", body: JSON.stringify({ tittel, tekst, type: document.getElementById("mldType").value }) });
+        document.getElementById("mldT").value = ""; document.getElementById("mldTx").value = "";
+        await loadMeldinger();
+        loadMld();
+      };
+      loadMld();
     } else if (tab === "sporing") {
       body.innerHTML = `<div class="formrow"><input id="audQ" placeholder="Filtrer på bruker …" style="flex:1"><button class="btn sec" id="audSok">Filtrer</button></div><div id="audRows" style="margin-top:8px"></div>`;
       const loadAudit = async () => {
@@ -2634,6 +2791,8 @@ document.getElementById("followBtn").onclick = () => {
   openFollowList();
 };
 document.getElementById("newsBtn").onclick = openNews;
+document.getElementById("bellBtn").onclick = openVarsler;
+document.getElementById("ukaBtn").onclick = openUka;
 const menuSheet = document.getElementById("menuSheet");
 const IS_MOBILE_MQ = window.matchMedia("(max-width: 760px)");
 function layoutForViewport() {
@@ -2656,7 +2815,7 @@ document.addEventListener("click", e => {
 });
 document.querySelectorAll(".menu-item").forEach(b => b.addEventListener("click", () => {
   menuSheet.classList.remove("open");
-  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto, klager: openKlager })[b.dataset.menu]();
+  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto, klager: openKlager, uka: openUka, varsler: openVarsler })[b.dataset.menu]();
 }));
 document.getElementById("accountBtn").onclick = openKonto;
 document.getElementById("statsBtn").onclick = openStats;
@@ -2693,6 +2852,8 @@ if ("serviceWorker" in navigator && IS_HTTP) {
 
 renderAccountState();
 drawRadius();
+loadMeldinger();
+setInterval(loadMeldinger, 5 * 60 * 1000);
 (async function bootData() {
   try {
     const idx = await fetch("data/index.json", { cache: "no-store" }).then(r => r.json());

@@ -88,3 +88,12 @@ CREATE TABLE IF NOT EXISTS hendelser (
 );
 CREATE INDEX IF NOT EXISTS hendelser_type_obj ON hendelser(type, objekt);
 CREATE INDEX IF NOT EXISTS hendelser_ts ON hendelser(ts);
+
+-- Driftsmeldinger fra superadmin (vises i varselsenteret i appen)
+CREATE TABLE IF NOT EXISTS meldinger (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts TEXT NOT NULL,
+  tittel TEXT NOT NULL,
+  tekst TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'info'   -- info | nyhet | betaling | drift
+);

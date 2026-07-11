@@ -1,6 +1,15 @@
 [
   {
     "dato": "2026-07-11",
+    "tittel": "Varselsenter og ukesoppsummering",
+    "punkter": [
+      "🔔 Nytt varselsenter: trykk på bjella og se oppdateringer på alt du følger samt meldinger fra oss som driver tjenesten",
+      "📰 «Uka»: ukesoppsummering med nye saker, vedtak, klager og plansaker – alt klikkbart, rett i appen",
+      "📲 Push-varsler til mobilen er verifisert – legg appen på Hjem-skjermen og skru på varsler under Min konto"
+    ]
+  },
+  {
+    "dato": "2026-07-11",
     "tittel": "Hele Kristiansand + regulering, kontoer og deling",
     "punkter": [
       "🗺️ Hele Kristiansand er inne: 21 141 saker fra 2020 til i dag (18 175 byggesaker, 1 607 henvendelser, 753 ulovlighetssaker, 606 plansaker) – komplett arkivdekning",

@@ -18,6 +18,9 @@
  *   GET  /all                      Bearer API_SECRET – alle profiler (for varselutsending)
  *   GET  /pdfproxy?url=            proxyet PDF med CORS
  *   Admin (krever rolle=admin):
+ *   GET  /meldinger                driftsmeldinger til varselsenteret (offentlig, siste 20)
+ *   POST /admin/melding {tittel,tekst,type}   publiser driftsmelding
+ *   POST /admin/melding/slett {id}
  *   GET  /admin/stats              nøkkeltall
  *   GET  /admin/users?q=&limit=    brukerliste
  *   PUT  /admin/user {id,tier?,rolle?}
@@ -316,6 +319,13 @@ export default {
         return json({ ok: true });
       }
 
+      // ---------- Driftsmeldinger (varselsenteret i appen) ----------
+      if (p === "/meldinger" && req.method === "GET") {
+        const rows = (await env.DB.prepare(
+          "SELECT id, ts, tittel, tekst, type FROM meldinger ORDER BY ts DESC, id DESC LIMIT 20").all()).results;
+        return json(rows);
+      }
+
       // ---------- Admin ----------
       if (p.startsWith("/admin/")) {
         const sess = await getSession(req, env);
@@ -377,6 +387,23 @@ export default {
           }
           await env.DB.prepare("DELETE FROM brukere WHERE id = ?").bind(id).run();
           await audit(env, req, sess.epost, "admin", "admin_bruker_slettet", "bruker:" + id, u.epost);
+          return json({ ok: true });
+        }
+
+        if (p === "/admin/melding" && req.method === "POST") {
+          const { tittel, tekst, type } = await req.json();
+          if (!tittel || !tekst) return err("Tittel og tekst må fylles ut", 400);
+          const t = ["info", "nyhet", "betaling", "drift"].includes(type) ? type : "info";
+          await env.DB.prepare("INSERT INTO meldinger (ts, tittel, tekst, type) VALUES (?,?,?,?)")
+            .bind(now(), tittel.slice(0, 120), tekst.slice(0, 2000), t).run();
+          await audit(env, req, sess.epost, "admin", "melding_publisert", null, tittel.slice(0, 120));
+          return json({ ok: true });
+        }
+
+        if (p === "/admin/melding/slett" && req.method === "POST") {
+          const { id } = await req.json();
+          await env.DB.prepare("DELETE FROM meldinger WHERE id = ?").bind(id).run();
+          await audit(env, req, sess.epost, "admin", "melding_slettet", "melding:" + id, null);
           return json({ ok: true });
         }
 
