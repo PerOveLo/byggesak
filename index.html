@@ -326,6 +326,11 @@
   .btn.sec { background: var(--glass-strong); color: var(--ink); border: 1px solid var(--glass-border);
     box-shadow: var(--glass-inset); }
   .formmsg { font-size: 12.5px; margin-top: 8px; }
+  .avatar { width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #2f97ff, #0a5fd6); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 750; font-size: 16px; letter-spacing: .5px;
+    box-shadow: 0 4px 12px rgba(10,132,255,.35), inset 0 1px 0 rgba(255,255,255,.4); }
   .formmsg.ok { color: var(--green); } .formmsg.err { color: var(--red); }
 
   /* ---------- Markører ---------- */
@@ -438,6 +443,8 @@
   .ob-card { width: min(430px, 100%); max-height: 86dvh; overflow-y: auto; border-radius: 26px;
     background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
     border: 1px solid var(--glass-border); box-shadow: var(--shadow), var(--glass-inset); padding: 22px 22px 18px; }
+  .ob-logo { height: 20px; display: block; margin: 0 auto 16px; opacity: .9; }
+  @media (prefers-color-scheme: dark) { .ob-logo { filter: invert(1); } }
   .ob-card h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.3px; }
   .ob-card .ob-sub { font-size: 13px; color: var(--ink2); margin-bottom: 14px; }
   .ob-step { display: flex; gap: 13px; align-items: center; background: var(--card); border: .5px solid var(--glass-border);
@@ -523,6 +530,7 @@
 
 <div id="onboard">
   <div class="ob-card">
+    <img src="vizbo-logo.png" alt="Vizbo" class="ob-logo">
     <div id="obSlides"></div>
     <div class="ob-dots" id="obDots"></div>
     <div class="ob-nav">
@@ -1057,9 +1065,12 @@ function renderKonto() {
   const sess = store.session.get();
   let html = emailBox();
   if (sess) {
-    html += `<div class="formrow" style="margin-top:4px">
-      <button class="btn sec" id="gdprExport" style="flex:1">⬇ Last ned mine data</button>
-      <button class="btn sec" id="gdprDelete" style="flex:1;color:var(--red)">Slett kontoen min</button>
+    html += `<div class="sectionlabel">Personvern</div>
+    <div class="formbox">
+      <div class="formrow">
+        <button class="btn sec" id="gdprExport" style="flex:1">⬇ Last ned mine data</button>
+        <button class="btn sec" id="gdprDelete" style="flex:1;color:var(--red)">Slett kontoen</button>
+      </div>
     </div>`;
   }
   const isIos = /iphone|ipad/i.test(navigator.userAgent);
@@ -1259,26 +1270,34 @@ function emailBox() {
   const sess = store.session.get();
   const prefs = store.prefs.read();
   if (sess) {
-    const visNavn = sess.navn ? `${esc(sess.navn)} (${esc(sess.email)})` : esc(sess.email);
-    return `<div class="formbox">
-      <h4>✅ Innlogget som ${visNavn}</h4>
-      <p>Adresser, varslingsnivåer, notater og innstillinger synkroniseres automatisk til kontoen din.</p>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0">
+    const navn = sess.navn || sess.email;
+    const initialer = navn.split(/[\s@]+/).slice(0, 2).map(x => x[0] || "").join("").toUpperCase();
+    return `
+    <div class="formbox" style="display:flex;align-items:center;gap:13px">
+      <div class="avatar">${esc(initialer)}</div>
+      <div style="flex:1;min-width:0">
+        <b style="font-size:15px;display:block">${esc(navn)}</b>
+        <div class="a-sub">${esc(sess.email)}${sess.rolle === "admin" ? ' · <span style="color:var(--purple);font-weight:650">Superadmin</span>' : ""}</div>
+      </div>
+      <button class="btn sec" id="logoutBtn" style="padding:8px 13px;font-size:12.5px">Logg ut</button>
+    </div>
+    ${sess.rolle === "admin" ? `
+    <button class="btn" id="adminBtn" style="width:100%;margin-bottom:4px;background:linear-gradient(180deg,#d47aff,#bf5af2);box-shadow:0 4px 14px rgba(191,90,242,.4), inset 0 1px 0 rgba(255,255,255,.4)">🛠 Adminpanel</button>` : ""}
+
+    <div class="sectionlabel">Varsling</div>
+    <div class="formbox">
+      <label style="display:flex;align-items:center;gap:9px;font-size:13.5px">
         <input type="checkbox" id="weeklyChk" ${prefs.weekly ? "checked" : ""}> Ukessammendrag på e-post hver fredag
       </label>
-      <div class="formrow" style="margin-top:8px">
-        <button class="btn sec" id="pushBtn" style="flex:1">🔔 Push-varsler på denne enheten</button>
-        <button class="btn sec" id="logoutBtn" style="flex:1">Logg ut</button>
+      <div class="formrow" style="margin-top:10px">
+        <button class="btn sec" id="pushBtn" style="flex:1">🔔 Push på denne enheten</button>
       </div>
       <div class="formrow" style="margin-top:8px">
         <button class="btn sec" id="radiusBtn" style="flex:1">📍 ${prefs.radius ? `Områdevarsling: ${prefs.radius.m} m (endre)` : "Sett opp områdevarsling"}</button>
         ${prefs.radius ? '<button class="btn sec" id="radiusOff">Fjern</button>' : ""}
       </div>
-      ${sess.rolle === "admin" ? `<div class="formrow" style="margin-top:8px">
-        <button class="btn" id="adminBtn" style="flex:1;background:linear-gradient(180deg,#d47aff,#bf5af2);box-shadow:0 4px 14px rgba(191,90,242,.4), inset 0 1px 0 rgba(255,255,255,.4)">🛠 Adminpanel (superadmin)</button>
-      </div>` : ""}
       <div class="formmsg" id="emailMsg"></div>
-      <p style="margin-top:10px">📅 <a href="data/kalender.ics" style="color:var(--blue)">Kalenderfeed (iCal)</a> – nye saker og befaringer rett i kalenderen din.</p>
+      <p style="margin:8px 0 0;font-size:12.5px">📅 <a href="data/kalender.ics" style="color:var(--blue)">Kalenderfeed (iCal)</a> – nye saker og befaringer i kalenderen din</p>
     </div>`;
   }
   return `<div class="formbox">
