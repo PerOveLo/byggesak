@@ -25,4 +25,4 @@ database_id = "93124d5c-db09-4073-ac9f-be8d230a2168"
 [vars]
 FROM_ADDR = "Byggesaker Kristiansand <varsel@vizbo.no>"
 SITE_URL = "https://perovelo.github.io/byggesak/"
-ADMIN_EPOST = "per@vizbo.no,sjur@vizbo.no,martin@vizbo.no,ck@k2grunderlab.no,sebastian@vizbo.no"
+ADMIN_EPOST = "per@vizbo.no,sjur@vizbo.no,martin@vizbo.no,ck@k2grunderlab.no,sebastian@vizbo.no,kevin@vizbo.no,aadne@vizbo.no"
