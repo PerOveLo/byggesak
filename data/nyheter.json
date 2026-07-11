@@ -1,8 +1,10 @@
 [
   {
     "dato": "2026-07-11",
-    "tittel": "Varselsenter og ukesoppsummering",
+    "tittel": "Varselsenter, ukesoppsummering, presedens og saksgang",
     "punkter": [
+      "📊 Presedens: åpne en sak og se hvordan lignende søknader i nærområdet har gått – «22 av 24 boligsøknader innen 800 m ble innvilget» – med median behandlingstid og klikkbar liste",
+      "📅 Saksgang: hver sak viser nå en tidslinje med milepæler – søknad, nabovarsel, mangelbrev, vedtak, klage, ferdigattest",
       "🔔 Nytt varselsenter: trykk på bjella og se oppdateringer på alt du følger samt meldinger fra oss som driver tjenesten",
       "📰 «Uka»: ukesoppsummering med nye saker, vedtak, klager og plansaker – alt klikkbart, rett i appen",
       "📲 Push-varsler til mobilen er verifisert – legg appen på Hjem-skjermen og skru på varsler under Min konto"
