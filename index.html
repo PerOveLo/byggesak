@@ -436,6 +436,22 @@
 
   .listnote { text-align: center; font-size: 12px; color: var(--ink2); padding: 10px 0 4px; }
 
+  /* Sammenligning */
+  .cmp-wrap { overflow-x: auto; margin: 0 -14px; padding: 0 14px; }
+  .cmp-table { display: grid; gap: 6px; min-width: min-content; }
+  .cmp-cell { background: var(--card); border: .5px solid var(--glass-border); border-radius: 12px;
+    padding: 9px 11px; font-size: 12.5px; min-width: 130px; }
+  .cmp-cell.head { font-weight: 700; font-size: 13px; display: flex; align-items: flex-start; gap: 6px; }
+  .cmp-cell.head .rm { margin-left: auto; color: var(--ink3); font-weight: 700; cursor: pointer; padding: 0 3px; }
+  .cmp-cell.lbl { background: transparent; border: none; box-shadow: none; color: var(--ink2);
+    font-size: 11.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .4px;
+    display: flex; align-items: center; min-width: 104px; padding: 9px 2px; }
+  .cmp-val { font-size: 17px; font-weight: 750; }
+  .cmp-sub { font-size: 11px; color: var(--ink2); }
+  .cmp-bar { height: 8px; border-radius: 4px; background: var(--fill2); overflow: hidden; margin-top: 5px; }
+  .cmp-bar i { display: block; height: 100%; border-radius: 4px; background: var(--green); }
+  .cmp-kat { font-size: 11.5px; line-height: 1.6; }
+
   /* Onboarding-modal */
   #onboard { position: fixed; inset: 0; z-index: 5000; display: none; align-items: center; justify-content: center;
     background: rgba(10,10,14,.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 18px; }
@@ -1237,8 +1253,9 @@ function renderEntity(kind, name) {
   const followed = isFollowedEnt(kind, name);
   const ico = kind === "sb" ? "👤" : "🏢";
   const label = kind === "sb" ? "saksbehandler" : "søkerfirma";
-  let html = `<div class="formbox" style="display:flex;align-items:center;gap:10px">
-    <div style="flex:1"><b>${ico} ${esc(name)}</b><div style="font-size:12px;color:var(--ink2)">${cs.length} sak(er) som ${label}</div></div>
+  let html = `<div class="formbox" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div style="flex:1;min-width:0"><b>${ico} ${esc(name)}</b><div style="font-size:12px;color:var(--ink2)">${cs.length} sak(er) som ${label}</div></div>
+    <button class="btn sec" id="entCmpBtn" title="Sammenlign med andre">⚖</button>
     <button class="btn ${followed ? "sec" : ""}" id="entFollowBtn">${followed ? "★ Følger" : "☆ Følg"}</button>
   </div>`;
   html += `<div class="seg" id="entSort" style="margin:0 0 12px">
@@ -1263,6 +1280,105 @@ function renderEntity(kind, name) {
     toggleFollowEnt(kind, name);
     renderEntity(kind, name);
   };
+  document.getElementById("entCmpBtn").onclick = () => openCompare(kind, name);
+}
+
+/* ---------------- Sammenligning (innloggede) ---------------- */
+let CMP = { kind: "firma", names: [] };
+function entStats(kind, name) {
+  const cs = entCases(kind, name);
+  const cut12 = isoDaysAgo(365);
+  const avslag = cs.filter(c => /avslag/i.test(c.status || "")).length;
+  const godkjent = cs.filter(c => /ferdigattest|tillatelse gitt|rammetillatelse|igangsetting|brukstillatelse/i.test(c.status || "")).length;
+  const avgjort = godkjent + avslag;
+  const aktive = cs.filter(c => /under behandling|venter|forhåndsvarsel|politisk/i.test(c.status || "")).length;
+  const ulov = cs.filter(c => c.type === "Ulovlighetssak").length;
+  const dur = cs.filter(c => c.firstDate && c.lastDate && /ferdigattest|tillatelse gitt|avslag|avsluttet/i.test(c.status || ""))
+    .map(c => Math.round((new Date(c.lastDate) - new Date(c.firstDate)) / 864e5)).filter(d => d >= 0);
+  const kat = {};
+  for (const c of cs) for (const k of (c.kategorier || [])) kat[k] = (kat[k] || 0) + 1;
+  return {
+    n: cs.length,
+    siste12: cs.filter(c => (c.lastDate || "") >= cut12).length,
+    godkjent, avslag, avgjort,
+    andel: avgjort ? Math.round(godkjent / avgjort * 100) : null,
+    aktive, ulov,
+    median: median(dur),
+    toppKat: Object.entries(kat).sort((a, b) => b[1] - a[1]).slice(0, 3),
+  };
+}
+function openCompare(kind, name) { navOpen("cmp", () => renderCompare(kind, name)); }
+function renderCompare(kind, seedName) {
+  if (!loggedIn()) {
+    openPanel("Sammenlign", "Krever innlogging", `<div class="formbox" style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1"><b>Logg inn for å sammenligne</b><div style="font-size:12px;color:var(--ink2)">Sammenligning av firmaer og saksbehandlere er en funksjon for innloggede brukere (gratis).</div></div>
+      <button class="btn" id="cmpLogin">Logg inn</button></div>`);
+    document.getElementById("cmpLogin").onclick = openKonto;
+    return;
+  }
+  if (seedName) {
+    if (CMP.kind !== kind) CMP = { kind, names: [] };
+    if (!CMP.names.includes(seedName)) CMP.names.push(seedName);
+    CMP.names = CMP.names.slice(-3);
+  }
+  const kindLbl = CMP.kind === "firma" ? "firmaer" : "saksbehandlere";
+  const html = `<div class="formbox">
+    <div class="formrow">
+      <input id="cmpSok" placeholder="Legg til ${kindLbl} … (maks 3)" style="flex:1">
+    </div>
+    <div id="cmpForslag"></div>
+  </div><div id="cmpBody"></div>`;
+  openPanel("⚖ Sammenlign", `${kindLbl[0].toUpperCase() + kindLbl.slice(1)} side om side`, html);
+
+  const drawTable = () => {
+    const body = document.getElementById("cmpBody");
+    if (!CMP.names.length) {
+      body.innerHTML = `<div class="emptystate"><div class="big">⚖</div>Søk opp ${kindLbl} over,<br>eller trykk ⚖ i et firma-/saksbehandlerpanel.</div>`;
+      return;
+    }
+    const stats = CMP.names.map(n => entStats(CMP.kind, n));
+    const cols = CMP.names.length;
+    const row = (lbl, cells) => `<div class="cmp-cell lbl">${lbl}</div>` + cells.join("");
+    body.innerHTML = `<div class="cmp-wrap"><div class="cmp-table" style="grid-template-columns: 104px repeat(${cols}, minmax(130px, 1fr))">
+      ${row("", CMP.names.map((n, i) => `<div class="cmp-cell head"><span class="cmp-navn" data-i="${i}" style="min-width:0;overflow-wrap:anywhere;cursor:pointer">${esc(n)}</span><span class="rm" data-rm="${i}">✕</span></div>`))}
+      ${row("Saker totalt", stats.map(s => `<div class="cmp-cell"><span class="cmp-val">${s.n}</span><div class="cmp-sub">${s.siste12} siste 12 mnd</div></div>`))}
+      ${row("Innvilget", stats.map(s => `<div class="cmp-cell"><span class="cmp-val">${s.andel === null ? "–" : s.andel + " %"}</span>
+        <div class="cmp-sub">${s.godkjent} godkjent · ${s.avslag} avslag</div>
+        <div class="cmp-bar"><i style="width:${s.andel ?? 0}%"></i></div></div>`))}
+      ${row("Aktive nå", stats.map(s => `<div class="cmp-cell"><span class="cmp-val">${s.aktive}</span><div class="cmp-sub">under behandling</div></div>`))}
+      ${row("Ulovlighet", stats.map(s => `<div class="cmp-cell"><span class="cmp-val" style="color:${s.ulov ? "var(--red)" : "inherit"}">${s.ulov}</span><div class="cmp-sub">saker involvert</div></div>`))}
+      ${row("Varighet", stats.map(s => `<div class="cmp-cell"><span class="cmp-val">${s.median ?? "–"}</span><div class="cmp-sub">median dager (avgjorte)</div></div>`))}
+      ${row("Topp tiltak", stats.map(s => `<div class="cmp-cell cmp-kat">${s.toppKat.map(([k, n]) => `${esc(k)} <b>${n}</b>`).join("<br>") || "–"}</div>`))}
+    </div></div>
+    <div class="listnote">Trykk på et navn for å åpne alle sakene deres.</div>`;
+    body.querySelectorAll("[data-rm]").forEach(x => x.onclick = () => {
+      CMP.names.splice(+x.dataset.rm, 1);
+      drawTable();
+    });
+    body.querySelectorAll(".cmp-navn").forEach(el =>
+      el.addEventListener("click", () => openEntity(CMP.kind, CMP.names[+el.dataset.i])));
+  };
+  drawTable();
+
+  const sok = document.getElementById("cmpSok");
+  sok.addEventListener("input", () => {
+    const q = sok.value.toLowerCase().trim();
+    const box = document.getElementById("cmpForslag");
+    if (q.length < 2) { box.innerHTML = ""; return; }
+    const cnt = new Map();
+    for (const c of DATA.cases) {
+      const v = CMP.kind === "firma" ? c.soker : c.saksbehandler;
+      if (v && v.toLowerCase().includes(q)) cnt.set(v, (cnt.get(v) || 0) + 1);
+    }
+    box.innerHTML = [...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
+      .map(([n, c]) => `<button class="entchip" data-add="${esc(n)}">${CMP.kind === "firma" ? "🏢" : "👤"} ${esc(n)} · ${c}</button>`).join("");
+    box.querySelectorAll("[data-add]").forEach(b => b.onclick = () => {
+      if (!CMP.names.includes(b.dataset.add)) CMP.names = [...CMP.names, b.dataset.add].slice(-3);
+      sok.value = "";
+      box.innerHTML = "";
+      drawTable();
+    });
+  });
 }
 
 /* ---------------- Konto, varsling og innlogging ---------------- */
