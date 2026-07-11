@@ -19,7 +19,8 @@
  *   GET  /pdfproxy?url=            proxyet PDF med CORS
  *   Admin (krever rolle=admin):
  *   GET  /meldinger                driftsmeldinger til varselsenteret (offentlig, siste 20)
- *   POST /admin/melding {tittel,tekst,type}   publiser driftsmelding
+ *   POST /admin/melding {tittel,tekst,type,push?}   publiser kunngjøring; push=true
+ *        sender den også som web-push til alle registrerte enheter (VAPID_PRIVATE_KEY kreves)
  *   POST /admin/melding/slett {id}
  *   GET  /admin/stats              nøkkeltall
  *   GET  /admin/users?q=&limit=    brukerliste
@@ -142,6 +143,73 @@ async function writeProfile(env, brukerId, body) {
        ON CONFLICT(bruker_id) DO UPDATE SET ukesammendrag = excluded.ukesammendrag`)
       .bind(brukerId, body.weekly ? 1 : 0).run();
   }
+}
+
+/* ---------- Web Push fra workeren (RFC 8291 aes128gcm + RFC 8292 VAPID) ---------- */
+const b64u = {
+  dec(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = s.length % 4 ? "=".repeat(4 - (s.length % 4)) : "";
+    return Uint8Array.from(atob(s + pad), c => c.charCodeAt(0));
+  },
+  enc(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  },
+};
+const utf8 = s => new TextEncoder().encode(s);
+function bcat(...arrs) {
+  const out = new Uint8Array(arrs.reduce((s, a) => s + a.length, 0));
+  let o = 0;
+  for (const a of arrs) { out.set(a, o); o += a.length; }
+  return out;
+}
+async function vapidJwt(env, aud) {
+  const pub = b64u.dec(env.VAPID_PUBLIC_KEY);   // 65 byte ukomprimert P-256-punkt
+  const jwk = { kty: "EC", crv: "P-256", d: env.VAPID_PRIVATE_KEY,
+                x: b64u.enc(pub.slice(1, 33)), y: b64u.enc(pub.slice(33, 65)) };
+  const key = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const enc = o => b64u.enc(utf8(JSON.stringify(o)));
+  const head = enc({ typ: "JWT", alg: "ES256" });
+  const body = enc({ aud, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: "mailto:post@vizbo.no" });
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, utf8(head + "." + body));
+  return `${head}.${body}.${b64u.enc(sig)}`;
+}
+async function hkdf(salt, ikm, info, len) {
+  const key = await crypto.subtle.importKey("raw", ikm, "HKDF", false, ["deriveBits"]);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: "HKDF", hash: "SHA-256", salt, info }, key, len * 8));
+}
+async function krypterPayload(sub, payload) {
+  const uaPub = b64u.dec(sub.keys.p256dh);
+  const authSecret = b64u.dec(sub.keys.auth);
+  const asKeys = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
+  const asPub = new Uint8Array(await crypto.subtle.exportKey("raw", asKeys.publicKey));
+  const uaKey = await crypto.subtle.importKey("raw", uaPub, { name: "ECDH", namedCurve: "P-256" }, false, []);
+  const ecdh = new Uint8Array(await crypto.subtle.deriveBits({ name: "ECDH", public: uaKey }, asKeys.privateKey, 256));
+  const ikm = await hkdf(authSecret, ecdh, bcat(utf8("WebPush: info\0"), uaPub, asPub), 32);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const cek = await hkdf(salt, ikm, utf8("Content-Encoding: aes128gcm\0"), 16);
+  const nonce = await hkdf(salt, ikm, utf8("Content-Encoding: nonce\0"), 12);
+  const aes = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
+  const cipher = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, aes,
+    bcat(utf8(payload), new Uint8Array([2]))));   // 0x02 = siste record-delimiter
+  const header = new Uint8Array(16 + 4 + 1 + 65); // salt | rs | idlen | avsenders offentlige nøkkel
+  header.set(salt, 0);
+  new DataView(header.buffer).setUint32(16, 4096);
+  header[20] = 65;
+  header.set(asPub, 21);
+  return bcat(header, cipher);
+}
+async function sendPush(env, sub, payloadObj) {
+  const jwt = await vapidJwt(env, new URL(sub.endpoint).origin);
+  const body = await krypterPayload(sub, JSON.stringify(payloadObj));
+  return fetch(sub.endpoint, {
+    method: "POST",
+    headers: { "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream",
+               TTL: "86400", Urgency: "normal",
+               Authorization: `vapid t=${jwt}, k=${env.VAPID_PUBLIC_KEY}` },
+    body,
+  });
 }
 
 export default {
@@ -434,13 +502,31 @@ export default {
         }
 
         if (p === "/admin/melding" && req.method === "POST") {
-          const { tittel, tekst, type } = await req.json();
+          const { tittel, tekst, type, push } = await req.json();
           if (!tittel || !tekst) return err("Tittel og tekst må fylles ut", 400);
           const t = ["info", "nyhet", "betaling", "drift"].includes(type) ? type : "info";
           await env.DB.prepare("INSERT INTO meldinger (ts, tittel, tekst, type) VALUES (?,?,?,?)")
             .bind(now(), tittel.slice(0, 120), tekst.slice(0, 2000), t).run();
-          await audit(env, req, sess.epost, "admin", "melding_publisert", null, tittel.slice(0, 120));
-          return json({ ok: true });
+          await audit(env, req, sess.epost, "admin", "melding_publisert", null,
+                      tittel.slice(0, 120) + (push ? " (+push)" : ""));
+          let sendt = 0, feilet = 0, dode = 0;
+          if (push && env.VAPID_PRIVATE_KEY) {
+            // Maks 45 pga. subrequest-grensen per kall; mer enn nok i MVP-fasen
+            const abos = (await env.DB.prepare("SELECT endpoint, data FROM push_abonnement LIMIT 45").all()).results;
+            const payload = { title: tittel.slice(0, 120), body: tekst.slice(0, 300),
+                              url: (env.SITE_URL || "").replace(/\/$/, "") + "/" };
+            for (const a of abos) {
+              try {
+                const r = await sendPush(env, JSON.parse(a.data), payload);
+                if (r.ok || r.status === 201) sendt++;
+                else if (r.status === 404 || r.status === 410) {  // dødt abonnement – rydd
+                  await env.DB.prepare("DELETE FROM push_abonnement WHERE endpoint = ?").bind(a.endpoint).run();
+                  dode++;
+                } else feilet++;
+              } catch { feilet++; }
+            }
+          }
+          return json({ ok: true, sendt, feilet, dode });
         }
 
         if (p === "/admin/melding/slett" && req.method === "POST") {

@@ -23,6 +23,7 @@ database_name = "byggesak"
 database_id = "93124d5c-db09-4073-ac9f-be8d230a2168"
 
 [vars]
+VAPID_PUBLIC_KEY = "BFgGLzdkvDtQ0pF91KQwPsdX5RwUdEDH3MCLffv2F4phdqwe-i4o659Ha1rmZ0_5U5IOdf6Fq489E_UW22JBqYo"
 FROM_ADDR = "Byggesaker Kristiansand <varsel@vizbo.no>"
 SITE_URL = "https://perovelo.github.io/byggesak/"
 ADMIN_EPOST = "per@vizbo.no,sjur@vizbo.no,martin@vizbo.no,ck@k2grunderlab.no,sebastian@vizbo.no,kevin@vizbo.no,aadne@vizbo.no"

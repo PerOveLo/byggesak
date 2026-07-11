@@ -2165,11 +2165,17 @@ async function renderAdmin(tab) {
     } else if (tab === "meldinger") {
       body.innerHTML = `<div class="formbox">
         <div class="formrow"><input id="mldT" placeholder="Tittel …" style="flex:1"></div>
-        <div class="formrow"><textarea id="mldTx" placeholder="Meldingstekst – vises til alle i 🔔-varselsenteret" style="flex:1;min-height:74px;padding:9px 12px;border-radius:14px;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink);resize:vertical"></textarea></div>
+        <div class="formrow"><textarea id="mldTx" placeholder="Kunngjøring – vises til alle i 🔔-varselsenteret" style="flex:1;min-height:74px;padding:9px 12px;border-radius:14px;border:1px solid var(--glass-border);background:var(--glass-strong);color:var(--ink);resize:vertical"></textarea></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:2px 2px 8px;cursor:pointer">
+          <input type="checkbox" id="mldPush" style="width:17px;height:17px;accent-color:var(--blue)">
+          📲 Send også som push-varsel til alle enheter med appen på Hjem-skjermen
+        </label>
         <div class="formrow">
           <select id="mldType" class="pill">${["info", "nyhet", "betaling", "drift"].map(t => `<option>${t}</option>`).join("")}</select>
           <button class="btn" id="mldPub" style="margin-left:auto">📣 Publiser</button>
-        </div></div><div id="mldList"></div>`;
+        </div>
+        <div id="mldStatus" class="listnote" style="text-align:left;padding:6px 0 0;display:none"></div>
+        </div><div id="mldList"></div>`;
       const loadMld = async () => {
         const rows = await api("/meldinger");
         document.getElementById("mldList").innerHTML = rows.map(m => `
@@ -2190,11 +2196,23 @@ async function renderAdmin(tab) {
       document.getElementById("mldPub").onclick = async () => {
         const tittel = document.getElementById("mldT").value.trim();
         const tekst = document.getElementById("mldTx").value.trim();
+        const push = document.getElementById("mldPush").checked;
         if (!tittel || !tekst) return alert("Fyll ut tittel og tekst.");
-        await api("/admin/melding", { method: "POST", body: JSON.stringify({ tittel, tekst, type: document.getElementById("mldType").value }) });
-        document.getElementById("mldT").value = ""; document.getElementById("mldTx").value = "";
-        await loadMeldinger();
-        loadMld();
+        if (push && !confirm(`Sende «${tittel}» som push-varsel til ALLE enheter nå?`)) return;
+        const knapp = document.getElementById("mldPub");
+        knapp.disabled = true; knapp.textContent = "Sender …";
+        try {
+          const r = await api("/admin/melding", { method: "POST",
+            body: JSON.stringify({ tittel, tekst, type: document.getElementById("mldType").value, push }) });
+          const st = document.getElementById("mldStatus");
+          st.style.display = "block";
+          st.innerHTML = `✅ Publisert i varselsenteret${push ? ` · 📲 push: <b>${r.sendt}</b> sendt${r.feilet ? `, ${r.feilet} feilet` : ""}${r.dode ? `, ${r.dode} døde abonnement ryddet` : ""}` : ""}`;
+          document.getElementById("mldT").value = ""; document.getElementById("mldTx").value = "";
+          document.getElementById("mldPush").checked = false;
+          await loadMeldinger();
+          loadMld();
+        } catch (e) { alert("Feil: " + e.message); }
+        knapp.disabled = false; knapp.textContent = "📣 Publiser";
       };
       loadMld();
     } else if (tab === "sporing") {
