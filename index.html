@@ -2197,12 +2197,18 @@ function focusCase(c) {
   if (!c.latlon) { openNogeo(); return; }
   const p = POIS.find(p => p.cases.includes(c));
   if (!p) return;
-  map.flyTo(c.latlon, 17, { duration: 0.8 });
+  // setView uten animasjon: robust ved oppstart (dyplenker) og skånsomt på mobil
+  map.setView(c.latlon, 17, { animate: false });
+  highlightCase(c);
   setTimeout(() => {
     openPoi(p);
     const card = document.querySelector(`.case[data-nr="${CSS.escape(c.casenr)}"]`);
-    if (card) { card.classList.add("open"); card.scrollIntoView({ behavior: "smooth", block: "start" }); }
-  }, 850);
+    if (card) {
+      card.classList.add("open");
+      fillCaseBody(card, c);
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, 150);
 }
 
 /* ---------------- Søk med forslag og kart-flytting ---------------- */
