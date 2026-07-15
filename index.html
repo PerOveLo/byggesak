@@ -2148,32 +2148,85 @@ function saksgangHtml(full) {
 
 /* ---------------- Presedens: lignende saker i nærområdet ---------------- */
 const INNVILGET_RE = /ferdigattest|tillatelse gitt|rammetillatelse|igangsetting|brukstillatelse/i;
+const AVGJORT_RE = /ferdigattest|tillatelse gitt|rammetillatelse|igangsetting|brukstillatelse|avslag|avsluttet/i;
+function behandlingsdager(c) {
+  if (!c.firstDate || !c.lastDate) return null;
+  const d = Math.round((new Date(c.lastDate) - new Date(c.firstDate)) / 864e5);
+  return d >= 0 ? d : null;
+}
+// Bysnitt per tiltakstype (regnes én gang) – gir de lokale tallene mening.
+let KAT_BASELINE = null;
+function katBaseline() {
+  if (KAT_BASELINE) return KAT_BASELINE;
+  const acc = {};
+  for (const c of DATA.cases) {
+    if (c.type !== "Byggesak") continue;
+    const st = c.status || "";
+    const dager = AVGJORT_RE.test(st) ? behandlingsdager(c) : null;
+    for (const k of (c.kategorier || [])) {
+      const a = acc[k] || (acc[k] = { n: 0, innv: 0, avslag: 0, dager: [] });
+      a.n++;
+      if (INNVILGET_RE.test(st)) a.innv++;
+      else if (/avslag/i.test(st)) a.avslag++;
+      if (dager !== null) a.dager.push(dager);
+    }
+  }
+  KAT_BASELINE = {};
+  for (const [k, a] of Object.entries(acc)) {
+    const avgjort = a.innv + a.avslag;
+    KAT_BASELINE[k] = { median: median(a.dager), andel: avgjort ? Math.round(a.innv / avgjort * 100) : null };
+  }
+  return KAT_BASELINE;
+}
 function presedens(c) {
   const kat = (c.kategorier || [])[0];
   if (!kat || !c.latlon) return null;
   const her = L.latLng(c.latlon);
-  const finn = radius => DATA.cases.filter(x => x !== c && x.latlon && (x.kategorier || []).includes(kat)
-    && her.distanceTo(L.latLng(x.latlon)) <= radius);
+  const finn = radius => DATA.cases.filter(x => x !== c && x.type === "Byggesak" && x.latlon
+    && (x.kategorier || []).includes(kat) && her.distanceTo(L.latLng(x.latlon)) <= radius);
   let radius = 800, naboer = finn(radius);
-  if (naboer.length < 3) { radius = 2000; naboer = finn(radius); }
-  if (naboer.length < 3) return null;
+  if (naboer.length < 5) { radius = 2000; naboer = finn(radius); }
+  if (naboer.length < 5) return null;
   const innv = naboer.filter(x => INNVILGET_RE.test(x.status || "")).length;
   const avslag = naboer.filter(x => /avslag/i.test(x.status || "")).length;
   const avgjort = innv + avslag;
-  const dager = naboer.filter(x => x.firstDate && x.lastDate && (INNVILGET_RE.test(x.status || "") || /avslag|avsluttet/i.test(x.status || "")))
-    .map(x => Math.round((new Date(x.lastDate) - new Date(x.firstDate)) / 864e5)).filter(d => d >= 0);
+  const disp = naboer.filter(x => (x.kategorier || []).includes("dispensasjon")).length;
+  const dager = naboer.filter(x => AVGJORT_RE.test(x.status || "")).map(behandlingsdager).filter(d => d !== null);
+  const bl = katBaseline()[kat] || {};
   return { kat, radius, naboer: naboer.sort(byActivity), innv, avslag, avgjort,
-           andel: avgjort ? Math.round(innv / avgjort * 100) : null, median: median(dager) };
+           andel: avgjort ? Math.round(innv / avgjort * 100) : null, median: median(dager),
+           disp, dispPst: Math.round(disp / naboer.length * 100),
+           byMedian: bl.median ?? null, byAndel: bl.andel ?? null };
 }
 function presedensHtml(p) {
   if (!p) return "";
-  return `<div class="sectionlabel" style="margin-top:10px">📊 Presedens i nærområdet</div>
+  // Behandlingstid er det som faktisk varierer (36–327 dager på tvers av typer) – led med det.
+  let tid = "";
+  if (p.median !== null) {
+    const diff = p.byMedian !== null ? p.median - p.byMedian : null;
+    const rel = diff === null ? "" : Math.abs(diff) < 20 ? " – på linje med bysnittet"
+      : diff < 0 ? ` – <b style="color:var(--green)">${-diff} dager raskere</b> enn snittet i Kristiansand (${p.byMedian})`
+      : ` – <b style="color:var(--red)">${diff} dager tregere</b> enn snittet i Kristiansand (${p.byMedian})`;
+    tid = `<div class="pres-hode" style="margin-bottom:6px"><span class="pres-tall">${p.median} dager</span>
+      typisk behandlingstid for <b>${esc(p.kat)}</b> her${rel}</div>`;
+  }
+  // Dispensasjon = det reelle risikosignalet (disse sakene avslås oftere og presser planen)
+  const risiko = p.disp
+    ? `<div class="pres-meta" style="margin-bottom:4px">📜 ${p.disp} av ${p.naboer.length} (${p.dispPst} %) trengte dispensasjon fra planen`
+      + (p.dispPst > 30 ? " – dette er et område med planpress" : "") + "</div>"
+    : "";
+  // Innvilgelse vises ærlig og nedtonet: nesten alt innvilges i Kristiansand
+  const innvilget = p.avgjort
+    ? `<div class="pres-meta">✅ ${p.innv} av ${p.avgjort} avgjorte ble innvilget${p.andel !== null ? ` (${p.andel} %)` : ""}.
+       Byggesaker i Kristiansand innvilges nesten alltid (~97 %)${p.byAndel !== null && p.andel !== null && p.andel < p.byAndel - 3
+        ? `, så ${p.andel} % her er noe strengere enn vanlig` : " – det som skiller sakene er tid og dispensasjon"}.</div>`
+    : `<div class="pres-meta">Ingen av sakene er avgjort ennå.</div>`;
+  return `<div class="sectionlabel" style="margin-top:10px">📊 Slik ligger ${esc(p.kat)}-saker an i nærområdet</div>
     <div class="pres">
-      <div class="pres-hode">${p.avgjort
-        ? `<span class="pres-tall">${p.innv} av ${p.avgjort}</span> avgjorte søknader om <b>${esc(p.kat)}</b> innen ${p.radius >= 1000 ? (p.radius / 1000) + " km" : p.radius + " m"} ble innvilget${p.andel !== null ? ` (${p.andel} %)` : ""}`
-        : `${p.naboer.length} saker om <b>${esc(p.kat)}</b> innen ${p.radius >= 1000 ? (p.radius / 1000) + " km" : p.radius + " m"} – ingen avgjort ennå`}</div>
-      ${p.avgjort ? `<div class="cmp-bar" style="margin:7px 0 5px"><i style="width:${p.andel ?? 0}%"></i></div>` : ""}
-      <div class="pres-meta">${p.avslag ? `⛔ ${p.avslag} avslag · ` : ""}${p.median !== null ? `⏱ median behandlingstid ${p.median} dager · ` : ""}${p.naboer.length} saker totalt</div>
+      ${tid}
+      ${risiko}
+      ${innvilget}
+      <div class="pres-meta" style="margin-top:4px;color:var(--ink3)">Basert på ${p.naboer.length} ${esc(p.kat)}-saker innen ${p.radius >= 1000 ? (p.radius / 1000) + " km" : p.radius + " m"} · geografisk nærhet, ikke nødvendigvis samme reguleringsplan.</div>
       <button class="btn sec pres-alle" style="margin-top:8px">Vis alle ${p.naboer.length} lignende saker</button>
     </div>`;
 }
