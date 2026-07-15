@@ -1103,9 +1103,17 @@ map.on("moveend", () => {
   if (state.bbox) render();
   if (EIENDOM) renderEiendomDots();
 });
-// Byggesaksmodus: klikk på tom kartflate -> områdeinnsikt. (Eiendomsmodus bruker de blå prikkene.)
 map.on("click", e => {
-  if (EIENDOM || AVIS.aktiv || map.getZoom() < 14) return;
+  if (AVIS.aktiv) return;
+  // Eiendomsmodus: klikk hvor som helst -> nærmeste eiendom (snap, romslig trykkeflate)
+  if (EIENDOM) {
+    if (map.getZoom() < EIENDOM_MIN_ZOOM) return;
+    const a = naermesteEiendom(e.latlng);
+    if (a) openEiendomFraAdresse(a);
+    return;
+  }
+  // Byggesaksmodus: klikk på tom kartflate -> områdeinnsikt
+  if (map.getZoom() < 14) return;
   if (e.originalEvent.target.closest(".leaflet-marker-icon, .leaflet-interactive, .leaflet-control")) return;
   openOmradeInnsikt(e.latlng);
 });
@@ -1654,17 +1662,29 @@ function renderEiendomDots() {
   const renderer = L.canvas({ padding: 0.4 });
   const layer = L.layerGroup();
   let n = 0;
+  // Prikkene er kun visuelle (interactive:false) – selve valget skjer via klikk-snap på kartet,
+  // så man slipper å treffe en liten prikk nøyaktig (viktig på mobil).
   for (const a of alleEiendomsPunkter()) {
     if (!b.contains(a.latlon)) continue;
-    const mk = L.circleMarker(a.latlon, { renderer, radius: 5, weight: 1.2, color: "#fff",
-      fillColor: "#0a84ff", fillOpacity: 0.92 });
-    mk.on("click", () => openEiendomFraAdresse(a));
-    mk.bindTooltip(a.label, { direction: "top", offset: [0, -6] });
-    layer.addLayer(mk);
+    layer.addLayer(L.circleMarker(a.latlon, { renderer, radius: 6, weight: 1.2, color: "#fff",
+      fillColor: "#0a84ff", fillOpacity: 0.9, interactive: false }));
     if (++n >= 3000) break;                            // tak: aldri drukne kartet
   }
   layer.addTo(map);
   eiendomDotLayer = layer;
+}
+// Finn eiendommen nærmest et kartklikk (i piksler), innen romslig trykkeflate.
+function naermesteEiendom(latlng, maxPx = 44) {
+  const cp = map.latLngToContainerPoint(latlng);
+  const b = map.getBounds();
+  let best = null, bestD = maxPx;
+  for (const a of alleEiendomsPunkter()) {
+    if (!b.contains(a.latlon)) continue;
+    const p = map.latLngToContainerPoint(a.latlon);
+    const d = Math.hypot(p.x - cp.x, p.y - cp.y);
+    if (d < bestD) { bestD = d; best = a; }
+  }
+  return best;
 }
 function openEiendomFraAdresse(a) {
   const p = a.poi || { label: a.label, latlon: a.latlon, cases: [],
