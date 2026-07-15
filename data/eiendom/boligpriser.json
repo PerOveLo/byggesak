@@ -1,0 +1,93 @@
+{
+ "kilde": "SSB tabell 14545 (2025) og 07221 (prisindeks, Agder og Rogaland uten Stavanger)",
+ "hentet": "2026-07-15",
+ "aar": 2025,
+ "kvmPriser": {
+  "Alle boligtyper": {
+   "kvmPris": 43843,
+   "omsetninger": 2628
+  },
+  "Eneboliger": {
+   "kvmPris": 30846,
+   "omsetninger": 612
+  },
+  "Småhus": {
+   "kvmPris": 31217,
+   "omsetninger": 492
+  },
+  "Blokkleiligheter": {
+   "kvmPris": 53139,
+   "omsetninger": 1524
+  }
+ },
+ "prisindeks": [
+  {
+   "aar": "2010",
+   "indeks": 85.3
+  },
+  {
+   "aar": "2011",
+   "indeks": 92.2
+  },
+  {
+   "aar": "2012",
+   "indeks": 96.6
+  },
+  {
+   "aar": "2013",
+   "indeks": 98.8
+  },
+  {
+   "aar": "2014",
+   "indeks": 99.5
+  },
+  {
+   "aar": "2015",
+   "indeks": 100.0
+  },
+  {
+   "aar": "2016",
+   "indeks": 99.0
+  },
+  {
+   "aar": "2017",
+   "indeks": 100.1
+  },
+  {
+   "aar": "2018",
+   "indeks": 100.3
+  },
+  {
+   "aar": "2019",
+   "indeks": 101.6
+  },
+  {
+   "aar": "2020",
+   "indeks": 104.2
+  },
+  {
+   "aar": "2021",
+   "indeks": 114.3
+  },
+  {
+   "aar": "2022",
+   "indeks": 122.3
+  },
+  {
+   "aar": "2023",
+   "indeks": 125.9
+  },
+  {
+   "aar": "2024",
+   "indeks": 132.3
+  },
+  {
+   "aar": "2025",
+   "indeks": 144.6
+  },
+  {
+   "aar": "2026",
+   "indeks": 156.7
+  }
+ ]
+}

@@ -1,0 +1,3331 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//byggesaker-kristiansand//NO
+CALSCALE:GREGORIAN
+X-WR-CALNAME:Byggesaker Kristiansand
+BEGIN:VEVENT
+UID:ny-227398@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny ulovlighetssak: Auglandskollen 12
+DESCRIPTION:Lysthus - KK132 (ULOV-26/01787) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227398
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-223171@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny ulovlighetssak: Nordtjønnåsen 2A\,
+DESCRIPTION:13/1185 \, pakeringsplass - avkjørsel (ULOV-25/01343) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/223171
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227628@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny henvendelse: Solliveien 3
+DESCRIPTION:avklaring om søknadsplikt - hagestue (HENV-26/02017) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227628
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227557@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny henvendelse: Åsveien 2
+DESCRIPTION:melding om bygg unntatt søknadsplikt - bod (HENV-26/01946) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227557
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227815@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260626
+SUMMARY:Ny byggesak: Nordtjønnåsen 9
+DESCRIPTION:bruksendring av gang (BYGG-26/02204) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227815
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227718@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny byggesak: Auglandskollen 22E
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/02107) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227718
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227422@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Kongleveien 16B
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/01811) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227422
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227365@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Solliveien 26 B
+DESCRIPTION:bygge om carport til lukket garasje (BYGG-26/01754) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227365
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227236@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Nordtjønnåsen 2A
+DESCRIPTION:godkjenning av innkjørsel (BYGG-26/01625) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227236
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227407@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny henvendelse: Solbergveien 8
+DESCRIPTION:spørsmål om det finnes ikke godkjente tiltak på eiendommen (HENV-26/01796) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227407
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227319@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny henvendelse: Egsveien 7
+DESCRIPTION:avklaring om søknadsplikt - fjerning av vegg\, bruksendring av bod samt etablering av minikjøkken (HENV-26/01708) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227319
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227714@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Andreas Kjærs vei 90
+DESCRIPTION:akuttbygg (BYGG-26/02103) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227714
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227693@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Egsveien 100
+DESCRIPTION:medisinsk poliklinikk i modulbygg (BYGG-26/02082) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227693
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227521@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Krogveien 9
+DESCRIPTION:forhåndskonferansen - påbygg (BYGG-26/01910) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227521
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227516@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Egsveien 100
+DESCRIPTION:plassering av midlertidige bygninger\, konstruksjoner og anlegg (BYGG-26/01905) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227516
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227448@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Egsveien 7
+DESCRIPTION:bruksendring av bod (BYGG-26/01837) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227448
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227752@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny henvendelse: Svarttjønnheia 19
+DESCRIPTION:utnyttelsesgrad av tomt (HENV-26/02141) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227752
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227565@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Stokkelandsvegen 8
+DESCRIPTION:infiltrasjonsanlegg - byggegrense (HENV-26/01954) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227565
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227326@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny henvendelse: Gamle Kuliaveg 44
+DESCRIPTION:ferdigattest (HENV-26/01715) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227326
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227768@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny byggesak: Svalåsvegen 116
+DESCRIPTION:oppføring av enebolig m/tilhørende garasje (BYGG-26/02157) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227768
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227761@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Stokkelandsvegen 8
+DESCRIPTION:infiltrasjonsanlegg for kloakk (BYGG-26/02150) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227761
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227720@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny byggesak: Porsmyrvegen 23
+DESCRIPTION:svømmebasseng (BYGG-26/02109) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227720
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227680@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Stupstadvegen 47
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02069) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227680
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227596@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Grakleivvegen 18A
+DESCRIPTION:bruksendring (BYGG-26/01985) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227596
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227524@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Mebakken 107
+DESCRIPTION:avklaring om søknadsplikt - carport (BYGG-26/01913) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227524
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227469@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Songdalsvegen 311
+DESCRIPTION:piperehabilitering (BYGG-26/01858) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227469
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227349@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny byggesak: Hestehovvegen 22A
+DESCRIPTION:carport (BYGG-26/01738) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227349
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227344@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny byggesak: Tunballvegen 21
+DESCRIPTION:ombygging (BYGG-26/01733) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227344
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227318@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Nodelandsvegen 12
+DESCRIPTION:bytte kledning\, fasadeendring\, utvidelse av terrasse over garasje samt overbygd tak (BYGG-26/01707) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227318
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227290@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny byggesak: Tverrmoen 29
+DESCRIPTION:forhåndskonferanse (BYGG-26/01679) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227290
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-226717@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Skinnerheia 9B\,
+DESCRIPTION:117/84 \, bod - tilbygg (ULOV-26/01106) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/226717
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-223101@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Skinnerheia 9B
+DESCRIPTION:hage\, tilbygg og p-plass på tvers av offentlig vei (ULOV-25/01273) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/223101
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227813@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260626
+SUMMARY:Ny henvendelse: Kornblomstveien 44
+DESCRIPTION:avklaring om søknadsplikt - utvendig trapp (HENV-26/02202) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227813
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227776@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny henvendelse: Grostølveien 50
+DESCRIPTION:forespørsel om sprengningsarbeider (HENV-26/02165) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227776
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227608@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny henvendelse: Smørblomstveien 30
+DESCRIPTION:spilegjerde (HENV-26/01997) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227608
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227403@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny henvendelse: Justlia 2
+DESCRIPTION:avklaring om søknadsplikt - tilbygg (HENV-26/01792) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227403
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227396@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny henvendelse: Østre Ålefjærvei 195
+DESCRIPTION:ny nettstasjon med jordkabler til eksisterende høystpent mastepunkt (HENV-26/01785) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227396
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227747@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Dalsveien 89
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02136) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227747
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227654@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260612
+SUMMARY:Ny byggesak: Ålefjærveien 294
+DESCRIPTION:forhåndskonferanse - tilbygg (BYGG-26/02043) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227654
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227454@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Dalsveien 117
+DESCRIPTION:forhåndskonferanse (BYGG-26/01843) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227454
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227451@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Skinnerheia 9 A
+DESCRIPTION:forstøtningsmur (BYGG-26/01840) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227451
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227375@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Dalsveien 66
+DESCRIPTION:tilbygg (BYGG-26/01764) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227375
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227331@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Jærnes 140
+DESCRIPTION:endring tilbygg - bad (BYGG-26/01720) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227331
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227306@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Grostølveien 27
+DESCRIPTION:bygging av terrasse med levegger og halvtak - tilbygg mindre enn 50m2 (BYGG-26/01695) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227306
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227301@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Ålefjærveien 208
+DESCRIPTION:forhåndskonferanse - ettergodkjenning av tiltak (BYGG-26/01690) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227301
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227461@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny henvendelse: Topdalsveien 137
+DESCRIPTION:bruksendring fra fritidsbolig til helåsbolig (HENV-26/01850) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227461
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227325@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny henvendelse: Topdalsveien 314
+DESCRIPTION:grunnundersøkelse (HENV-26/01714) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227325
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227825@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260629
+SUMMARY:Ny byggesak: Ryensveien 28I
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/02214) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227825
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227551@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Topdalsveien 244
+DESCRIPTION:endring av bygg - innvendig - Våtrom i bygg (BYGG-26/01940) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227551
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227414@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Topdalsveien 314
+DESCRIPTION:tilbygg (BYGG-26/01803) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227414
+END:VEVENT
+BEGIN:VEVENT
+UID:dok-205487-2027-12-31@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20271231
+SUMMARY:Dønnestadveien 131: Dønnestadveien 131 100/26/0/0\, ønske om at frist for ferdigstilling av
+DESCRIPTION:BYGG-20/05331 – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/205487
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227823@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260629
+SUMMARY:Ny henvendelse: Jolleveien 1A
+DESCRIPTION:carport (HENV-26/02212) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227823
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227742@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny henvendelse: Voie ringvei 60
+DESCRIPTION:lage anbudsunderlag for kommunen (HENV-26/02131) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227742
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227590@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny henvendelse: Briggveien 73A
+DESCRIPTION:tilsyn (HENV-26/01979) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227590
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227453@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny henvendelse: Sjekteveien 22B
+DESCRIPTION:avklaring om søknadsplikt - bytte av kledning (HENV-26/01842) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227453
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227894@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Bråvannslia 2
+DESCRIPTION:bruksendring av  bod til soverom (BYGG-26/02283) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227894
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227888@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Sagmyra 2
+DESCRIPTION:bruksendring (BYGG-26/02277) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227888
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227790@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny byggesak: Rådyrveien 40
+DESCRIPTION:tilbygg (BYGG-26/02179) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227790
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227741@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Paltosken 56
+DESCRIPTION:oppføring av påbygg\, levegg og bruksendring (BYGG-26/02130) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227741
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227532@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Jolleveien 11
+DESCRIPTION:piperehabilitering (BYGG-26/01921) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227532
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227416@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Steindalen 125
+DESCRIPTION:oppføring av natursteinsmur og port (BYGG-26/01805) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227416
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227356@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Bråvann platå 137
+DESCRIPTION:ny terrasse og og oppføring av pipe/ildsted (BYGG-26/01745) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227356
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227317@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Pramveien 8A
+DESCRIPTION:endring av bygg - utvendig - Tilbygg med samlet areal mindre enn 50 m2 (BYGG-26/01706) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227317
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227819@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260626
+SUMMARY:Ny henvendelse: Kirsten Flagstads vei 43-47
+DESCRIPTION:forretningsbygg (HENV-26/02208) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227819
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227673@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny henvendelse: Kirsten Flagstads vei 115B
+DESCRIPTION:spørsmål om godkjente tiltak (HENV-26/02062) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227673
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227666@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny henvendelse: Kjerrheia 73
+DESCRIPTION:hus med ikke godkjente bruksendringer (HENV-26/02055) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227666
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227869@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny byggesak: Svanedamsveien 44A
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02258) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227869
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227862@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny byggesak: Svanedamsveien 44B
+DESCRIPTION:enebolig (BYGG-26/02251) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227862
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227817@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260626
+SUMMARY:Ny byggesak: Svanedamsveien 20
+DESCRIPTION:takkvister og bruksendring av loft (BYGG-26/02206) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227817
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227694@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Vågsbygdveien 51A
+DESCRIPTION:riving og oppføring av nytt bygg (BYGG-26/02083) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227694
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227622@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny byggesak: Dallonaveien 1
+DESCRIPTION:påbygg (BYGG-26/02011) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227622
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227603@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Kirsten Flagstads vei 6A
+DESCRIPTION:rekkehus (BYGG-26/01992) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227603
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227411@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Fiskåveien 4
+DESCRIPTION:ombygging (BYGG-26/01800) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227411
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227376@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Konsul Wilds vei 20A
+DESCRIPTION:garasje (BYGG-26/01765) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227376
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227575@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Monsøya 80
+DESCRIPTION:innsynsbegjæring - oppføring av to bygg i forbindelse med innspillling av Farmen (HENV-26/01964) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227575
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227328@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny henvendelse: Monsøya 36
+DESCRIPTION:nødvendig grad av byggemelding (HENV-26/01717) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227328
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227626@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny byggesak: Østre Bastholmen 3
+DESCRIPTION:nytt anlegg - tilkobling til Vann- og avløp (BYGG-26/02015) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227626
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227513@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Okse 24
+DESCRIPTION:ny utrigger (BYGG-26/01902) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227513
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227309@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Borøya 8
+DESCRIPTION:utrigger på eksisterende brygge (BYGG-26/01698) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227309
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227806@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260625
+SUMMARY:Ny ulovlighetssak: Holmen 44
+DESCRIPTION:lagring av masser - hestemøkk (ULOV-26/02195) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227806
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224519@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260602
+SUMMARY:Ny ulovlighetssak: Leireveien 293
+DESCRIPTION:431/2/0/0\, plasthall - feil bruk (ULOV-25/02691) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224519
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-221040@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Trysnesveien 291\,
+DESCRIPTION:437/55 \, tiltak i strandsone (ULOV-24/02746) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/221040
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227646@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260612
+SUMMARY:Ny henvendelse: Ospedalen 2
+DESCRIPTION:avklaring om søknadsprosess - tilbygg til hytte (HENV-26/02035) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227646
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227625@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny henvendelse: Leireveien 10
+DESCRIPTION:avklaring om søknadsplikt - innvendig ombygging (HENV-26/02014) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227625
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227572@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Vaktodden 9
+DESCRIPTION:innsynsbegjæring  vedrørende mur\, trafikksikkerhet og siktforhold (HENV-26/01961) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227572
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227567@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Røsstadveien 50
+DESCRIPTION:ny enebolig (HENV-26/01956) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227567
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227525@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny henvendelse: Norddalsheia 24
+DESCRIPTION:melding om bygning som er unntatt søknadsplikt - hagestue (HENV-26/01914) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227525
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227506@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny henvendelse: Ausviga
+DESCRIPTION:innsynsbegjæring - antall boenheter med igangsettingstillatelse/brukstillatelse/ferdigattest (HENV-26/01895) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227506
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227299@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny henvendelse: Røsstadveien 443
+DESCRIPTION:fasadeendring (HENV-26/01688) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227299
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227064@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny henvendelse: Åløya 17
+DESCRIPTION:stadfesting av tiltak (HENV-26/01453) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227064
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227925@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260709
+SUMMARY:Ny byggesak: Hummerviga 5
+DESCRIPTION:bod (BYGG-26/02314) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227925
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227748@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Norddalsheia 24
+DESCRIPTION:endring av bygg - utvendig - Tilbygg med samlet areal mindre enn 50 m2 (BYGG-26/02137) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227748
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227591@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Greleholmen 3
+DESCRIPTION:rive og bygge ny fritidsbolig (BYGG-26/01980) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227591
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227492@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Ausvigheia 91
+DESCRIPTION:bod (BYGG-26/01881) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227492
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227441@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Heftenesveien 65
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/01830) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227441
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227424@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Trysnesveien 459
+DESCRIPTION:bygningstekniske installasjoner - Nytt anlegg (BYGG-26/01813) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227424
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227679@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny henvendelse: Juraveien 25
+DESCRIPTION:industribygg (HENV-26/02068) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227679
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227604@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny henvendelse: Stemmane 26A
+DESCRIPTION:ferdigattest for seksjon nr 18 (HENV-26/01993) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227604
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227944@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Barstølveien 60A
+DESCRIPTION:fjerning av rullebånd (BYGG-26/02333) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227944
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227871@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Skibåsen 16 B
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/02260) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227871
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227858@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny byggesak: Barstølveien 14A
+DESCRIPTION:endring av bygg - Annet (BYGG-26/02247) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227858
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227853@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny byggesak: Avenyen 45
+DESCRIPTION:nytt bygg - Under 70 m2 - ikke boligformål (BYGG-26/02242) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227853
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227716@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Barstølveien 60A
+DESCRIPTION:demontering av rullebånd (BYGG-26/02105) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227716
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227634@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260611
+SUMMARY:Ny byggesak: Krittveien 37
+DESCRIPTION:bruksendring (BYGG-26/02023) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227634
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227602@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Stemmane 1A
+DESCRIPTION:ombygging\, fasadeendring\, virksomhetsskilt (BYGG-26/01991) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227602
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227472@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Ingen adresse
+DESCRIPTION:bruksendring (BYGG-26/01861) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227472
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227468@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Grasdalen 20
+DESCRIPTION:solcelleanlegg (BYGG-26/01857) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227468
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224415@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Hanneviktoppen 38\,
+DESCRIPTION:15/185 \, flytting av bod (ULOV-25/02587) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224415
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227313@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny henvendelse: Manganveien 28A
+DESCRIPTION:nye vinduer (HENV-26/01702) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227313
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227914@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny byggesak: Porsveien 11
+DESCRIPTION:forhåndskonferanse (BYGG-26/02303) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227914
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227736@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Palladiumveien 14B
+DESCRIPTION:bruksendring (BYGG-26/02125) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227736
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-219610@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Trollkleiva 26\,
+DESCRIPTION:97/142 \, utvidelse platting (ULOV-24/01316) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/219610
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227900@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny henvendelse: Veslefrikkveien 21B
+DESCRIPTION:byggetegninger (HENV-26/02289) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227900
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227378@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny henvendelse: Gudbrandslia 9A
+DESCRIPTION:tilbygg (HENV-26/01767) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227378
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227291@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny henvendelse: Sofiero 7
+DESCRIPTION:trapp til hagen (HENV-26/01680) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227291
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227822@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260629
+SUMMARY:Ny byggesak: Gamle Strømmevei 53
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/02211) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227822
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227697@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Strømme terrasse 63
+DESCRIPTION:oppføring av levegg (BYGG-26/02086) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227697
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227685@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Gruvestien 21B
+DESCRIPTION:støttemur (BYGG-26/02074) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227685
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227639@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260611
+SUMMARY:Ny byggesak: Korsvikkilen 11
+DESCRIPTION:piperehabilitering (BYGG-26/02028) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227639
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227586@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Knarrevikveien 32
+DESCRIPTION:tilbygg (BYGG-26/01975) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227586
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227537@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Strandåsen 27B
+DESCRIPTION:enebolig (BYGG-26/01926) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227537
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227508@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Gudbrandslia 9B
+DESCRIPTION:ferdigattest tilbygg (BYGG-26/01897) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227508
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227421@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Veslefrikkveien 21A
+DESCRIPTION:bruksendring av hobbyrom (BYGG-26/01810) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227421
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227677@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny henvendelse: Svalekollen 2
+DESCRIPTION:avklaring om søknadsplikt - bygge inn veranda (HENV-26/02066) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227677
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227563@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Kartheia 31
+DESCRIPTION:avklaring om søknadsplikt - pergola (HENV-26/01952) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227563
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227487@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny henvendelse: Rødvingeveien 6
+DESCRIPTION:avklaring vedrørende bygging av terrasse (HENV-26/01876) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227487
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227401@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny henvendelse: Slettheitoppen 43
+DESCRIPTION:befaring og dialog angående støttemur (HENV-26/01790) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227401
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227802@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260625
+SUMMARY:Ny byggesak: Rødstrupeveien 24
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/02191) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227802
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227724@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny byggesak: Slettheitoppen 20
+DESCRIPTION:godkjenning oppført hagestue (BYGG-26/02113) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227724
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227629@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny byggesak: Rugdeveien 25A
+DESCRIPTION:tilbygg (BYGG-26/02018) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227629
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227025@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny byggesak: Rødvingeveien 23
+DESCRIPTION:terrenginngrep og hybler/en ekstra boenhet (BYGG-26/01414) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227025
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-226640@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny ulovlighetssak: Tjønnemyra 18
+DESCRIPTION:420/394/0/0\, levegg (ULOV-26/01029) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/226640
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-218785@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Ytre Åros 44
+DESCRIPTION:420/36 420/36/0/0\, ulovlig tiltak (ULOV-24/00491) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/218785
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227906@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260707
+SUMMARY:Ny henvendelse: Stauslandsveien 99
+DESCRIPTION:flytting av stabbur (HENV-26/02295) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227906
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227847@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny henvendelse: Stifjellet 12
+DESCRIPTION:melding om oppført bygg unntatt søknadsplikt - hagestue (HENV-26/02236) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227847
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227744@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny henvendelse: Søgnetunet 3
+DESCRIPTION:tilbygg endring fasade (HENV-26/02133) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227744
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227594@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny henvendelse: Langenesveien 6
+DESCRIPTION:behov for bruksendring (HENV-26/01983) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227594
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227566@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Udjusveien 18
+DESCRIPTION:spørsmål om utviklingsmuligheter for eiendommen (HENV-26/01955) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227566
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227488@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny henvendelse: Sentrumsveien 8
+DESCRIPTION:spørsmål om det er søkt om bruksendring\, fasadeendring og montering av fettutskiller (HENV-26/01877) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227488
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227463@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny henvendelse: Tangveien 36
+DESCRIPTION:bruksendring av kjeller - avklaring om det foreligger ferdigatttest (HENV-26/01852) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227463
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227341@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny henvendelse: Bekkeveien 5
+DESCRIPTION:avklaring knyttet til mulig etablering av boliger og herunder adkomstforhold (HENV-26/01730) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227341
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227315@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny henvendelse: Høllegata 11
+DESCRIPTION:avklaring om søknadsplikt - mur (HENV-26/01704) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227315
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227923@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260709
+SUMMARY:Ny byggesak: Bergeveien 15
+DESCRIPTION:stall\, innhegning\, ridebane\, parkeringsplass (BYGG-26/02312) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227923
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227889@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Rådhusveien 33
+DESCRIPTION:bruksendring (BYGG-26/02278) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227889
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227885@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Søgnetunet 3
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/02274) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227885
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227808@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260625
+SUMMARY:Ny byggesak: Røseveien 23
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/02197) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227808
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227799@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny byggesak: Gamle Lundevei 4C
+DESCRIPTION:forhåndskonferanse - utvidelse av brygge (BYGG-26/02188) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227799
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227797@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny byggesak: Årosveien 220
+DESCRIPTION:sjåførbu (BYGG-26/02186) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227797
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227778@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny byggesak: Rådhusveien 33
+DESCRIPTION:bruksendring (BYGG-26/02167) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227778
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227762@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Nordre Stifjellet 70
+DESCRIPTION:420/711 og 420/710/0/0\, nytt bygg - Boligformål (BYGG-26/02151) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227762
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227735@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Eikeveien 84A
+DESCRIPTION:endring av bygg - innvendig - Bærekonstruksjoner i bygg (BYGG-26/02124) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227735
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227719@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny byggesak: Eikeveien 84A
+DESCRIPTION:rive garasje/bod - oppføring  av tilbygg og terrasse (BYGG-26/02108) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227719
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227702@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Sangvikveien 148
+DESCRIPTION:svømmebasseng (BYGG-26/02091) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227702
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227664@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny byggesak: Røsstadveien 50
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02053) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227664
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227611@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Langenesveien 6
+DESCRIPTION:riving av garasje og bruksendring av kjeller (BYGG-26/02000) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227611
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227573@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny byggesak: Eikeveien 84 A
+DESCRIPTION:melding om tiltak unntatt søknadsplikt - drivhus (BYGG-26/01962) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227573
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227570@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny byggesak: Hølleveien 196A
+DESCRIPTION:tilbygg\, bruksendring av garasje og fradeling (BYGG-26/01959) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227570
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227553@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Eikeveien 84 A
+DESCRIPTION:melding om tiltak unntatt søknadsplikt - sportsbod (BYGG-26/01942) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227553
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227526@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Kleplandsveien 117
+DESCRIPTION:forhåndskonferanse - takoppbygg\, fasadeendring og terrasse (BYGG-26/01915) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227526
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227502@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Grøvansveien 37
+DESCRIPTION:pipemontering (BYGG-26/01891) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227502
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227459@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Eiendommen 473/58/0/0 har ikke adresse.
+DESCRIPTION:oasen barnehage og menighethus (BYGG-26/01848) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227459
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227452@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Grøvansveien 71
+DESCRIPTION:ferdigattest (BYGG-26/01841) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227452
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227425@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Stifjellet 24
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01814) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227425
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227395@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Støbakken 12
+DESCRIPTION:garasje (BYGG-26/01784) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227395
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227320@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Søgneveien 21
+DESCRIPTION:tilbygg til garasje - dispensasjon (BYGG-26/01709) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227320
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227156@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Eikeveien 148
+DESCRIPTION:forhåndskonferanse (BYGG-26/01545) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227156
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224588@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny ulovlighetssak: Vigeveien 30\,
+DESCRIPTION:47/36 \, tilbygg - div (ULOV-25/02760) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224588
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-217612@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Håkon den Godes vei 4\,
+DESCRIPTION:42/70 \, bod (ULOV-23/02982) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/217612
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227891@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny henvendelse: Sunnivas vei 25
+DESCRIPTION:telemast (HENV-26/02280) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227891
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227415@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny henvendelse: Ingebjørgs vei 34 A
+DESCRIPTION:spørsmål om møne-/gesimshøyde ved løfting av garasjetak (HENV-26/01804) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227415
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227909@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260707
+SUMMARY:Ny byggesak: Gimlekollen 1
+DESCRIPTION:oppføring av tilbygg og loftstue (BYGG-26/02298) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227909
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227877@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Margretes vei 46
+DESCRIPTION:bruksendring (BYGG-26/02266) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227877
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227864@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny byggesak: Olav Trygvasons vei 5A
+DESCRIPTION:enebolig i kjede (BYGG-26/02253) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227864
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227837@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny byggesak: Tretjønnveien 16
+DESCRIPTION:reetablering av forstøtningsmur (BYGG-26/02226) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227837
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227836@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny byggesak: Olav Trygvasons vei 60
+DESCRIPTION:bruksendring og ombygging (BYGG-26/02225) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227836
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227725@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny byggesak: Harald Hårfagres vei 10B
+DESCRIPTION:tilbygg sykkelbod (BYGG-26/02114) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227725
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227711@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Vigeveien 14D
+DESCRIPTION:levegg (BYGG-26/02100) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227711
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227475@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Gunhilds vei 127
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/01864) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227475
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227430@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Ålefjærveien 58
+DESCRIPTION:nytt bygg - Under 70 m2 - ikke boligformål (BYGG-26/01819) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227430
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227409@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Gunhilds vei 137
+DESCRIPTION:garasje (BYGG-26/01798) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227409
+END:VEVENT
+BEGIN:VEVENT
+UID:dok-214746-2026-09-01@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260901
+SUMMARY:Tretjønnveien 27: Tretjønnveien 27 42/302/0/0\, tilbakemelding vedrørende murer - ønske o
+DESCRIPTION:BYGG-23/00116 – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/214746
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227852@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny henvendelse: Dvergsnesveien 115
+DESCRIPTION:tilleggsopplysninger om eiendom (HENV-26/02241) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227852
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227810@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260625
+SUMMARY:Ny henvendelse: Dvergsnesveien 532
+DESCRIPTION:byggesakspapirer (HENV-26/02199) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227810
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227805@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260625
+SUMMARY:Ny henvendelse: Dvergsnessvingen 2
+DESCRIPTION:pergola (HENV-26/02194) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227805
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227788@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny henvendelse: Ådnevikveien 23
+DESCRIPTION:feil i eiendomsinformasjonen (HENV-26/02177) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227788
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227556@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny henvendelse: Børresvågveien 10
+DESCRIPTION:nytt vindu i fasade (HENV-26/01945) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227556
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227536@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny henvendelse: Børresvågveien 10
+DESCRIPTION:avklaring om søknadsplikt - fasadeendring/nytt vindu (HENV-26/01925) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227536
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227457@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny henvendelse: Dreggveien 14
+DESCRIPTION:tilbygg - ferdig utførte tiltak (HENV-26/01846) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227457
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227371@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny henvendelse: Dvergsnesbrinken 11
+DESCRIPTION:avklaring om søknadsplikt - pergola på takterrasse (HENV-26/01760) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227371
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227361@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny henvendelse: Sukkestølveien 45
+DESCRIPTION:avklaring om søknadsplikt - toalett i garasje (HENV-26/01750) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227361
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227345@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny henvendelse: Odderhei terrasse 15 A
+DESCRIPTION:veiledning vedrørende søknad om veranda/utestue (HENV-26/01734) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227345
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227926@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260709
+SUMMARY:Ny byggesak: Herøya 219
+DESCRIPTION:herøya 219 Søknad om ferdigattest 92/58 (BYGG-26/02315) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227926
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227849@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny byggesak: Kystveien 440
+DESCRIPTION:riving av eksisterende fritidsbolig og oppføring av ny enebolig (BYGG-26/02238) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227849
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227840@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny byggesak: Herøya 46
+DESCRIPTION:veranda og balkongdør (BYGG-26/02229) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227840
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227779@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny byggesak: Bordalssløyfen 8
+DESCRIPTION:fasadeendring/endring av tak (BYGG-26/02168) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227779
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227772@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny byggesak: Støleveien 21
+DESCRIPTION:tiltak uten søknadsplikt - badstue/sauna (BYGG-26/02161) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227772
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227771@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny byggesak: Støleveien 21
+DESCRIPTION:tiltak uten søknadsplikt - garasje (BYGG-26/02160) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227771
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227770@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny byggesak: Støleveien 21
+DESCRIPTION:tiltak uten søknadsplikt - hagestue/orangeri (BYGG-26/02159) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227770
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227765@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Støleveien 21
+DESCRIPTION:bruksendring - anneks (BYGG-26/02154) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227765
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227757@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Valsvigveien 44
+DESCRIPTION:fasadeendring (BYGG-26/02146) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227757
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227661@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny byggesak: Tømmerstøveien 3A
+DESCRIPTION:tilbygg (BYGG-26/02050) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227661
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227569@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny byggesak: Dvergsnesbakken 8
+DESCRIPTION:riving (BYGG-26/01958) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227569
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227501@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Kystveien 650
+DESCRIPTION:piperehabilitering (BYGG-26/01890) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227501
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227471@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Fidjeåsen 137
+DESCRIPTION:endring av bygg - utvendig - Påbygg (BYGG-26/01860) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227471
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227464@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Dvergsneslia 29
+DESCRIPTION:pergola (BYGG-26/01853) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227464
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227369@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Dvergsnesåsen 6
+DESCRIPTION:mur (BYGG-26/01758) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227369
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227357@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Rabbersveien 58
+DESCRIPTION:endring av bygg - utvendig - Tilbygg med samlet areal større enn 50 m2 (BYGG-26/01746) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227357
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227342@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny byggesak: Dvergsnesveien 119
+DESCRIPTION:forhåndskonferanse (BYGG-26/01731) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227342
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227316@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Bordalssløyfen 12B
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/01705) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227316
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227550@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny henvendelse: Dronningens gate 51
+DESCRIPTION:registrert som bolig (HENV-26/01939) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227550
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227402@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny henvendelse: Kongens gate 75
+DESCRIPTION:avklaring om søknadsplikt og om det er frist for å start og søke - uteareal på tak (HENV-26/01791) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227402
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227368@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny henvendelse: Kongens gate 44
+DESCRIPTION:rekkverk (HENV-26/01757) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227368
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227921@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny byggesak: Kongens gate 64
+DESCRIPTION:etablering av kontorer/bruksendring (BYGG-26/02310) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227921
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227755@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Østre Strandgate 60
+DESCRIPTION:fasadeendring - balkongdør og vindu (BYGG-26/02144) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227755
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227595@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Elvegata 4
+DESCRIPTION:byggtekniske installasjoner og innvendig endring i bygg - våtrom (BYGG-26/01984) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227595
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227338@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny byggesak: Festningsgata 4E
+DESCRIPTION:skilt/reklame mindre enn 6\,5 m2 - fasade (BYGG-26/01727) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227338
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227902@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260707
+SUMMARY:Ny byggesak: Brennåsmoen 1
+DESCRIPTION:ferdigattest (BYGG-26/02291) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227902
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227850@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny byggesak: Farvannsvegen 70
+DESCRIPTION:forhåndskonferanse (BYGG-26/02239) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227850
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227432@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Lindvegen 38
+DESCRIPTION:bruksendring (BYGG-26/01821) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227432
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227287@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny byggesak: Brennåsmoen 38
+DESCRIPTION:bruksendring (BYGG-26/01676) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227287
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-225060@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny ulovlighetssak: Rådhusgata 5\,
+DESCRIPTION:150/1720 \, brannkrav (ULOV-25/03232) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/225060
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227455@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny henvendelse: Skippergata 6
+DESCRIPTION:avklaring om søknadsplikt - fasadeendring - skilt og profilering (HENV-26/01844) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227455
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227358@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny henvendelse: Rådhusgata 2
+DESCRIPTION:forespørsel om søknadsplikt / bruksendring (HENV-26/01747) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227358
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227327@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny henvendelse: Rådhusgata 4
+DESCRIPTION:endring av rekkverk (HENV-26/01716) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227327
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-225608@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny ulovlighetssak: Voielia 18\,
+DESCRIPTION:11/143 \, skade på vannrør (ULOV-25/03780) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/225608
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-223129@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Løvika 85
+DESCRIPTION:skarpe gjenstander på tomtegrense (ULOV-25/01301) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/223129
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227777@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny henvendelse: Voieåsen 16
+DESCRIPTION:forespørsel om informasjon nabotomt tomtegrense (HENV-26/02166) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227777
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227754@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny henvendelse: Voielia 6
+DESCRIPTION:utvidelse av boenhet (HENV-26/02143) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227754
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227703@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny henvendelse: Løvika 49
+DESCRIPTION:platting (HENV-26/02092) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227703
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227593@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny henvendelse: Kjosdalen 51
+DESCRIPTION:erstatte eksisterende nettstasjon (HENV-26/01982) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227593
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227890@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Andøyveien 11A
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/02279) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227890
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227739@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Andøybakken 14
+DESCRIPTION:bruksendring (BYGG-26/02128) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227739
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227712@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Måkeveien 9
+DESCRIPTION:nytt bygg - Over 70 m2 -Ikke boligformål (BYGG-26/02101) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227712
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227696@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Linnkjellkollen 16
+DESCRIPTION:bruksendring (BYGG-26/02085) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227696
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227618@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny byggesak: Alkeveien 124
+DESCRIPTION:gjerde (BYGG-26/02007) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227618
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227541@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Brøviglia 26
+DESCRIPTION:bruksendring (BYGG-26/01930) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227541
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227515@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Voielia 1
+DESCRIPTION:støttemur og gjerde (BYGG-26/01904) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227515
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227484@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Alkeveien 87B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01873) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227484
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227483@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Alkeveien 79B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01872) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227483
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227482@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Alkeveien 71B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01871) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227482
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227481@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Alkeveien 63B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01870) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227481
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227480@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Alkeveien 13B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01869) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227480
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227478@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Alkeveien 39B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01867) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227478
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227477@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Alkeveien 27B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01866) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227477
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227476@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Alkeveien 23B
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01865) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227476
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227386@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Andøyveien 42B
+DESCRIPTION:oppføring av utestue/levegg (BYGG-26/01775) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227386
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227373@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Andøysløyfen 69
+DESCRIPTION:hagestue (BYGG-26/01762) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227373
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227310@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Løvika 87
+DESCRIPTION:garasje og og fasadeendring (BYGG-26/01699) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227310
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-225153@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny ulovlighetssak: Moneheia 45\,
+DESCRIPTION:98/265 \, bruksendring (ULOV-25/03325) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/225153
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224517@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260602
+SUMMARY:Ny ulovlighetssak: Gabbroveien 1
+DESCRIPTION:mulig ulovlighet (ULOV-25/02689) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224517
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227668@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny henvendelse: Balchens vei 4C-4F
+DESCRIPTION:spørsmål om planlagte tiltak på eiendom (HENV-26/02057) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227668
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227730@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Tingveien 28
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02119) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227730
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227692@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Oskar Omdals terrasse 15
+DESCRIPTION:piperehabilitering (BYGG-26/02081) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227692
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227486@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Topdalsveien 6
+DESCRIPTION:delfelt B7 og F1 - Opparbeidelse av tomteområde (BYGG-26/01875) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227486
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227434@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Moneheia 14
+DESCRIPTION:endring av bygg - hovedombygging (BYGG-26/01823) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227434
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224872@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260602
+SUMMARY:Ny ulovlighetssak: Elgstien 48
+DESCRIPTION:59/143 59/143/0/0\, pergola med tak (ULOV-25/03044) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224872
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227763@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny henvendelse: Vardåsveien 23
+DESCRIPTION:avklaring om søknasdplikt - støttemur (HENV-26/02152) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227763
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227649@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260612
+SUMMARY:Ny henvendelse: Sjursøya 1
+DESCRIPTION:oppmåling av festetomt (HENV-26/02038) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227649
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227288@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny henvendelse: Knarreviktoppen 17
+DESCRIPTION:garasjeanlegg inndeling (HENV-26/01677) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227288
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227758@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Lyngøya 22
+DESCRIPTION:endring av anlegg (BYGG-26/02147) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227758
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227686@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Bliksheia 49
+DESCRIPTION:veranda (BYGG-26/02075) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227686
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227627@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny byggesak: Haumyrveien 40
+DESCRIPTION:bruksendring (BYGG-26/02016) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227627
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227587@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Fuglevikkleiva 63
+DESCRIPTION:terrenginngrep (BYGG-26/01976) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227587
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227544@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Torsvikveien 5
+DESCRIPTION:rive og bygge nytt sommerhus (BYGG-26/01933) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227544
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227732@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny henvendelse: Kirsebærveien 32
+DESCRIPTION:reguleringsplan (HENV-26/02121) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227732
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227675@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny henvendelse: Hånestangen 49 B
+DESCRIPTION:bruksendring garasje (HENV-26/02064) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227675
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227624@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny henvendelse: Hånesveien 101
+DESCRIPTION:endring av bygg (HENV-26/02013) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227624
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227660@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny byggesak: Hånesveien 101
+DESCRIPTION:tilbygg (BYGG-26/02049) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227660
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227535@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Bringebærveien 4D
+DESCRIPTION:piperehabilitering (BYGG-26/01924) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227535
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227433@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Nedre Hånes 9
+DESCRIPTION:endring av bygg - utvendig - Tilbygg med samlet areal mindre enn 50 m2 (BYGG-26/01822) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227433
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-226113@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny ulovlighetssak: Kolsbergveien 10B
+DESCRIPTION:151/1111 151/1111/0/0\, bruksendring (ULOV-26/00502) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/226113
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227689@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny henvendelse: Grimsvollen 13
+DESCRIPTION:avklaring om søknadsplikt - fasadeendring (HENV-26/02078) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227689
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227507@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny henvendelse: Artillerivollen 52
+DESCRIPTION:spørsmål om det foreligger endring fra næringsdel til bolig (HENV-26/01896) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227507
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227418@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny henvendelse: Baneheiveien 9
+DESCRIPTION:avklaring om søknadsplikt - bygging av praktikantdel (HENV-26/01807) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227418
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227922@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260709
+SUMMARY:Ny byggesak: Møllevannsveien 20I
+DESCRIPTION:endring av bygg - utvendig - Påbygg (BYGG-26/02311) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227922
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227851@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny byggesak: Palle Rosenkrantz gate 15
+DESCRIPTION:forhåndskonferanse (BYGG-26/02240) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227851
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227500@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Møllevannsveien 10
+DESCRIPTION:piperehabilitering (BYGG-26/01889) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227500
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227431@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Møllevannsveien 1
+DESCRIPTION:tilbygg bolig (BYGG-26/01820) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227431
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-226641@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny ulovlighetssak: Hellemyr Terrasse 41\,
+DESCRIPTION:151/839 \, tiltak utenfor eiendomsgrense - fylling (ULOV-26/01030) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/226641
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227916@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny henvendelse: Hellemyr terrasse 32E
+DESCRIPTION:platting på lekeplass (HENV-26/02305) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227916
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227619@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny henvendelse: Lille Kartemyrvei 16
+DESCRIPTION:melding om oppført bygg unntatt søknadsplikt - garasje (HENV-26/02008) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227619
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227387@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny henvendelse: Lille Kartemyrvei 20
+DESCRIPTION:avklaring om søknadsplikt - nedgravd svømmebasseng (HENV-26/01776) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227387
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227330@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny henvendelse: Hellemyr terrasse 41
+DESCRIPTION:støttemur (HENV-26/01719) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227330
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227292@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny henvendelse: Mjåvannsvegen 106
+DESCRIPTION:melding fra Arbeidstilsynet (HENV-26/01681) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227292
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227918@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny byggesak: Hellemyrdalen 46
+DESCRIPTION:bruksendring (BYGG-26/02307) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227918
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227915@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny byggesak: Lille Kartemyrvei 20
+DESCRIPTION:basseng (BYGG-26/02304) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227915
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227843@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny byggesak: Solkollen 7
+DESCRIPTION:hagestue (BYGG-26/02232) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227843
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227552@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Mjåvannsvegen 21
+DESCRIPTION:oppføring av lagerhall (BYGG-26/01941) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227552
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227510@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Bydalsveien 43
+DESCRIPTION:riving av hele bygg (BYGG-26/01899) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227510
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227490@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Mjåvannsvegen 158
+DESCRIPTION:innvendig endringer (BYGG-26/01879) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227490
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227460@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Lille Kartemyrvei 28
+DESCRIPTION:oppføring av enebolig (BYGG-26/01849) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227460
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227413@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Breimyrstien 21
+DESCRIPTION:tilbygg med samlet areal mindre enn 50 m2 - oppføring av frittstående carport (BYGG-26/01802) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227413
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227406@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Hellemyrtoppen 35
+DESCRIPTION:bruksendring av bod (BYGG-26/01795) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227406
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227372@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Breimyråsen 103
+DESCRIPTION:tilbygg (BYGG-26/01761) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227372
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227367@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Breimyråsen 2
+DESCRIPTION:carport med terrasse over (BYGG-26/01756) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227367
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227332@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Mjåvannsvegen 106
+DESCRIPTION:endring av bygg - innvendig - Bærekonstruksjoner i bygg (BYGG-26/01721) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227332
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-225686@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Høgskoleveien 34\,
+DESCRIPTION:417/228 \, veranda (ULOV-26/00075) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/225686
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-225335@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Søvigheia 19\,
+DESCRIPTION:416/304 \, platting (ULOV-25/03507) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/225335
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224385@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny ulovlighetssak: Kosseviga 1
+DESCRIPTION:416/27 416/27/0/0\, diverse tiltak (ULOV-25/02557) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224385
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227830@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260629
+SUMMARY:Ny henvendelse: Langenesveien 337B
+DESCRIPTION:endring av opplyninger i matrikkelen (HENV-26/02219) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227830
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227388@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny henvendelse: Langenesveien 316
+DESCRIPTION:levegg (HENV-26/01777) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227388
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227296@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny henvendelse: Langenesveien 540
+DESCRIPTION:godkjent soverom (HENV-26/01685) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227296
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227910@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260707
+SUMMARY:Ny byggesak: Kilenesheia 13
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02299) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227910
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227881@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Langenesåsen 46
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02270) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227881
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227585@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Kilenesheia 25
+DESCRIPTION:fasadeendring og bruksendring (BYGG-26/01974) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227585
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227474@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Pålsnesveien 72
+DESCRIPTION:uthus (BYGG-26/01863) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227474
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227173@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Øygarden 7 A
+DESCRIPTION:forhåndskonferanse - bruksendring av barnehage (BYGG-26/01562) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227173
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227172@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Lyngmyr 39
+DESCRIPTION:fritidsbolig (BYGG-26/01561) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227172
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-225366@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny ulovlighetssak: Leirdalen 19A\,
+DESCRIPTION:28/220 \, bruksendring bod til oppholdsrom (ULOV-25/03538) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/225366
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-223690@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260611
+SUMMARY:Ny ulovlighetssak: Høietun 312\,
+DESCRIPTION:28/479 \, hybel\, bruksendring (ULOV-25/01862) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/223690
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227672@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny henvendelse: Høietun 63
+DESCRIPTION:garasje (HENV-26/02061) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227672
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227729@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Lillefjell terrasse 51
+DESCRIPTION:mur og terrengendring (BYGG-26/02118) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227729
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227577@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny byggesak: Høietun 256
+DESCRIPTION:garasje - Tilbygg med samlet areal mindre enn 50 m2 (BYGG-26/01966) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227577
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227449@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Setesdalsveien 417
+DESCRIPTION:driftsbygning til sag (BYGG-26/01838) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227449
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227908@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260707
+SUMMARY:Ny henvendelse: Dronningens gate 33
+DESCRIPTION:solskjerming (HENV-26/02297) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227908
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227559@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny henvendelse: Sjølystveien 70
+DESCRIPTION:fasadeendring (HENV-26/01948) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227559
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227445@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny henvendelse: Wilhelm Rosenvolds vei 24
+DESCRIPTION:beredskapsplass Odderøya (HENV-26/01834) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227445
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227323@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny henvendelse: Vestre Strandgate 7
+DESCRIPTION:skiltendring (HENV-26/01712) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227323
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227861@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny byggesak: Kirkegata 6
+DESCRIPTION:ombygging (BYGG-26/02250) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227861
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227860@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny byggesak: Nodeviga 42
+DESCRIPTION:flytebrygge (BYGG-26/02249) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227860
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227841@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny byggesak: Lagmannsholmen 1
+DESCRIPTION:3\, 4\, 5A\, 6\, 7 150/1636/0/0\, forlengelse av kai (BYGG-26/02230) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227841
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227531@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Nodeviga 14
+DESCRIPTION:utskiftning av heis (BYGG-26/01920) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227531
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227352@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Kongens gate 8
+DESCRIPTION:bruksendring (BYGG-26/01741) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227352
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227336@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny byggesak: Sjølystveien 2
+DESCRIPTION:gjennomføring av branntekniske oppgraderinger (BYGG-26/01725) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227336
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227334@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Østre Strandgate 21
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/01723) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227334
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227324@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Dronningensgate 22
+DESCRIPTION:endring av boligenhet - Oppdeling av bolig (BYGG-26/01713) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227324
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227285@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny byggesak: Kirkegata 5A
+DESCRIPTION:5B\, 5C\, 5D\, 5E\, 5F\, 5G 150/625/0/0\, endring av bygg - Annet (BYGG-26/01674) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227285
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227700@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny henvendelse: Johan Øydegards vei 29
+DESCRIPTION:oppdaterte retningslinjer (HENV-26/02089) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227700
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227576@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Agder allé 27A
+DESCRIPTION:avklaring om søknadspliktig tiltak (HENV-26/01965) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227576
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227886@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: 4204-44/107/0/0
+DESCRIPTION:endring av VA-anlegg (BYGG-26/02275) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227886
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227883@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Urds vei 5A
+DESCRIPTION:forhåndskonferanse (BYGG-26/02272) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227883
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227863@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny byggesak: Kuholmsveien 103A
+DESCRIPTION:forhåndskonferanse (BYGG-26/02252) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227863
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227647@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260612
+SUMMARY:Ny byggesak: Marviksveien 113D
+DESCRIPTION:bruksendring av bod og tørkerom samt fasadeendring (BYGG-26/02036) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227647
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227419@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Johan Øydegards vei 2A
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01808) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227419
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227355@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Snorres gate 21
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01744) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227355
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227826@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260629
+SUMMARY:Ny byggesak: Østre Lone lier 71
+DESCRIPTION:plassering av midlertidige bygninger\, konstruksjoner og anlegg (BYGG-26/02215) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227826
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227450@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Svemmelandsveien 96
+DESCRIPTION:driftsbygning (BYGG-26/01839) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227450
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227443@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Eikestølveien 151
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/01832) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227443
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227408@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Vedderheia 181
+DESCRIPTION:oppføring av 2-mannsbolig med carporter (BYGG-26/01797) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227408
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227363@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Lonelia 1A
+DESCRIPTION:oppføring av innvendig mesanin (BYGG-26/01752) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227363
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227339@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny byggesak: Krogan 52
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01728) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227339
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227617@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny henvendelse: Kjevikveien 106
+DESCRIPTION:avklaring om søknadsplikt - bytte av kledning (HENV-26/02006) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227617
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-223996@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260612
+SUMMARY:Ny ulovlighetssak: Belteviga 1
+DESCRIPTION:bruksendring bolig\, div (ULOV-25/02168) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/223996
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227848@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny henvendelse: Årekjerret 94
+DESCRIPTION:grense (HENV-26/02237) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227848
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227633@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260611
+SUMMARY:Ny henvendelse: Andåsveien 48
+DESCRIPTION:spørsmål vedrørendre grensejustering (HENV-26/02022) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227633
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227874@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Holeberget 5
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02263) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227874
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227691@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Belteviga 1
+DESCRIPTION:endring av bygg - utvendig - Underbygg (BYGG-26/02080) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227691
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227605@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Skålevigsgarden 35
+DESCRIPTION:forhåndskonferanse - fradeling (BYGG-26/01994) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227605
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227588@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Vragesløyfen 63
+DESCRIPTION:plassering av midlertidige bygninger\, konstruksjoner og anlegg (BYGG-26/01977) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227588
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227462@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Vesterøya 117
+DESCRIPTION:rive og oppføre ny bolig (BYGG-26/01851) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227462
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227442@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny byggesak: Stangefjellveien 47
+DESCRIPTION:nytt bygg - Under 70 m2 - ikke boligformål (BYGG-26/01831) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227442
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227438@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Lindebøskauen 71
+DESCRIPTION:endring av VA-anlegg (BYGG-26/01827) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227438
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227400@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Hallekjerret 7
+DESCRIPTION:forhåndskonferanse - grensejustering (BYGG-26/01789) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227400
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227392@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Asperøyveien 13
+DESCRIPTION:carport/bod/badstue (BYGG-26/01781) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227392
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227298@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny byggesak: Revemyrknausen 2 A
+DESCRIPTION:fasadeendring/halvtak over inngangsparti (BYGG-26/01687) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227298
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227228@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Paulen 5
+DESCRIPTION:avkjørsel (BYGG-26/01617) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227228
+END:VEVENT
+BEGIN:VEVENT
+UID:dok-226426-2026-09-01@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260901
+SUMMARY:Østerøya 242: Østerøya 242 2/127/0/0\, bekrefter at ny frist settes til 01.09.2026
+DESCRIPTION:BYGG-26/00815 – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/226426
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-225965@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Skibbuveien 31
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/00354) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/225965
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227726@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny henvendelse: Sjømannsgata 7
+DESCRIPTION:bruksendring (HENV-26/02115) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227726
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227555@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny henvendelse: Valhallagata 15
+DESCRIPTION:as-built tegninger (HENV-26/01944) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227555
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227456@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny henvendelse: Østerveien 69
+DESCRIPTION:manglende ferdigattest (HENV-26/01845) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227456
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227880@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Bjørndalsheia 2
+DESCRIPTION:endring av bygg - utvendig - Tilbygg med samlet areal mindre enn 50 m2 (BYGG-26/02269) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227880
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227873@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Galgebergveien 36
+DESCRIPTION:endring av bygg - utvendig - Påbygg (BYGG-26/02262) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227873
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227528@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Tryms vei 13 C
+DESCRIPTION:bruksendring (BYGG-26/01917) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227528
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227520@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Odins gate 19 A
+DESCRIPTION:utebod (BYGG-26/01909) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227520
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227519@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Odins gate 19 A
+DESCRIPTION:tilbygg (BYGG-26/01908) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227519
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227512@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Bispeveien 3A
+DESCRIPTION:bruksendring og ombygging (BYGG-26/01901) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227512
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227511@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Kuholmsveien 11
+DESCRIPTION:bygningstekniske installasjoner - Reparasjon (BYGG-26/01900) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227511
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227509@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Tryms vei 13 B
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/01898) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227509
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227423@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Østerveien 10
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/01812) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227423
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227417@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Bjørnebakken 15A
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01806) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227417
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227405@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny byggesak: Bjørndalsheia 8
+DESCRIPTION:enebolig (BYGG-26/01794) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227405
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227322@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Bjørnebakken 43
+DESCRIPTION:piperehabilitering (BYGG-26/01711) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227322
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227249@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Hugins gate 1
+DESCRIPTION:bruksendring (BYGG-26/01638) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227249
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227564@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Møllevannsveien 99A
+DESCRIPTION:spørsmål om kjeller lovlig kan tas i bruk (HENV-26/01953) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227564
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227749@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Gamle Mandalsvei 16
+DESCRIPTION:bygningstekniske installasjoner - Endring - Teknisk installasjon i bygg (BYGG-26/02138) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227749
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227540@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Jørgen Løvlands vei 3
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01929) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227540
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227503@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Fagervollen 25
+DESCRIPTION:piperehabilitering (BYGG-26/01892) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227503
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227312@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Setesdalsveien 62B
+DESCRIPTION:veranda (BYGG-26/01701) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227312
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227554@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny henvendelse: Henrik Wergelands gate 44A
+DESCRIPTION:rømningsvei (HENV-26/01943) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227554
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227917@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny byggesak: Markens gate 34
+DESCRIPTION:reklameskilt (BYGG-26/02306) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227917
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227856@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny byggesak: Kirkegata 22
+DESCRIPTION:forhåndskonferanse (BYGG-26/02245) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227856
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227796@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny byggesak: Kristian IVs gate 42
+DESCRIPTION:bruksendring (BYGG-26/02185) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227796
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227653@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260612
+SUMMARY:Ny byggesak: Tordenskjolds gate 41
+DESCRIPTION:forhåndskonferanse - påbygg og fasadeendring (BYGG-26/02042) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227653
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227473@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Tordenskjolds gate 24
+DESCRIPTION:riving av hele bygg (BYGG-26/01862) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227473
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227437@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny byggesak: Markens gate 50
+DESCRIPTION:riving av hele bygg (BYGG-26/01826) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227437
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224876@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260529
+SUMMARY:Ny ulovlighetssak: Bliksheia 49\,
+DESCRIPTION:59/69 \, hus i forfall (ULOV-25/03048) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224876
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-222249@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny ulovlighetssak: Kronstien 6\,
+DESCRIPTION:13/386 \, bruksendring (ULOV-25/00422) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/222249
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227905@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260707
+SUMMARY:Ny henvendelse: Ingen adresse
+DESCRIPTION:oppføring av lagerbygg med tilhørende lagerseksjoner (HENV-26/02294) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227905
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227832@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny henvendelse: Kvartal 11
+DESCRIPTION:dokumenter vedrørende brannsikkerhet (HENV-26/02221) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227832
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227798@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny henvendelse: Aberdalen
+DESCRIPTION:spørsmål om dokumenter i sak BYGG--25/02209 - hva som er unntatt offentlig\, hvilke dokumenter er endret og  hvem vil få tilgang (HENV-26/02187) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227798
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227774@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny henvendelse: Kjerrheia\, Vågsbygd
+DESCRIPTION:Vågsbygd 14/2045/0/0\, fjerning av gapahuk (HENV-26/02163) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227774
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227773@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny henvendelse: Ingen adresse 38/128/0/0
+DESCRIPTION:presteheia - henvendelse om gjesteparkering/carport/garasje (HENV-26/02162) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227773
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227715@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny henvendelse: Ingen adresse
+DESCRIPTION:område for hester (HENV-26/02104) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227715
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227695@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny henvendelse: Banenr 2120 Sørlandsbanen
+DESCRIPTION:plassering poretykksmåler (HENV-26/02084) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227695
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227599@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny henvendelse: Bredalsholmen
+DESCRIPTION:bruk av naust og tilbakeføring av slippen (HENV-26/01988) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227599
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227584@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny henvendelse: Kanalbyen felt 2C Silokaia
+DESCRIPTION:tvist om tolking av reguleringsplaner (HENV-26/01973) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227584
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227534@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny henvendelse: Flekkerøy
+DESCRIPTION:spørsmål vedrørende bygging på tomt (HENV-26/01923) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227534
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227529@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny henvendelse: E18 Aust-Agder grense - Timenes
+DESCRIPTION:spørsmål om byggesøknad og varsel om avvik fra reguleringsplan 883-1 ved riving av Krogevann bru (HENV-26/01918) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227529
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227523@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny henvendelse: Fv 498 Sørlandsparken Øst
+DESCRIPTION:utvidelse av bussholdeplasser (HENV-26/01912) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227523
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227429@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260528
+SUMMARY:Ny henvendelse: Kilura\, Flekkerøy
+DESCRIPTION:Flekkerøy 4/215/0/0\, vedlikehold av brygge i strandsonen (HENV-26/01818) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227429
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227370@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny henvendelse: Hortemo ringveg
+DESCRIPTION:ber om endring av opplysninger i matrikkelen (HENV-26/01759) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227370
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227364@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny henvendelse: Kilura reguleringsplan
+DESCRIPTION:status (HENV-26/01753) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227364
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227913@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260708
+SUMMARY:Ny byggesak: Eiendommen 151/3003/0/0 har ikke adresse.
+DESCRIPTION:delfelt B4\, B5\, B6 og B7 151/3003/0/0\, opparbeidelse tekniske anlegg og utomhusplan (BYGG-26/02302) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227913
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227896@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Utsiktens brygge
+DESCRIPTION:riving og oppføring av ny sjøbod og renovering/utvidelse av brygge (BYGG-26/02285) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227896
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227878@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Ingen adresse Bråvannsløkka
+DESCRIPTION:nybygg (BYGG-26/02267) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227878
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227875@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny byggesak: Fv3908
+DESCRIPTION:nytt utvendig VA-anlegg (BYGG-26/02264) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227875
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227834@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny byggesak: Langemyr 18
+DESCRIPTION:midlertidig mellomlagring av masser (BYGG-26/02223) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227834
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227801@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260625
+SUMMARY:Ny byggesak: Skillsmyra
+DESCRIPTION:nytt bygg - Under 70 m2 - ikke boligformål (BYGG-26/02190) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227801
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227759@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Humleveien 6
+DESCRIPTION:enebolig med garasje (BYGG-26/02148) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227759
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227745@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Alvestien 2A
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/02134) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227745
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227737@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Hamreheia 29
+DESCRIPTION:mur og avkjørsel (BYGG-26/02126) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227737
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227734@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Skibbuveien 2B
+DESCRIPTION:gjenoppbygging av sjøbod (BYGG-26/02123) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227734
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227728@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260619
+SUMMARY:Ny byggesak: Skylleviga 19
+DESCRIPTION:nytt bygg - Boligformål (BYGG-26/02117) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227728
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227723@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny byggesak: Eiendommen 428/670/0/0 har ikke adresse.
+DESCRIPTION:fortøyningsbommer (BYGG-26/02112) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227723
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227648@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260612
+SUMMARY:Ny byggesak: Ingen adresse
+DESCRIPTION:opparbeidelse av gang- og sykkelvei med belysning (BYGG-26/02037) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227648
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227621@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny byggesak: Klynga 12
+DESCRIPTION:piperehabilitering (BYGG-26/02010) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227621
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227384@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Buane
+DESCRIPTION:oppføring av fritidsbolig (BYGG-26/01773) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227384
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227270@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Hamreheia 29
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01659) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227270
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227882@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260703
+SUMMARY:Ny henvendelse: Ospeveien 15B
+DESCRIPTION:total BYA på tomt (HENV-26/02271) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227882
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227494@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny henvendelse: Seljeveien 13
+DESCRIPTION:gjerde og stablesteinsmur (HENV-26/01883) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227494
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227350@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny henvendelse: Aberdalen 201
+DESCRIPTION:erstatte nettstasjon med ny med tilhørende høyspent jordkabel (HENV-26/01739) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227350
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227895@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Seljeveien 15A
+DESCRIPTION:bygging av veranda og innsetting av ny terrassedør (BYGG-26/02284) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227895
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227705@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260617
+SUMMARY:Ny byggesak: Hyllebakken 15
+DESCRIPTION:natursteinsmur (BYGG-26/02094) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227705
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227467@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Bjørkeliveien 8A
+DESCRIPTION:carport/garasje og litt endring på mur (BYGG-26/01856) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227467
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227354@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Unn Løvlands vei 5
+DESCRIPTION:nytt bygg - Under 70 m2 - ikke boligformål (BYGG-26/01743) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227354
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-226046@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260702
+SUMMARY:Ny ulovlighetssak: Kvernveien 15A
+DESCRIPTION:bredde avkjørsel (ULOV-26/00435) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/226046
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-224378@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny ulovlighetssak: Peder Claussøns gate 10
+DESCRIPTION:152/1194/0/0\, garasje (ULOV-25/02550) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/224378
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-217349@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny ulovlighetssak: Torridalsveien 17
+DESCRIPTION:tilbygg (ULOV-23/02719) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/217349
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227839@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260630
+SUMMARY:Ny henvendelse: Jegersbergveien 22
+DESCRIPTION:levegg (HENV-26/02228) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227839
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227784@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260624
+SUMMARY:Ny henvendelse: Sødalsveien 42
+DESCRIPTION:opplysninger i forbindelse med fradeling av tomt (HENV-26/02173) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227784
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227495@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny henvendelse: Torridalsveien 136
+DESCRIPTION:dokumentasjon bolig (HENV-26/01884) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227495
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227420@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny henvendelse: Parkveien 11
+DESCRIPTION:avklaring om søknadsplikt - byggearbeider i leilighet i 2. og 3. etasje (HENV-26/01809) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227420
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227348@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny henvendelse: Oddernes kirkevei 9
+DESCRIPTION:parkeringforhold og hybelutleie (HENV-26/01737) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227348
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227928@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260709
+SUMMARY:Ny byggesak: Kjøita 21
+DESCRIPTION:bygningstekniske installasjoner - Endring - Teknisk installasjon i bygg (BYGG-26/02317) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227928
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227824@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260629
+SUMMARY:Ny byggesak: Sommerrogata 11
+DESCRIPTION:bruksendring (BYGG-26/02213) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227824
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227643@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260611
+SUMMARY:Ny byggesak: Nedre Lunds vei 13A
+DESCRIPTION:nytt anlegg/konstruksjon (BYGG-26/02032) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227643
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227574@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny byggesak: Klynga 51
+DESCRIPTION:bruksendring (BYGG-26/01963) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227574
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227568@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny byggesak: Kvernveien 14
+DESCRIPTION:garasje med loftsbod (BYGG-26/01957) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227568
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227548@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Ingerthas vei 5
+DESCRIPTION:endring av bygg - utvendig - Fasade (BYGG-26/01937) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227548
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227489@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny byggesak: Flaten 1
+DESCRIPTION:innebygging av terrasse (BYGG-26/01878) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227489
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227399@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Marcus Thranes gate 18
+DESCRIPTION:ombygging av carport til garasje (BYGG-26/01788) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227399
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227391@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny byggesak: Jegersbergveien 1
+DESCRIPTION:ombygging (BYGG-26/01780) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227391
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227346@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260521
+SUMMARY:Ny byggesak: Strandveien 33B
+DESCRIPTION:påbygg (BYGG-26/01735) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227346
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227333@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260520
+SUMMARY:Ny byggesak: Arenfeldts vei 4
+DESCRIPTION:bruksendring fra tilleggsdel til hoveddel (BYGG-26/01722) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227333
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227082@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260518
+SUMMARY:Ny ulovlighetssak: Setesdalsveien 327A
+DESCRIPTION:19/60 19/60/0/0\, opprettelse av boenhet (ULOV-26/01471) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227082
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227893@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Dalaneveien 35
+DESCRIPTION:behandlingsanlegg for kasserte kjøretøy (BYGG-26/02282) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227893
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227499@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny byggesak: Straiskleiva 31
+DESCRIPTION:18/104/0/0\, piperehabilitering (BYGG-26/01888) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227499
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227362@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Kuliaveien 210
+DESCRIPTION:endring av bygg - utvendig - Tilbygg med samlet areal større enn 50 m2 (BYGG-26/01751) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227362
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227308@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260519
+SUMMARY:Ny byggesak: Setesdalsveien 240
+DESCRIPTION:vA-anlegg og kabelgrøft (BYGG-26/01697) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227308
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227857@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260701
+SUMMARY:Ny ulovlighetssak: Askekjerran 13
+DESCRIPTION:terrengarbeid (ULOV-26/02246) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227857
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227412@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260527
+SUMMARY:Ny henvendelse: Songdalsvegen 898
+DESCRIPTION:endre fra tomannsbolig til enebolig - hvordan gå frem (HENV-26/01801) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227412
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227717@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260618
+SUMMARY:Ny byggesak: Hønemyrvegen 195
+DESCRIPTION:tilbygg (BYGG-26/02106) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227717
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227631@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260611
+SUMMARY:Ny byggesak: Hønemyrvegen 184
+DESCRIPTION:endring av bygg - utvendig - Påbygg (BYGG-26/02020) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227631
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227514@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny byggesak: Finslandsvegen 3
+DESCRIPTION:bruksendring av låve (BYGG-26/01903) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227514
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227374@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Slottevegen 37
+DESCRIPTION:riving av hele bygg (BYGG-26/01763) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227374
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227496@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260605
+SUMMARY:Ny ulovlighetssak: Holbergs gate 32B
+DESCRIPTION:brannskille mangler (ULOV-26/01885) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227496
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-226349@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260623
+SUMMARY:Ny ulovlighetssak: Festningsgata 44\,
+DESCRIPTION:150/1915 \, bruk av fellesareal (ULOV-26/00738) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/226349
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227887@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny henvendelse: Tordenskjolds gate 81
+DESCRIPTION:spørsmål godkjenning bad (HENV-26/02276) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227887
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227751@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny henvendelse: St. Hans gate 7
+DESCRIPTION:gjerde (HENV-26/02140) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227751
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227665@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny henvendelse: Elvegata 22
+DESCRIPTION:sykkelbod (HENV-26/02054) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227665
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227615@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260610
+SUMMARY:Ny henvendelse: Gyldenløves gate 35C
+DESCRIPTION:spørsmål om bruksrett til fellesbod i kjeller (HENV-26/02004) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227615
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227560@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260608
+SUMMARY:Ny henvendelse: Festningsgata 56
+DESCRIPTION:spørsmål vedrørnede fasadeendring (HENV-26/01949) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227560
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227504@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260603
+SUMMARY:Ny henvendelse: Lømslands vei 9
+DESCRIPTION:forespørsel godkjent bruk og innsyn (HENV-26/01893) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227504
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227397@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260526
+SUMMARY:Ny henvendelse: Festningsgata 6E
+DESCRIPTION:avklaring om søknadsplikt - reklameskjerm (HENV-26/01786) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227397
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227897@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260706
+SUMMARY:Ny byggesak: Tordenskjolds gate 49
+DESCRIPTION:endring av bygg (BYGG-26/02286) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227897
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227829@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260629
+SUMMARY:Ny byggesak: Henrik Wergelands gate 88-94J
+DESCRIPTION:Kronprinsens gate 45A-45B 150/908/0/0\, piperehabilitering (BYGG-26/02218) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227829
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227812@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260626
+SUMMARY:Ny byggesak: Gyldenløves gate 70
+DESCRIPTION:bruksendring (BYGG-26/02201) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227812
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227698@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260616
+SUMMARY:Ny byggesak: Kristian IVs gate 77
+DESCRIPTION:nytt bygg - Under 70 m2 - ikke boligformål (BYGG-26/02087) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227698
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227659@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260615
+SUMMARY:Ny byggesak: Elvegata 56
+DESCRIPTION:etablering av takterrasse på eksisterende takflate og oppgradering av fallsikring/rekkverk (BYGG-26/02048) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227659
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227635@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260611
+SUMMARY:Ny byggesak: Elvegata 16A
+DESCRIPTION:oppføring av garasje (BYGG-26/02024) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227635
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227582@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260609
+SUMMARY:Ny byggesak: Sigvard Gundersens gate 6 B
+DESCRIPTION:bruksendring (BYGG-26/01971) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227582
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227530@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260604
+SUMMARY:Ny byggesak: Elvegata 6
+DESCRIPTION:bruksendring (BYGG-26/01919) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227530
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227353@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260522
+SUMMARY:Ny byggesak: Tordenskjolds gate 62
+DESCRIPTION:nytt anlegg/konstruksjon (BYGG-26/01742) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227353
+END:VEVENT
+BEGIN:VEVENT
+UID:ny-227760@byggesak
+DTSTAMP:20260715T061501Z
+DTSTART;VALUE=DATE:20260622
+SUMMARY:Ny henvendelse: Vesterveien 19
+DESCRIPTION:støttemur K40 og K141 vei til fergeterminalen (HENV-26/02149) – https://opengov.360online.com/Cases/KRSANDEBYGG/Case/Details/227760
+END:VEVENT
+END:VCALENDAR

@@ -1,0 +1,8 @@
+# Byggesaker Kristiansand
+# Rådata og adminside skal ikke indekseres av søkemotorer.
+# (Jf. Datatilsynets krav om at innsynsdata med personnavn ikke skal
+# gjøres søkbare via søkemotorer.)
+User-agent: *
+Disallow: /data/
+Allow: /$
+Allow: /index.html

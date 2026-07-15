@@ -1,0 +1,29 @@
+# Cloudflare Worker-konfig for Byggesaker Kristiansand.
+#
+# Oppsett (engangs, ~10 min):
+#   1. npm install -g wrangler && wrangler login
+#   2. wrangler d1 create byggesak            -> lim inn database_id under
+#   3. wrangler d1 execute byggesak --file=schema.sql --remote
+#   4. wrangler secret put API_SECRET         (lang tilfeldig streng, samme som GitHub Secret VARSLER_API_SECRET)
+#      wrangler secret put ADMIN_PASSORD      (delt superadmin-passord)
+#      wrangler secret put RESEND_API_KEY     (VALGFRITT – kun for magisk lenke/e-postvarsler, fra resend.com)
+#   5. Juster FROM_ADDR/SITE_URL/ADMIN_EPOST under, og: wrangler deploy
+#   6. Legg worker-URLen inn i config.js (apiBase + pdfProxy) i repoet.
+#
+# Passordinnlogging virker UTEN Resend: superadminene (ADMIN_EPOST) logger inn med
+# ADMIN_PASSORD; vanlige brukere registrerer seg selv med e-post + eget passord.
+
+name = "byggesak-api"
+main = "varsler-worker.js"
+compatibility_date = "2026-06-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "byggesak"
+database_id = "93124d5c-db09-4073-ac9f-be8d230a2168"
+
+[vars]
+VAPID_PUBLIC_KEY = "BFgGLzdkvDtQ0pF91KQwPsdX5RwUdEDH3MCLffv2F4phdqwe-i4o659Ha1rmZ0_5U5IOdf6Fq489E_UW22JBqYo"
+FROM_ADDR = "Byggesaker Kristiansand <varsel@vizbo.no>"
+SITE_URL = "https://perovelo.github.io/byggesak/"
+ADMIN_EPOST = "per@vizbo.no,sjur@vizbo.no,martin@vizbo.no,ck@k2grunderlab.no,sebastian@vizbo.no,kevin@vizbo.no,aadne@vizbo.no"

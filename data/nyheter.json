@@ -1,0 +1,41 @@
+[
+  {
+    "dato": "2026-07-15",
+    "tittel": "Grafiske kartlag, eiendomsmodus og skarpere analyser",
+    "punkter": [
+      "🗺 Grafiske kartlag: drap snittpris eller befolkning over kartet som fargede grunnkretser. Snittprisen er estimert kr/m² per område fra SSBs boligverdimodell; befolkningen er innbyggere per km². Trykk «Kartlag» nede til venstre",
+      "🏠 Eiendomsmodus er nå en egen kartvisning: alle eiendommer i Kristiansand vises som blå prikker – trykk (hvor som helst nær en) for eiendomsprofil med tomtegrense, matrikkelfakta og historikk. Den valgte eiendommen highlightes med blå puls",
+      "📊 Områdeinnsikt (byggesaksmodus): trykk hvor som helst i kartet og se hva som skjer innen 300 m – antall saker, median behandlingstid, vanligste tiltak og åpne ulovlighetssaker",
+      "🎯 Bedre presedens: byggesaker i Kristiansand innvilges nesten alltid (~97 %), så vi leder nå med det som faktisk varierer – behandlingstid målt mot bysnittet og hvor ofte det kreves dispensasjon"
+    ]
+  },
+  {
+    "dato": "2026-07-11",
+    "tittel": "Varselsenter, ukesoppsummering, presedens og saksgang",
+    "punkter": [
+      "📊 Presedens: åpne en sak og se hvordan lignende søknader i nærområdet har gått, med median behandlingstid og klikkbar liste",
+      "🏠 Eiendomsmodus med ekte registerdata: tomteareal og eiendomsgrense tegnet på kartet (Kartverket), bygninger med type og status, SEFRAK-merking av verneverdige bygg, boligpriser og prisutvikling (SSB) – pluss godkjente tiltak, komplett historikk, ulovlighetssaker og klager",
+      "🏘 Nabolagsprofil: åpne en adresse og se alt innen 500 m – saker under behandling, ferske avgjørelser, plansaker på høring og åpne ulovlighetssaker",
+      "⏱ Behandlingstid i statistikken: median dager per tiltakstype (tregest øverst) og utvikling per startår – alt klikkbart",
+      "📅 Saksgang: hver sak viser nå en tidslinje med milepæler – søknad, nabovarsel, mangelbrev, vedtak, klage, ferdigattest",
+      "🔔 Nytt varselsenter: trykk på bjella og se oppdateringer på alt du følger samt meldinger fra oss som driver tjenesten",
+      "📰 «Uka»: ukesoppsummering med nye saker, vedtak, klager og plansaker – alt klikkbart, rett i appen",
+      "📲 Push-varsler til mobilen er verifisert – legg appen på Hjem-skjermen og skru på varsler under Min konto"
+    ]
+  },
+  {
+    "dato": "2026-07-11",
+    "tittel": "Hele Kristiansand + regulering, kontoer og deling",
+    "punkter": [
+      "🗺️ Hele Kristiansand er inne: 21 141 saker fra 2020 til i dag (18 175 byggesaker, 1 607 henvendelser, 753 ulovlighetssaker, 606 plansaker) – komplett arkivdekning",
+      "📐 Ny Regulering-oversikt: 606 område- og detaljreguleringer med fasemerker (81 i oppstart, 207 på høring, 139 vedtatt) og bannere fra plandokumentene",
+      "👤 Brukerkontoer med passordinnlogging: favoritter, varslingsnivåer og notater synkroniseres mellom enhetene dine",
+      "⭐ Følg det som betyr noe: enkeltsaker, adresser, søkerfirmaer, saksbehandlere – eller et helt område med radiusvarsling",
+      "📤 Deling: send lenke til en sak eller adresse, mottakeren lander på riktig sted i kartet med riktig zoom",
+      "🔍 Søket finner nå også firmaer og saksbehandlere (prøv «Flatnes» eller «Skjærgårdsbygg»)",
+      "📊 Klikkbar statistikk: trykk på et tall, et år, en gate eller et firma og se sakene bak",
+      "📅 Journaldatoer på dokumentene og dato på alle saker – nyeste alltid øverst",
+      "📱 Mobil: hamburgermeny, sveipbart bunnpanel, større trykkflater og slutt på uønsket zoom"
+    ]
+  }
+]

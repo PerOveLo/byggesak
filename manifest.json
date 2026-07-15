@@ -1,0 +1,15 @@
+{
+  "name": "Byggesaker Kristiansand",
+  "short_name": "Byggesaker",
+  "description": "Interaktivt kart over byggesaker, henvendelser og ulovlighetssaker",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#eef1f6",
+  "theme_color": "#eef1f6",
+  "lang": "nb",
+  "icons": [
+    { "src": "ikon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "ikon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
