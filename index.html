@@ -1588,6 +1588,8 @@ async function renderEiendom(p) {
   const [gnr, bnr] = (mtr || "/").split("/");
   const seEiendom = mtr ? `https://seeiendom.kartverket.no/eiendom/${KOMMUNENR}/${gnr.trim()}/${bnr.trim()}/0/0` : null;
   const streetview = `https://www.google.com/maps?q=&layer=c&cbll=${p.latlon[0]},${p.latlon[1]}`;
+  // Dyplenke til FINNs egen søkeside for adressen (vi høster ikke FINN – vi sender brukeren dit).
+  const finnUrl = "https://www.finn.no/realestate/homes/search.html?q=" + encodeURIComponent(p.label + " Kristiansand");
 
   const tidslinje = alle.map(c => `
     <div class="sg-step" data-eik="${esc(c.casenr)}" style="cursor:pointer">
@@ -1604,6 +1606,7 @@ async function renderEiendom(p) {
       </div>
       ${seEiendom ? `<a class="btn sec" href="${seEiendom}" target="_blank" rel="noopener" style="text-decoration:none">🗺 Se eiendom</a>` : ""}
       <a class="btn sec" href="${streetview}" target="_blank" rel="noopener" style="text-decoration:none">📷 Gatebilde</a>
+      <a class="btn sec" href="${finnUrl}" target="_blank" rel="noopener" style="text-decoration:none">🔍 Til salgs (FINN)</a>
     </div>
     <div class="sectionlabel">📐 Eiendomsfakta</div>
     <div id="eiFakta"><div class="listnote" style="text-align:left">Henter tomteareal og bygninger fra Kartverket …</div></div>
