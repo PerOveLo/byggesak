@@ -1,9 +1,17 @@
 [
   {
+    "dato": "2026-07-15",
+    "tittel": "Områdeinnsikt og skarpere analyser",
+    "punkter": [
+      "📊 Områdeinnsikt: trykk hvor som helst i kartet og se hva som skjer innen 300 m – antall saker, median behandlingstid, vanligste tiltak og åpne ulovlighetssaker",
+      "🎯 Bedre presedens: byggesaker i Kristiansand innvilges nesten alltid (~97 %), så vi leder nå med det som faktisk varierer – behandlingstid målt mot bysnittet og hvor ofte det kreves dispensasjon"
+    ]
+  },
+  {
     "dato": "2026-07-11",
     "tittel": "Varselsenter, ukesoppsummering, presedens og saksgang",
     "punkter": [
-      "📊 Presedens: åpne en sak og se hvordan lignende søknader i nærområdet har gått – «22 av 24 boligsøknader innen 800 m ble innvilget» – med median behandlingstid og klikkbar liste",
+      "📊 Presedens: åpne en sak og se hvordan lignende søknader i nærområdet har gått, med median behandlingstid og klikkbar liste",
       "🏠 Eiendomsmodus med ekte registerdata: tomteareal og eiendomsgrense tegnet på kartet (Kartverket), bygninger med type og status, SEFRAK-merking av verneverdige bygg, boligpriser og prisutvikling (SSB) – pluss godkjente tiltak, komplett historikk, ulovlighetssaker og klager",
       "🏘 Nabolagsprofil: åpne en adresse og se alt innen 500 m – saker under behandling, ferske avgjørelser, plansaker på høring og åpne ulovlighetssaker",
       "⏱ Behandlingstid i statistikken: median dager per tiltakstype (tregest øverst) og utvikling per startår – alt klikkbart",

@@ -178,8 +178,9 @@
   #menuControls { display: flex; flex-direction: column; gap: 10px; }
   #menuControls .seg { flex-wrap: wrap; width: 100%; }
   .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .menu-item { display: flex; align-items: center; gap: 8px; padding: 13px 14px; border-radius: 14px;
-    background: var(--card); font-weight: 600; font-size: 14px; border: 0.5px solid var(--glass-border); }
+  .menu-item { display: flex; align-items: center; gap: 7px; padding: 13px 12px; border-radius: 14px;
+    background: var(--card); font-weight: 600; font-size: 14px; border: 0.5px solid var(--glass-border);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .menu-item:active { transform: scale(.97); }
   .mbadge { margin-left: auto; background: var(--red); color: #fff; font-size: 11px; font-weight: 700;
     border-radius: 999px; padding: 2px 7px; display: none; }
@@ -553,6 +554,32 @@
   .pres-meta { font-size: 11.5px; color: var(--ink2); }
   .emptystate { text-align: center; color: var(--ink2); padding: 46px 20px; font-size: 14px; }
   .emptystate .big { font-size: 40px; margin-bottom: 10px; }
+
+  /* Avismodus */
+  #avisIntro { position: fixed; inset: 0; z-index: 4000; display: none; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(10,12,18,.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  #avisIntro .ai-card { max-width: 400px; background: var(--glass-strong);
+    backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 26px; box-shadow: var(--shadow), var(--glass-inset);
+    padding: 26px 24px; text-align: center; }
+  #avisIntro .ai-logo { height: 34px; margin-bottom: 14px; }
+  @media (prefers-color-scheme: dark) { #avisIntro .ai-logo { filter: invert(1); } }
+  #avisIntro h2 { font-size: 21px; margin: 0 0 8px; letter-spacing: -.3px; }
+  #avisIntro p { font-size: 14px; color: var(--ink2); line-height: 1.5; margin: 0 0 10px; }
+  #avisIntro .ai-liten { font-size: 12px; color: var(--ink3); }
+  #avisIntro .ai-btns { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
+  #avisGuide { position: fixed; z-index: 3600; display: none; left: 50%; transform: translateX(-50%);
+    top: calc(env(safe-area-inset-top, 0px) + 74px); width: min(380px, calc(100vw - 24px));
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 20px; box-shadow: var(--shadow), var(--glass-inset);
+    padding: 15px 17px; }
+  #avisGuide .ag-step { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: .5px; }
+  #avisGuide .ag-title { font-size: 16px; font-weight: 700; margin: 3px 0 4px; }
+  #avisGuide .ag-text { font-size: 13px; color: var(--ink2); line-height: 1.45; }
+  #avisGuide .ag-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+  .avis-spot { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 14px;
+    transition: outline-color .3s; animation: avisPulse 1.4s ease-in-out infinite; }
+  @keyframes avisPulse { 0%,100% { outline-color: rgba(10,132,255,.4); } 50% { outline-color: rgba(10,132,255,.95); } }
 </style>
 </head>
 <body>
@@ -596,13 +623,14 @@
   <div id="menuControls"></div>
   <div class="menu-grid">
     <button class="menu-item" data-menu="konto" style="grid-column: span 2">👤 <span id="mKontoLbl">Logg inn / Min konto</span></button>
-    <button class="menu-item" data-menu="nytt">🕐 Nytt <span class="mbadge" id="mbNytt"></span></button>
-    <button class="menu-item" data-menu="uka">📰 Uka</button>
-    <button class="menu-item" data-menu="eiendom">🏠 Eiendomsmodus <span class="mbadge" id="mbEiendom" style="background:var(--green)">PÅ</span></button>
+    <button class="menu-item" data-menu="nytt">🆕 Nytt <span class="mbadge" id="mbNytt"></span></button>
+    <button class="menu-item" data-menu="uka">📅 Uka</button>
+    <button class="menu-item" data-menu="eiendom">🏠 Eiendom <span class="mbadge" id="mbEiendom" style="background:var(--green)">PÅ</span></button>
     <button class="menu-item" data-menu="regulering">📐 Regulering</button>
     <button class="menu-item" data-menu="klager">🗣 Klager</button>
     <button class="menu-item" data-menu="statistikk">📊 Statistikk</button>
-    <button class="menu-item" data-menu="folger">★ Følger <span class="mbadge" id="mbFolger"></span></button>
+    <button class="menu-item" data-menu="folger">⭐ Følger <span class="mbadge" id="mbFolger"></span></button>
+    <button class="menu-item" data-menu="avis" style="grid-column: span 2; border-style: dashed; opacity: .85">📰 Avismodus <span style="font-size:11px;color:var(--ink2)">(test – demo for redaksjon)</span></button>
   </div>
   <div class="listnote" style="padding:0"><a href="personvern.html" style="color:var(--blue)">Personvern</a> · Levert av <a href="https://vizbo.no" style="color:var(--blue)">Vizbo</a></div>
 </div>
@@ -621,6 +649,22 @@
 
 <div class="legend" id="legend"></div>
 <div id="toasts"></div>
+
+<!-- Avismodus: intro-overlay + guide-boble (demo for redaksjon/iframe) -->
+<div id="avisIntro">
+  <div class="ai-card">
+    <img src="vizbo-logo.png" alt="Vizbo" class="ai-logo">
+    <h2>Byggesaker i Kristiansand</h2>
+    <p>Utforsk hva som bygges, rives og reguleres – eiendom for eiendom. Komplett byggesakshistorikk,
+       eiendomsfakta fra Kartverket og lokal statistikk, på ett kart.</p>
+    <p class="ai-liten">Demo-omvisning for redaksjonen. Senere leveres dette som innbygd kart på avisens egne sider.</p>
+    <div class="ai-btns">
+      <button class="btn sec" onclick="document.getElementById('avisIntro').style.display='none'">Lukk</button>
+      <button class="btn" id="avisStartBtn">Start omvisningen →</button>
+    </div>
+  </div>
+</div>
+<div id="avisGuide"></div>
 
 <div id="onboard">
   <div class="ob-card">
@@ -1044,6 +1088,12 @@ function renderSeg(counts) {
   seg.appendChild(bb);
 }
 map.on("moveend", () => { if (state.bbox) render(); });
+// Klikk på tom kartflate (ikke markør/klynge) -> områdeinnsikt for punktet
+map.on("click", e => {
+  if (AVIS.aktiv || map.getZoom() < 14) return;
+  if (e.originalEvent.target.closest(".leaflet-marker-icon, .leaflet-interactive, .leaflet-control")) return;
+  openOmradeInnsikt(e.latlng);
+});
 function renderLegend(counts) {
   document.getElementById("legend").innerHTML =
     TYPES.map(t => `<div><span class="dot" style="background:${COLORS[t]}"></span>${t} <b>${counts[t]}</b></div>`).join("") +
@@ -1134,6 +1184,7 @@ function closePanel() {
   clearHighlight();
   clearNabolag();
   clearGrense();
+  clearInnsiktMark();
 }
 
 function poiAi(p) {
@@ -1174,6 +1225,132 @@ function toast(emoji, tittel, sub) {
   el.innerHTML = `<span class="emoji">${emoji}</span><div><div class="t-title">${esc(tittel)}</div><div class="t-sub">${esc(sub)}</div></div>`;
   box.appendChild(el);
   setTimeout(() => el.remove(), 5000);
+}
+
+/* ---------------- Områdeinnsikt (klikk hvor som helst i kartet) ---------------- */
+function omradeInnsikt(latlng, radius = 300) {
+  const her = L.latLng(latlng);
+  const naer = DATA.cases.filter(c => c.latlon && her.distanceTo(L.latLng(c.latlon)) <= radius);
+  const byType = {};
+  for (const t of TYPES) byType[t] = naer.filter(c => c.type === t).length;
+  const bygg = naer.filter(c => c.type === "Byggesak");
+  const aktive = naer.filter(c => /under behandling|venter|forhåndsvarsel|politisk/i.test(c.status || ""));
+  const ulov = naer.filter(c => c.type === "Ulovlighetssak" && !/avsluttet|trukket|avvist/i.test(c.status || ""));
+  const dager = bygg.filter(c => AVGJORT_RE.test(c.status || "")).map(behandlingsdager).filter(d => d !== null);
+  const kat = {};
+  for (const c of naer) for (const k of (c.kategorier || [])) kat[k] = (kat[k] || 0) + 1;
+  const topp = Object.entries(kat).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const disp = bygg.filter(c => (c.kategorier || []).includes("dispensasjon")).length;
+  let naermest = null, best = Infinity;
+  for (const p of POIS) { const d = her.distanceTo(L.latLng(p.latlon)); if (d < best) { best = d; naermest = p; } }
+  return { naer: naer.sort(byActivity), byType, aktive, ulov, dager, topp, disp, radius, naermest, naermestM: Math.round(best) };
+}
+let innsiktMark = null;
+function clearInnsiktMark() { if (innsiktMark) { map.removeLayer(innsiktMark); innsiktMark = null; } }
+function openOmradeInnsikt(latlng) {
+  navOpen("innsikt", () => renderOmradeInnsikt(latlng));
+}
+function renderOmradeInnsikt(latlng) {
+  const o = omradeInnsikt(latlng);
+  clearInnsiktMark();
+  innsiktMark = L.layerGroup([
+    L.circle(latlng, { radius: o.radius, color: "#0a84ff", weight: 2, dashArray: "6 6", fillColor: "#0a84ff", fillOpacity: 0.06, interactive: false }),
+    L.marker(latlng, { interactive: false, icon: L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="nb-dot" style="--c:#0a84ff"></div>' }) }),
+  ]).addTo(map);
+  if (!o.naer.length) {
+    openPanel("📊 Områdeinnsikt", `Innen ${o.radius} m fra dette punktet`,
+      `<div class="emptystate"><div class="big">🗺</div>Ingen registrerte byggesaker innen ${o.radius} m herfra siden 2020.
+       ${o.naermest && o.naermestM < 900 ? `<div style="margin-top:12px"><button class="btn sec" id="innNaermest">Nærmeste eiendom: ${esc(o.naermest.label)} (${o.naermestM} m)</button></div>` : ""}</div>`);
+    const bn = document.getElementById("innNaermest");
+    if (bn) bn.onclick = () => flyToPoi(o.naermest);
+    return;
+  }
+  const medD = median(o.dager);
+  const typer = TYPES.filter(t => o.byType[t]).map(t =>
+    `<span class="entchip" style="cursor:default"><span class="dot" style="background:${COLORS[t]};display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px"></span>${TYPE_LABEL[t]} ${o.byType[t]}</span>`).join(" ");
+  const html = `
+    <div class="kpis">
+      <button class="kpi" data-inn="alle"><div class="k-val">${o.naer.length}</div><div class="k-lbl">saker innen ${o.radius} m</div></button>
+      <button class="kpi" data-inn="aktive"><div class="k-val">${o.aktive.length}</div><div class="k-lbl">under behandling nå</div></button>
+      <div class="kpi"><div class="k-val">${medD ?? "–"}</div><div class="k-lbl">median behandlingstid (dager)</div></div>
+      <button class="kpi" data-inn="ulov" ${o.ulov.length ? 'style="color:var(--red)"' : ""}><div class="k-val">${o.ulov.length}</div><div class="k-lbl">åpne ulovlighetssaker</div></button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px">${typer}</div>
+    ${o.topp.length ? `<div class="sectionlabel">Vanligste tiltak her</div>
+      ${o.topp.map(([k, n]) => `<div class="barrow" style="grid-template-columns:130px 1fr 30px"><div class="b-lbl">${esc(k)}</div>
+        <div class="b-track"><div class="b-fill" style="width:${Math.round(n / o.topp[0][1] * 100)}%;background:var(--orange)"></div></div><div class="b-val">${n}</div></div>`).join("")}` : ""}
+    ${o.disp ? `<div class="pres-meta" style="margin-top:6px">📜 ${o.disp} av sakene trengte dispensasjon fra planen.</div>` : ""}
+    ${o.naermest && o.naermestM < 400 ? `<div style="margin-top:10px"><button class="btn sec" id="innNaermest" style="width:100%">🏠 Åpne nærmeste eiendom: ${esc(o.naermest.label)}</button></div>` : ""}
+    <button class="btn sec" id="innAlle" style="width:100%;margin-top:8px">Vis alle ${o.naer.length} sakene i lista</button>
+    <div class="listnote" style="text-align:left">📊 Trykk hvor som helst i kartet for innsikt om et annet område.</div>`;
+  openPanel("📊 Områdeinnsikt", `${o.naer.length} saker innen ${o.radius} m`, html);
+  const lists = { alle: ["Områdeinnsikt", o.naer], aktive: ["Under behandling", o.aktive], ulov: ["Åpne ulovlighetssaker", o.ulov] };
+  document.querySelectorAll("#panelBody [data-inn]").forEach(b => b.onclick = () => {
+    const [t, cs] = lists[b.dataset.inn];
+    if (cs.length) openCaseList(t, `innen ${o.radius} m`, [...cs]);
+  });
+  const alleBtn = document.getElementById("innAlle");
+  if (alleBtn) alleBtn.onclick = () => openCaseList("Områdeinnsikt", `innen ${o.radius} m`, [...o.naer]);
+  const bn = document.getElementById("innNaermest");
+  if (bn) bn.onclick = () => flyToPoi(o.naermest);
+  fireEvent("side", "omradeinnsikt");
+}
+
+/* ---------------- Avismodus: guidet demo for redaksjon (iframe) ---------------- */
+const AVIS = { aktiv: false, steg: 0, seq: [] };
+function startAvismodus() {
+  const ov = document.getElementById("avisIntro");
+  ov.style.display = "flex";
+}
+function avisStart() {
+  document.getElementById("avisIntro").style.display = "none";
+  AVIS.aktiv = true;
+  if (!EIENDOM) { EIENDOM = true; localStorage.setItem("bsEiendom", "1"); syncEiendomUi(); }
+  // Velg en rik eksempeleiendom: flest saker, gjerne med historikk
+  const kandidat = [...POIS].filter(p => p.cases.length >= 3 && p.cases.some(c => c.firstDate))
+    .sort((a, b) => b.cases.length - a.cases.length)[0]
+    || POIS.find(p => p.label === "Anderåsen 6") || POIS[0];
+  map.flyTo(kandidat.latlon, 17, { duration: 1.1 });
+  setTimeout(async () => {
+    await renderEiendom(kandidat);
+    AVIS.steg = 0;
+    AVIS.seq = [
+      [".formbox", "Dette er eiendomsprofilen", "Adresse, matrikkelnummer og direktelenker til offentlige registre og gatebilde."],
+      ["#eiFakta", "Fakta rett fra Kartverket", "Tomteareal og bygninger med type og status – hentet live fra matrikkelen. Grensen tegnes i oransje på kartet."],
+      [".sg", "Komplett byggesakshistorikk", "Hver sak på eiendommen som en tidslinje – søknader, vedtak, klager og ferdigattester."],
+      [".pres", "Boligmarkedet i området", "Kvadratmeterpris og prisutvikling fra SSB, sammen med lokal statistikk du ikke finner andre steder."],
+      [".formbox", "En tjeneste fra Vizbo", "Slik kan leserne deres grave i byggesaker, eiendom for eiendom. Trykk hvor som helst i kartet for å utforske videre, eller avslutt demoen."],
+    ];
+    avisVisSteg();
+  }, 1200);
+}
+function avisVisSteg() {
+  document.querySelectorAll(".avis-spot").forEach(e => e.classList.remove("avis-spot"));
+  const [sel, tittel, tekst] = AVIS.seq[AVIS.steg] || [];
+  if (!sel) return avisAvslutt();
+  const el = document.querySelector("#panelBody " + sel);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("avis-spot");
+  }
+  const sisteSteg = AVIS.steg === AVIS.seq.length - 1;
+  const g = document.getElementById("avisGuide");
+  g.innerHTML = `<div class="ag-step">${AVIS.steg + 1} / ${AVIS.seq.length}</div>
+    <div class="ag-title">${esc(tittel)}</div>
+    <div class="ag-text">${esc(tekst)}</div>
+    <div class="ag-btns">
+      ${sisteSteg ? "" : '<button class="btn sec" id="avisHopp">Hopp over</button>'}
+      <button class="btn" id="avisNeste">${sisteSteg ? "Avslutt demoen" : "Neste →"}</button>
+    </div>`;
+  g.style.display = "block";
+  document.getElementById("avisNeste").onclick = () => { AVIS.steg++; avisVisSteg(); };
+  const hopp = document.getElementById("avisHopp");
+  if (hopp) hopp.onclick = avisAvslutt;
+}
+function avisAvslutt() {
+  AVIS.aktiv = false;
+  document.querySelectorAll(".avis-spot").forEach(e => e.classList.remove("avis-spot"));
+  document.getElementById("avisGuide").style.display = "none";
 }
 
 const KOMMUNENR = "4204";
@@ -3489,7 +3666,10 @@ document.getElementById("followBtn").onclick = () => {
 document.getElementById("newsBtn").onclick = openNews;
 document.getElementById("bellBtn").onclick = openVarsler;
 document.getElementById("eiendomBtn").onclick = toggleEiendom;
+document.getElementById("avisStartBtn").onclick = avisStart;
 syncEiendomUi();
+// Avismodus kan senere aktiveres direkte i iframe via ?modus=avis
+if (new URLSearchParams(location.search).get("modus") === "avis") setTimeout(startAvismodus, 600);
 document.getElementById("ukaBtn").onclick = openUka;
 const menuSheet = document.getElementById("menuSheet");
 const IS_MOBILE_MQ = window.matchMedia("(max-width: 760px)");
@@ -3513,7 +3693,7 @@ document.addEventListener("click", e => {
 });
 document.querySelectorAll(".menu-item").forEach(b => b.addEventListener("click", () => {
   menuSheet.classList.remove("open");
-  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto, klager: openKlager, uka: openUka, varsler: openVarsler, eiendom: toggleEiendom })[b.dataset.menu]();
+  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto, klager: openKlager, uka: openUka, varsler: openVarsler, eiendom: toggleEiendom, avis: startAvismodus })[b.dataset.menu]();
 }));
 document.getElementById("accountBtn").onclick = openKonto;
 document.getElementById("statsBtn").onclick = openStats;
