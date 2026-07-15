@@ -1133,6 +1133,7 @@ function closePanel() {
   PANEL_CUR = null;
   clearHighlight();
   clearNabolag();
+  clearGrense();
 }
 
 function poiAi(p) {
@@ -1176,6 +1177,103 @@ function toast(emoji, tittel, sub) {
 }
 
 const KOMMUNENR = "4204";
+
+/* ---------- Åpne matrikkeldata: eiendomsgrense (Kartverket REST) + bygningspunkter (bakt) ---------- */
+const BYGGTYPE = { 111: ["🏠", "Enebolig"], 112: ["🏠", "Enebolig med hybel"], 113: ["🏠", "Våningshus"],
+  121: ["🏘", "Tomannsbolig"], 122: ["🏘", "Tomannsbolig"], 131: ["🏘", "Rekkehus"], 133: ["🏘", "Kjedehus"],
+  135: ["🏢", "Terrassehus"], 136: ["🏘", "Annet småhus"], 141: ["🏢", "Boligblokk"], 142: ["🏢", "Boligblokk"],
+  143: ["🏢", "Boligblokk"], 144: ["🏢", "Boligblokk"], 145: ["🏢", "Boligblokk"], 146: ["🏢", "Boligblokk"],
+  151: ["🏢", "Bo-/servicesenter"], 152: ["🏢", "Studentbolig"], 161: ["🏕", "Fritidsbolig"],
+  162: ["🏕", "Bolig brukt som fritidsbolig"], 181: ["🚗", "Garasje/uthus"], 182: ["🚗", "Garasje (fritid)"],
+  183: ["⛵", "Naust/båthus"], 193: ["🏗", "Boligbrakke"], 199: ["🏠", "Annen boligbygning"],
+  241: ["🚜", "Driftsbygning"], 322: ["🏬", "Butikkbygning"] };
+const BYGGGRUPPE = { 1: ["🏠", "Boligbygning"], 2: ["🏭", "Industri/landbruk"], 3: ["🏬", "Kontor/forretning"],
+  4: ["🚉", "Samferdselsbygg"], 5: ["🏨", "Hotell/restaurant"], 6: ["🏫", "Skole/kultur/idrett"],
+  7: ["🏥", "Helsebygg"], 8: ["🏛", "Beredskapsbygg"] };
+const BYGGSTATUS = { TB: "tatt i bruk", FA: "ferdigattest", MB: "midlertidig brukstillatelse",
+  IG: "under bygging", RA: "rammetillatelse gitt", GR: "revet/brent", BA: "bygging avlyst" };
+function byggLabel(kode) {
+  return BYGGTYPE[kode] || BYGGGRUPPE[Math.floor(kode / 100)] || ["🏗", "Bygning (kode " + kode + ")"];
+}
+let BYGG_ALLE = null, BYGG_LASTER = false;
+function lastBygninger() {
+  if (BYGG_ALLE || BYGG_LASTER) return Promise.resolve(BYGG_ALLE);
+  BYGG_LASTER = true;
+  return fetch("data/eiendom/bygninger.json", { cache: "force-cache" }).then(r => r.json())
+    .then(d => { BYGG_ALLE = d; return d; }).catch(() => { BYGG_LASTER = false; return null; });
+}
+function ringAreal(ring, lat0) {  // shoelace i lokale meter (WGS84-gradlengder ved lat0)
+  const f = lat0 * Math.PI / 180;
+  const my = 111132.92 - 559.82 * Math.cos(2 * f) + 1.175 * Math.cos(4 * f);
+  const mx = 111412.84 * Math.cos(f) - 93.5 * Math.cos(3 * f);
+  let s = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x1, y1] = ring[i], [x2, y2] = ring[i + 1];
+    s += (x1 * mx) * (y2 * my) - (x2 * mx) * (y1 * my);
+  }
+  return Math.abs(s / 2);
+}
+function polygonAreal(coords) {  // GeoJSON Polygon [ytre, hull...] (lon,lat)
+  const lat0 = coords[0][0][1];
+  return coords.reduce((sum, ring, i) => sum + (i ? -1 : 1) * ringAreal(ring, lat0), 0);
+}
+function iRing(lon, lat, ring) {
+  let inne = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inne = !inne;
+  }
+  return inne;
+}
+function iPolygon(lon, lat, coords) {
+  if (!iRing(lon, lat, coords[0])) return false;
+  return !coords.slice(1).some(hull => iRing(lon, lat, hull));
+}
+let grenseLayer = null;
+function clearGrense() { if (grenseLayer) { map.removeLayer(grenseLayer); grenseLayer = null; } }
+async function hentTeig(latlon) {
+  const u = `https://ws.geonorge.no/eiendom/v1/punkt/omrader?nord=${latlon[0]}&ost=${latlon[1]}&koordsys=4258&radius=1`;
+  const d = await fetch(u).then(r => r.json());
+  return (d.features || []).filter(f => f.geometry && f.geometry.type === "Polygon");
+}
+async function fyllEiendomFakta(p) {
+  const boks = document.getElementById("eiFakta");
+  if (!boks) return;
+  try {
+    const [teiger, bygg] = await Promise.all([hentTeig(p.latlon), lastBygninger()]);
+    if (!teiger.length) { boks.innerHTML = '<div class="listnote" style="text-align:left">Fant ingen eiendomsteig for punktet (kan være festegrunn eller uregistrert).</div>'; return; }
+    const props = teiger[0].properties || {};
+    const mtekst = props.matrikkelnummertekst || null;
+    const areal = Math.round(teiger.reduce((s, f) => s + polygonAreal(f.geometry.coordinates), 0));
+    // tegn eiendomsgrensen på kartet
+    clearGrense();
+    grenseLayer = L.layerGroup(teiger.map(f => L.polygon(
+      f.geometry.coordinates.map(ring => ring.map(([lon, lat]) => [lat, lon])),
+      { color: "#ff9f0a", weight: 2.5, fillColor: "#ff9f0a", fillOpacity: 0.09, interactive: false }))).addTo(map);
+    // bygninger innenfor teigen(e)
+    const paaTeig = [];
+    if (bygg) for (const b of bygg) {
+      const [lat, lon] = b;
+      if (Math.abs(lat - p.latlon[0]) > 0.01 || Math.abs(lon - p.latlon[1]) > 0.01) continue;
+      if (teiger.some(f => iPolygon(lon, lat, f.geometry.coordinates))) paaTeig.push(b);
+    }
+    const chips = paaTeig.map(b => {
+      const [ico, navn] = byggLabel(b[2]);
+      const st = BYGGSTATUS[b[3]] || b[3] || "";
+      return `<span class="entchip" style="cursor:default">${ico} ${navn}${st ? ` · ${st}` : ""}${b[4] ? " · 🏛 SEFRAK" : ""}</span>`;
+    }).join(" ");
+    boks.innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><div class="k-val">${areal.toLocaleString("no")}</div><div class="k-lbl">m² tomteareal</div></div>
+        <div class="kpi"><div class="k-val">${paaTeig.length || "–"}</div><div class="k-lbl">bygninger på eiendommen</div></div>
+      </div>
+      ${chips ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px">${chips}</div>` : ""}
+      <div class="listnote" style="text-align:left;padding:5px 0 0">Eiendomsgrensen vises i oransje på kartet${mtekst ? ` · gnr/bnr ${esc(mtekst)}` : ""} · Kilde: Kartverket (matrikkelen, åpne data)</div>`;
+  } catch {
+    boks.innerHTML = '<div class="listnote" style="text-align:left">Klarte ikke hente eiendomsgrenser fra Kartverket akkurat nå.</div>';
+  }
+}
+
 let BOLIGPRISER = null;
 async function hentBoligpriser() {
   if (BOLIGPRISER !== null) return BOLIGPRISER;
@@ -1254,6 +1352,8 @@ async function renderEiendom(p) {
       ${seEiendom ? `<a class="btn sec" href="${seEiendom}" target="_blank" rel="noopener" style="text-decoration:none">🗺 Se eiendom</a>` : ""}
       <a class="btn sec" href="${streetview}" target="_blank" rel="noopener" style="text-decoration:none">📷 Gatebilde</a>
     </div>
+    <div class="sectionlabel">📐 Eiendomsfakta</div>
+    <div id="eiFakta"><div class="listnote" style="text-align:left">Henter tomteareal og bygninger fra Kartverket …</div></div>
     <div class="kpis">
       <div class="kpi"><div class="k-val">${alle.length}</div><div class="k-lbl">saker på eiendommen</div></div>
       <div class="kpi"><div class="k-val">${godkjente.length}</div><div class="k-lbl">godkjente tiltakstyper</div></div>
@@ -1287,6 +1387,7 @@ async function renderEiendom(p) {
   });
   wireNabolag(p, nabo);
   if (nabo) showNabolag(p, nabo.saker); else clearNabolag();
+  fyllEiendomFakta(p);
   setPanelShare(`adresse=${encodeURIComponent(p.label)}@${p.latlon[0].toFixed(5)},${p.latlon[1].toFixed(5)},17`, p.label);
   markSeenAddr(p);
   fireEvent("poi", p.label);
