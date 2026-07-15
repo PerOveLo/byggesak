@@ -1178,7 +1178,7 @@ function toast(emoji, tittel, sub) {
 const KOMMUNENR = "4204";
 async function renderEiendom(p) {
   const alle = [...p.cases].sort((a, b) => (a.firstDate || a.casenr.slice(5)).localeCompare(b.firstDate || b.casenr.slice(5)));
-  const mtr = p.cases.find(c => c.matrikkel)?.matrikkel || null;
+  const mtr = p.cases.find(c => c.matrikkel)?.matrikkel || p.matrikkel || null;
   const nDok = alle.reduce((s, c) => s + (caseDocs(c) || 0), 0);
   const aktive = alle.filter(c => /under behandling|venter|forhåndsvarsel|politisk/i.test(c.status || ""));
   const ulov = alle.filter(c => c.type === "Ulovlighetssak" && !/avsluttet|trukket|avvist/i.test(c.status || ""));
@@ -1230,7 +1230,8 @@ async function renderEiendom(p) {
       ${ulov.map(c => `<button class="admrow" data-eik="${esc(c.casenr)}"><span class="ar-t">🚨 <b>Ulovlighetssak:</b> ${esc(c.description || c.casenr)}<span class="ar-sub">${esc(c.status || "")}</span></span></button>`).join("")}
       ${klagerHer.slice(0, 5).map(k => `<button class="admrow" data-eik="${esc(k.c)}"><span class="ar-t">🗣 <b>${esc(k.t || "Merknad")}:</b> ${esc((k.i || "").slice(0, 90))}<span class="ar-sub">${k.d ? fmtDate(k.d) : ""}${k.fra ? " · fra " + esc(k.fra) : ""}</span></span></button>`).join("")}` : ""}
     <div class="sectionlabel">🏗 Eiendommens historikk (${alle.length} saker · ${nDok} dokumenter)</div>
-    <div class="sg">${tidslinje}</div>
+    ${alle.length ? `<div class="sg">${tidslinje}</div>`
+      : '<div class="listnote" style="text-align:left">Ingen byggesaker er registrert på denne adressen siden 2020 – det kan i seg selv være god informasjon: ingen pålegg, avslag eller ulovlighetssaker i innsynsløsningen.</div>'}
     <div class="sectionlabel">💰 Pris, eierskap og tilstand</div>
     <div class="formbox" style="font-size:12.5px;line-height:1.5;color:var(--ink2)">
       Omsetningshistorikk og hjemmelshavere ligger i grunnboken hos Kartverket –
@@ -2937,6 +2938,24 @@ function focusCase(c) {
 /* ---------------- Søk med forslag og kart-flytting ---------------- */
 const suggest = document.getElementById("suggest");
 let selIdx = -1;
+/* Alle offisielle adresser i Kristiansand (Kartverket) – lastes ved første søk */
+let ALLE_ADR = null, ALLE_ADR_LASTER = false;
+function lastAlleAdresser() {
+  if (ALLE_ADR || ALLE_ADR_LASTER) return;
+  ALLE_ADR_LASTER = true;
+  fetch("data/adresser_4204.json", { cache: "force-cache" }).then(r => r.json()).then(liste => {
+    const harSaker = new Set(POIS.map(p => addrKey(p.label)));
+    ALLE_ADR = liste.filter(a => !harSaker.has(addrKey(a.adressetekst)));
+    // oppdater åpne forslag med de nye treffene
+    if (suggest.style.display === "block" && qInput.value.trim().length >= 2)
+      drawSuggest(searchMatches(qInput.value));
+  }).catch(() => { ALLE_ADR_LASTER = false; });
+}
+function virtuellPoi(a) {
+  return { label: a.adressetekst, latlon: [a.lat, a.lon], cases: [],
+           matrikkel: a.gnr + "/" + a.bnr, postnr: a.postnr };
+}
+
 function searchMatches(q) {
   q = q.toLowerCase().trim();
   if (q.length < 2) return [];
@@ -2950,6 +2969,22 @@ function searchMatches(q) {
   }
   out.sort((a, b) => a.score - b.score || a.p.label.localeCompare(b.p.label));
   const res = out.slice(0, 5).map(o => ({ type: "addr", p: o.p, label: "📍 " + o.p.label, raw: o.p.label, sub: `${o.p.cases.length} sak(er)` }));
+  // Offisielle adresser uten byggesaker (hele Kristiansand)
+  if (ALLE_ADR && res.length < 5) {
+    const ekstra = [];
+    for (const a of ALLE_ADR) {
+      const l = a.adressetekst.toLowerCase();
+      if (l.startsWith(q) || l.includes(" " + q)) {
+        ekstra.push({ a, score: l.startsWith(q) ? 0 : 1 });
+        if (ekstra.length >= 24) break;
+      }
+    }
+    ekstra.sort((x, y) => x.score - y.score || x.a.adressetekst.localeCompare(y.a.adressetekst));
+    for (const e of ekstra.slice(0, 5 - res.length)) {
+      res.push({ type: "nyadr", a: e.a, label: "📍 " + e.a.adressetekst, raw: e.a.adressetekst,
+                 sub: "adresse uten byggesaker – åpne eiendomsprofil" });
+    }
+  }
 
   // Firmaer og saksbehandlere
   const ents = new Map();
@@ -3006,6 +3041,11 @@ function pickSuggest(it) {
     render();
   }
   if (it.type === "addr") flyToPoi(it.p);
+  else if (it.type === "nyadr") {
+    const vp = virtuellPoi(it.a);
+    map.flyTo(vp.latlon, Math.max(map.getZoom(), 16), { duration: 0.8 });
+    setTimeout(() => navOpen("poi:" + addrKey(vp.label), () => renderEiendom(vp)), 850);
+  }
   else if (it.type === "ent") openEntity(it.kind, it.name);
   else if (it.type === "kat") openCaseList("Tiltakstype: " + it.name,
     "", DATA.cases.filter(c => (c.kategorier || []).includes(it.name)).sort(byActivity));
@@ -3029,7 +3069,7 @@ qInput.addEventListener("input", () => {
     drawSuggest(searchMatches(qInput.value));
   }, 160);
 });
-qInput.addEventListener("focus", syncSearchUi);
+qInput.addEventListener("focus", () => { syncSearchUi(); lastAlleAdresser(); });
 qInput.addEventListener("blur", () => {
   setTimeout(() => { if (!qInput.value) topbarEl.classList.remove("search-active"); }, 250);
 });
