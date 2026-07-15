@@ -380,6 +380,36 @@
     box-shadow: 0 0 0 3px rgba(10,132,255,.22), 0 0 20px rgba(10,132,255,.6);
     animation: eiendomPuls 1.5s ease-out infinite; }
   @keyframes eiendomPuls { 0% { transform: scale(.55); opacity: 1; } 70% { transform: scale(1.15); opacity: .5; } 100% { transform: scale(1.3); opacity: 0; } }
+  /* Grafiske kartlag – kontroll + legende (nede-venstre; menyen åpner til høyre) */
+  #kartlagCtrl { position: fixed; z-index: 1200; left: 12px; bottom: 12px; }
+  #kartlagBtn { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 999px;
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); box-shadow: var(--shadow), var(--glass-inset); font-size: 15px; font-weight: 600; }
+  #kartlagBtn.on { background: linear-gradient(180deg, rgba(10,132,255,.35), rgba(10,132,255,.15)); }
+  #kartlagBtn .lbl { font-size: 13px; }
+  #kartlagMeny { position: absolute; left: calc(100% + 8px); bottom: 0; display: none; flex-direction: column; gap: 4px; padding: 6px;
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 16px; box-shadow: var(--shadow), var(--glass-inset); }
+  #kartlagCtrl.open #kartlagMeny { display: flex; }
+  .kl-item { text-align: left; padding: 9px 14px; border-radius: 11px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+  .kl-item:hover { background: var(--fill); }
+  .kl-item.on { background: linear-gradient(180deg, rgba(10,132,255,.3), rgba(10,132,255,.12)); }
+  #kartlagLegend { position: fixed; z-index: 1200; left: 12px; bottom: 60px; display: none; max-width: 220px;
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 16px; box-shadow: var(--shadow), var(--glass-inset); padding: 11px 13px; }
+  #kartlagLegend .kl-tit { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  #kartlagLegend .kl-enh { font-weight: 500; color: var(--ink2); font-size: 11px; }
+  #kartlagLegend .kl-row { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink); padding: 1px 0; }
+  #kartlagLegend .kl-sw { width: 16px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  #kartlagLegend .kl-kilde { font-size: 10.5px; color: var(--ink3); margin-top: 6px; line-height: 1.35; }
+  /* Type-legenden løftes over kartlag-knappen; skjules når et overlay er aktivt */
+  .legend { bottom: calc(env(safe-area-inset-bottom, 0px) + 60px) !important; }
+  body.kartlag-aktiv .legend { display: none; }
+  @media (max-width: 760px) {
+    #kartlagCtrl { bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); left: 10px; }
+    #kartlagBtn .lbl { display: none; }
+    #kartlagLegend { bottom: 58px; left: 10px; }
+  }
   #eiendomHint { position: fixed; z-index: 1200; display: none; align-items: center; gap: 8px;
     left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
     background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
@@ -661,6 +691,16 @@
 <div class="legend" id="legend"></div>
 <div id="toasts"></div>
 <div id="eiendomHint">🔍 Zoom inn for å se eiendommene</div>
+
+<!-- Grafiske kartlag: knapp + meny + legende -->
+<div id="kartlagCtrl">
+  <button id="kartlagBtn" title="Grafiske kartlag">🗺<span class="lbl">Kartlag</span></button>
+  <div id="kartlagMeny">
+    <button class="kl-item" data-kl="pris">💰 Snittpris</button>
+    <button class="kl-item" data-kl="befolkning">👥 Befolkning</button>
+  </div>
+</div>
+<div id="kartlagLegend"></div>
 
 <!-- Avismodus: intro-overlay + guide-boble (demo for redaksjon/iframe) -->
 <div id="avisIntro">
@@ -1695,6 +1735,73 @@ function oppdaterEiendomHint() {
   const h = document.getElementById("eiendomHint");
   if (!h) return;
   h.style.display = (EIENDOM && map.getZoom() < EIENDOM_MIN_ZOOM) ? "flex" : "none";
+}
+
+/* ================= Grafiske kartlag (choropleth per grunnkrets) =================
+   Ett datasett (grunnkretser.geojson) med folketall, tetthet og estimert kr/m²;
+   flere lag drapes på kartet med ulike metrikker. Utvidbart – legg til i KARTLAG. */
+const KARTLAG = {
+  pris: { navn: "Snittpris", emoji: "💰", prop: "kvmpris", enhet: "kr/m²",
+    farger: ["#fee5d9", "#fcae91", "#fb6a4a", "#de2d26", "#a50f15"],
+    fmt: v => (v / 1000).toFixed(0) + "k",
+    kilde: "Estimert kvadratmeterpris fra SSBs boligverdimodell (referanse-enebolig) – prisnivået per område." },
+  befolkning: { navn: "Befolkning", emoji: "👥", prop: "tetthet", enhet: "pers/km²",
+    farger: ["#edf8e9", "#bae4b3", "#74c476", "#31a354", "#006d2c"],
+    fmt: v => v.toLocaleString("no"),
+    kilde: "Innbyggere per km² per grunnkrets (SSB, 2026)." },
+};
+let GRUNNKRETSER = null, kartlagLayer = null, KARTLAG_AKTIV = null;
+map.createPane("kartlagPane").style.zIndex = 250;   // over fliser, under markører
+function lastGrunnkretser() {
+  if (GRUNNKRETSER) return Promise.resolve(GRUNNKRETSER);
+  return fetch("data/eiendom/grunnkretser.geojson", { cache: "force-cache" })
+    .then(r => r.json()).then(d => (GRUNNKRETSER = d));
+}
+function clearKartlag() {
+  if (kartlagLayer) { map.removeLayer(kartlagLayer); kartlagLayer = null; }
+  const l = document.getElementById("kartlagLegend");
+  if (l) l.style.display = "none";
+  document.body.classList.remove("kartlag-aktiv");   // vis type-legenden igjen
+}
+async function setKartlag(key) {
+  clearKartlag();
+  KARTLAG_AKTIV = KARTLAG_AKTIV === key ? null : key;   // klikk igjen = av
+  oppdaterKartlagMeny();
+  if (!KARTLAG_AKTIV) { fireEvent("side", "kartlag-av"); return; }
+  const def = KARTLAG[KARTLAG_AKTIV];
+  const gj = await lastGrunnkretser();
+  const verdier = gj.features.map(f => f.properties[def.prop]).filter(v => v != null).sort((a, b) => a - b);
+  const brk = def.farger.map((_, i) => verdier[Math.floor(i / def.farger.length * verdier.length)]);
+  const farge = v => {
+    if (v == null) return "rgba(140,140,140,.2)";
+    let i = def.farger.length - 1;
+    while (i > 0 && v < brk[i]) i--;
+    return def.farger[i];
+  };
+  kartlagLayer = L.geoJSON(gj, {
+    pane: "kartlagPane", interactive: false,   // rent visuelt – stjeler ikke klikk fra kart/markører
+    style: f => ({ fillColor: farge(f.properties[def.prop]), fillOpacity: 0.62, weight: 0.5, color: "rgba(255,255,255,.55)" }),
+  }).addTo(map);
+  visKartlagLegende(def, brk, verdier);
+  document.body.classList.add("kartlag-aktiv");   // skjul type-legenden mens overlay vises
+  fireEvent("side", "kartlag-" + KARTLAG_AKTIV);
+}
+function visKartlagLegende(def, brk, verdier) {
+  const el = document.getElementById("kartlagLegend");
+  const maks = verdier[verdier.length - 1];
+  const rader = def.farger.map((c, i) => {
+    const fra = brk[i], til = i < def.farger.length - 1 ? brk[i + 1] : maks;
+    return `<div class="kl-row"><span class="kl-sw" style="background:${c}"></span>${def.fmt(fra)}${til > fra ? "–" + def.fmt(til) : "+"}</div>`;
+  }).join("");
+  el.innerHTML = `<div class="kl-tit">${def.emoji} ${def.navn} <span class="kl-enh">${def.enhet}</span></div>
+    ${rader}<div class="kl-kilde">${def.kilde}</div>`;
+  el.style.display = "block";
+}
+function oppdaterKartlagMeny() {
+  document.querySelectorAll("#kartlagMeny [data-kl]").forEach(b =>
+    b.classList.toggle("on", b.dataset.kl === KARTLAG_AKTIV));
+  const btn = document.getElementById("kartlagBtn");
+  if (btn) btn.classList.toggle("on", !!KARTLAG_AKTIV);
 }
 // Fargelegg punktet etter utfall – gir variasjon OG informasjon i stedet for et hav av blått.
 function dotColor(c) {
@@ -3784,6 +3891,10 @@ document.getElementById("newsBtn").onclick = openNews;
 document.getElementById("bellBtn").onclick = openVarsler;
 document.getElementById("eiendomBtn").onclick = toggleEiendom;
 document.getElementById("avisStartBtn").onclick = avisStart;
+const kartlagCtrl = document.getElementById("kartlagCtrl");
+document.getElementById("kartlagBtn").onclick = () => kartlagCtrl.classList.toggle("open");
+document.querySelectorAll("#kartlagMeny [data-kl]").forEach(b => b.onclick = () => setKartlag(b.dataset.kl));
+document.addEventListener("click", e => { if (!e.target.closest("#kartlagCtrl")) kartlagCtrl.classList.remove("open"); });
 syncEiendomUi();
 // Avismodus kan senere aktiveres direkte i iframe via ?modus=avis
 if (new URLSearchParams(location.search).get("modus") === "avis") setTimeout(startAvismodus, 600);
