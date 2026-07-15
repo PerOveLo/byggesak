@@ -1252,7 +1252,7 @@ function openOmradeInnsikt(latlng) {
 }
 function renderOmradeInnsikt(latlng) {
   const o = omradeInnsikt(latlng);
-  clearInnsiktMark();
+  clearMapOverlays();
   innsiktMark = L.layerGroup([
     L.circle(latlng, { radius: o.radius, color: "#0a84ff", weight: 2, dashArray: "6 6", fillColor: "#0a84ff", fillOpacity: 0.06, interactive: false }),
     L.marker(latlng, { interactive: false, icon: L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="nb-dot" style="--c:#0a84ff"></div>' }) }),
@@ -1488,6 +1488,7 @@ function boligprisHtml(bp) {
     </div>`;
 }
 async function renderEiendom(p) {
+  clearMapOverlays();
   const alle = [...p.cases].sort((a, b) => (a.firstDate || a.casenr.slice(5)).localeCompare(b.firstDate || b.casenr.slice(5)));
   const mtr = p.cases.find(c => c.matrikkel)?.matrikkel || p.matrikkel || null;
   const nDok = alle.reduce((s, c) => s + (caseDocs(c) || 0), 0);
@@ -1592,6 +1593,19 @@ function nabolag(p) {
 }
 let naboLayer = null;
 function clearNabolag() { if (naboLayer) { map.removeLayer(naboLayer); naboLayer = null; } }
+// Alle utvalgs-overlays (nabolagspunkter, eiendomsgrense, områdeinnsikt-ring) ryddes samlet,
+// så et nytt valg aldri arver forrige hus' blinkende punkter. Rød case-markør styres separat.
+function clearMapOverlays() { clearNabolag(); clearGrense(); clearInnsiktMark(); }
+// Fargelegg punktet etter utfall – gir variasjon OG informasjon i stedet for et hav av blått.
+function dotColor(c) {
+  if (c.type === "Ulovlighetssak") return "#ff453a";
+  if (c.type === "Plansak") return "#bf5af2";
+  const st = c.status || "";
+  if (/avslag/i.test(st)) return "#ff453a";
+  if (INNVILGET_RE.test(st)) return "#30d158";                                  // grønn = innvilget/fullført
+  if (/under behandling|venter|forhåndsvarsel|politisk/i.test(st)) return "#ff9f0a"; // oransje = pågår
+  return "#0a84ff";                                                             // blå = øvrig
+}
 function showNabolag(p, cases, fit) {
   clearNabolag();
   const ring = L.circle(p.latlon, { radius: NABO_RADIUS, color: "#0a84ff", weight: 2,
@@ -1605,7 +1619,7 @@ function showNabolag(p, cases, fit) {
     seen.add(k);
     dots.push(L.marker(c.latlon, { interactive: false, icon: L.divIcon({ className: "",
       iconSize: [18, 18], iconAnchor: [9, 9],
-      html: `<div class="nb-dot" style="--c:${COLORS[c.type] || "#0a84ff"};animation-delay:${(dots.length % 5) * 0.13}s"></div>` }) }));
+      html: `<div class="nb-dot" style="--c:${dotColor(c)};animation-delay:${(dots.length % 6) * 0.16}s"></div>` }) }));
     if (dots.length >= 300) break;
   }
   naboLayer = L.layerGroup([ring, ...dots]).addTo(map);
@@ -1638,6 +1652,7 @@ function wireNabolag(p, n) {
 
 function renderPoi(p) {
   if (EIENDOM) return renderEiendom(p);
+  clearMapOverlays();
   const vis = p.cases.filter(caseVisible);
   const show = vis.length ? vis : p.cases;
   const ai = poiAi(p);
