@@ -1141,7 +1141,7 @@ function renderSeg(counts) {
 }
 map.on("moveend", () => {
   if (state.bbox) render();
-  if (EIENDOM) renderEiendomDots();
+  // eiendomsprikkene tegnes av sitt eget canvas-lag (EiendomsPrikker), som lytter selv på move/zoom
 });
 map.on("click", e => {
   if (AVIS.aktiv) return;
@@ -1687,39 +1687,97 @@ function markerEiendomValgt(latlon) {
   eiendomSelMark = L.marker(latlon, { interactive: false, zIndexOffset: 1000, icon: L.divIcon({ className: "",
     iconSize: [30, 30], iconAnchor: [15, 15], html: '<div class="eiendom-sel"></div>' }) }).addTo(map);
 }
+let _eiCache = null;
 function alleEiendomsPunkter() {
-  // Adresser med saker (POIS) + adresser uten saker (ALLE_ADR) = alle eiendommer i kommunen
+  // Adresser med saker (POIS) + adresser uten saker (ALLE_ADR) = alle eiendommer i kommunen.
+  // Bygges én gang og caches; invalideres når ALLE_ADR lastes (se lastAlleAdresser).
+  if (_eiCache && _eiCache.n === POIS.length + (ALLE_ADR ? ALLE_ADR.length : 0)) return _eiCache.pts;
   const ut = POIS.map(p => ({ label: p.label, latlon: p.latlon, poi: p }));
   if (ALLE_ADR) for (const a of ALLE_ADR) ut.push({ label: a.adressetekst, latlon: [a.lat, a.lon], adr: a });
+  _eiCache = { n: ut.length, pts: ut };
   return ut;
 }
-function renderEiendomDots() {
-  if (!EIENDOM) return;
-  clearEiendomDots();
-  oppdaterEiendomHint();
-  if (map.getZoom() < EIENDOM_MIN_ZOOM) return;       // for mange på lav zoom – hint vises i stedet
-  const b = map.getBounds().pad(0.15);
-  const renderer = L.canvas({ padding: 0.4 });
-  const layer = L.layerGroup();
-  let n = 0;
-  // Prikkene er kun visuelle (interactive:false) – selve valget skjer via klikk-snap på kartet,
-  // så man slipper å treffe en liten prikk nøyaktig (viktig på mobil).
+// Romlig rutenett-indeks: O(celler i utsnitt) i stedet for O(44 000) per zoom/pan.
+const EI_GRID = 0.004;   // ~250 m ruter
+let EIENDOM_GRID = null, eiendomRenderer = null;
+function byggEiendomGrid() {
+  EIENDOM_GRID = new Map();
   for (const a of alleEiendomsPunkter()) {
-    if (!b.contains(a.latlon)) continue;
-    layer.addLayer(L.circleMarker(a.latlon, { renderer, radius: 6, weight: 1.2, color: "#fff",
-      fillColor: "#0a84ff", fillOpacity: 0.9, interactive: false }));
-    if (++n >= 3000) break;                            // tak: aldri drukne kartet
+    const k = Math.floor(a.latlon[0] / EI_GRID) + ":" + Math.floor(a.latlon[1] / EI_GRID);
+    let arr = EIENDOM_GRID.get(k);
+    if (!arr) EIENDOM_GRID.set(k, arr = []);
+    arr.push(a);
   }
-  layer.addTo(map);
-  eiendomDotLayer = layer;
+}
+function invaliderEiendomGrid() { EIENDOM_GRID = null; _eiCache = null; }
+function eiendommerIBounds(b, maks) {
+  if (!EIENDOM_GRID) byggEiendomGrid();
+  const out = [];
+  const y0 = Math.floor(b.getSouth() / EI_GRID), y1 = Math.floor(b.getNorth() / EI_GRID);
+  const x0 = Math.floor(b.getWest() / EI_GRID), x1 = Math.floor(b.getEast() / EI_GRID);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const arr = EIENDOM_GRID.get(y + ":" + x);
+    if (!arr) continue;
+    for (const a of arr) {
+      if (b.contains(a.latlon)) { out.push(a); if (maks && out.length >= maks) return out; }
+    }
+  }
+  return out;
+}
+// Eget canvas-lag: tegner alle synlige eiendomsprikker direkte (én canvas, ~3 ms for tusenvis)
+// i stedet for tusenvis av Leaflet-markørobjekter (~70 ms). Skalerer jevnt under zoom-animasjon.
+const EiendomsPrikker = L.Layer.extend({
+  onAdd(map) {
+    this._c = L.DomUtil.create("canvas", "leaflet-zoom-animated");
+    this._c.style.pointerEvents = "none";
+    map.getPane("overlayPane").appendChild(this._c);
+    map.on("moveend viewreset zoomend", this._reset, this);
+    if (map.options.zoomAnimation && L.Browser.any3d) map.on("zoomanim", this._zoomAnim, this);
+    this._reset();
+  },
+  onRemove(map) {
+    L.DomUtil.remove(this._c);
+    map.off("moveend viewreset zoomend", this._reset, this);
+    map.off("zoomanim", this._zoomAnim, this);
+  },
+  _zoomAnim(e) {
+    const scale = this._map.getZoomScale(e.zoom, this._map.getZoom());
+    const offset = this._map._latLngBoundsToNewLayerBounds(this._map.getBounds(), e.zoom, e.center).min;
+    L.DomUtil.setTransform(this._c, offset, scale);
+  },
+  _reset() {
+    const map = this._map, size = map.getSize();
+    L.DomUtil.setPosition(this._c, map.containerPointToLayerPoint([0, 0]));
+    L.DomUtil.setTransform(this._c, null, 1);
+    if (this._c.width !== size.x) this._c.width = size.x;
+    if (this._c.height !== size.y) this._c.height = size.y;
+    this._draw();
+  },
+  _draw() {
+    const map = this._map, ctx = this._c.getContext("2d");
+    ctx.clearRect(0, 0, this._c.width, this._c.height);
+    oppdaterEiendomHint();
+    if (map.getZoom() < EIENDOM_MIN_ZOOM) return;      // for mange på lav zoom – hint vises i stedet
+    ctx.lineWidth = 1.3; ctx.strokeStyle = "rgba(255,255,255,.95)"; ctx.fillStyle = "#0a84ff";
+    for (const a of eiendommerIBounds(map.getBounds().pad(0.1), 8000)) {
+      const p = map.latLngToContainerPoint(a.latlon);
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5.5, 0, 6.2832); ctx.fill(); ctx.stroke();
+    }
+  },
+});
+function visEiendomDots() {
+  if (!eiendomDotLayer) { eiendomDotLayer = new EiendomsPrikker(); eiendomDotLayer.addTo(map); }
+}
+function renderEiendomDots() {
+  if (!EIENDOM) { clearEiendomDots(); return; }
+  visEiendomDots();
+  if (eiendomDotLayer._reset) eiendomDotLayer._reset();
 }
 // Finn eiendommen nærmest et kartklikk (i piksler), innen romslig trykkeflate.
 function naermesteEiendom(latlng, maxPx = 44) {
   const cp = map.latLngToContainerPoint(latlng);
-  const b = map.getBounds();
   let best = null, bestD = maxPx;
-  for (const a of alleEiendomsPunkter()) {
-    if (!b.contains(a.latlon)) continue;
+  for (const a of eiendommerIBounds(map.getBounds())) {
     const p = map.latLngToContainerPoint(a.latlon);
     const d = Math.hypot(p.x - cp.x, p.y - cp.y);
     if (d < bestD) { bestD = d; best = a; }
@@ -3538,6 +3596,7 @@ function lastAlleAdresser() {
   fetch("data/adresser_4204.json", { cache: "force-cache" }).then(r => r.json()).then(liste => {
     const harSaker = new Set(POIS.map(p => addrKey(p.label)));
     ALLE_ADR = liste.filter(a => !harSaker.has(addrKey(a.adressetekst)));
+    invaliderEiendomGrid();             // bygg rutenett-indeksen på nytt med alle adresser
     // oppdater åpne forslag med de nye treffene
     if (suggest.style.display === "block" && qInput.value.trim().length >= 2)
       drawSuggest(searchMatches(qInput.value));
