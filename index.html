@@ -1176,6 +1176,42 @@ function toast(emoji, tittel, sub) {
 }
 
 const KOMMUNENR = "4204";
+let BOLIGPRISER = null;
+async function hentBoligpriser() {
+  if (BOLIGPRISER !== null) return BOLIGPRISER;
+  try { BOLIGPRISER = await fetch("data/eiendom/boligpriser.json", { cache: "force-cache" }).then(r => r.json()); }
+  catch { BOLIGPRISER = false; }
+  return BOLIGPRISER;
+}
+function boligprisHtml(bp) {
+  if (!bp || !bp.kvmPriser) return "";
+  const idx = bp.prisindeks || [];
+  const forste = idx[0], siste = idx[idx.length - 1];
+  const vekst = forste && siste ? Math.round((siste.indeks / forste.indeks - 1) * 100) : null;
+  // sparkline over prisindeksen
+  let spark = "";
+  if (idx.length > 2) {
+    const min = Math.min(...idx.map(x => x.indeks)), max = Math.max(...idx.map(x => x.indeks));
+    const pts = idx.map((x, i) => `${(i / (idx.length - 1) * 100).toFixed(1)},${(34 - (x.indeks - min) / (max - min) * 30).toFixed(1)}`).join(" ");
+    spark = `<svg viewBox="0 0 100 36" preserveAspectRatio="none" style="width:100%;height:44px;display:block">
+      <polyline points="${pts}" fill="none" stroke="var(--blue)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    </svg>`;
+  }
+  const rader = Object.entries(bp.kvmPriser).filter(([k]) => k !== "Alle boligtyper").map(([k, v]) =>
+    `<div class="barrow" style="grid-template-columns:110px 1fr 60px">
+      <div class="b-lbl">${esc(k)}</div>
+      <div class="b-track"><div class="b-fill" style="width:${Math.round(v.kvmPris / 60000 * 100)}%;background:var(--blue)"></div></div>
+      <div class="b-val">${(v.kvmPris / 1000).toFixed(0)}k</div></div>`).join("");
+  const alle = bp.kvmPriser["Alle boligtyper"] || {};
+  return `<div class="sectionlabel">📈 Boligmarkedet i Kristiansand (${bp.aar})</div>
+    <div class="pres">
+      <div class="pres-hode"><span class="pres-tall">${(alle.kvmPris || 0).toLocaleString("no")} kr/m²</span>
+        i snitt · ${(alle.omsetninger || 0).toLocaleString("no")} boligsalg i ${bp.aar}${vekst !== null ? ` · <b>+${vekst} %</b> prisvekst siden ${forste.aar}` : ""}</div>
+      ${spark}
+      <div style="margin-top:6px">${rader}</div>
+      <div class="pres-meta" style="margin-top:5px">kr/m² per boligtype · Kilde: SSB (prisindeks: Agder og Rogaland utenom Stavanger)</div>
+    </div>`;
+}
 async function renderEiendom(p) {
   const alle = [...p.cases].sort((a, b) => (a.firstDate || a.casenr.slice(5)).localeCompare(b.firstDate || b.casenr.slice(5)));
   const mtr = p.cases.find(c => c.matrikkel)?.matrikkel || p.matrikkel || null;
@@ -1197,6 +1233,7 @@ async function renderEiendom(p) {
   const nrSet = new Set(alle.map(c => c.casenr));
   const klagerHer = (KLAGER || []).filter(k => nrSet.has(k.c));
   const nabo = nabolag(p);
+  const bp = await hentBoligpriser();
   const [gnr, bnr] = (mtr || "/").split("/");
   const seEiendom = mtr ? `https://seeiendom.kartverket.no/eiendom/${KOMMUNENR}/${gnr.trim()}/${bnr.trim()}/0/0` : null;
   const streetview = `https://www.google.com/maps?q=&layer=c&cbll=${p.latlon[0]},${p.latlon[1]}`;
@@ -1239,6 +1276,7 @@ async function renderEiendom(p) {
       Tilstandsrapporter er private dokumenter og finnes ikke i offentlige registre.
       Byggesakshistorikken over er ofte det nærmeste du kommer: godkjente tiltak, pålegg og ulovlighetssaker sier mye om eiendommens tilstand og verdi.
     </div>
+    ${boligprisHtml(bp)}
     ${nabolagHtml(nabo)}
     <div class="listnote">🏠 Eiendomsmodus er på – trykk 🏠-knappen for vanlig saksvisning.</div>`;
 
