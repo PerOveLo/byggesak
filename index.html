@@ -580,6 +580,7 @@
     <option value="10">Siste 10 år</option>
   </select>
   </span>
+  <button class="iconbtn m-hide" id="eiendomBtn" title="Eiendomsmodus – se adresser som eiendomsprofiler">🏠</button>
   <button class="iconbtn" id="bellBtn" title="Varsler">🔔<span class="bubble" id="bellBubble" style="display:none">0</span></button>
   <button class="iconbtn m-hide" id="accountBtn" title="Logg inn / min konto">👤<span class="lbl" id="accountLbl">Logg inn</span></button>
   <button class="iconbtn m-hide" id="newsBtn" title="Nye saker">🕐<span class="lbl">Nytt</span><span class="bubble" id="newsBubble" style="display:none">0</span></button>
@@ -597,6 +598,7 @@
     <button class="menu-item" data-menu="konto" style="grid-column: span 2">👤 <span id="mKontoLbl">Logg inn / Min konto</span></button>
     <button class="menu-item" data-menu="nytt">🕐 Nytt <span class="mbadge" id="mbNytt"></span></button>
     <button class="menu-item" data-menu="uka">📰 Uka</button>
+    <button class="menu-item" data-menu="eiendom">🏠 Eiendomsmodus <span class="mbadge" id="mbEiendom" style="background:var(--green)">PÅ</span></button>
     <button class="menu-item" data-menu="regulering">📐 Regulering</button>
     <button class="menu-item" data-menu="klager">🗣 Klager</button>
     <button class="menu-item" data-menu="statistikk">📊 Statistikk</button>
@@ -1143,6 +1145,114 @@ function poiAi(p) {
   return null;
 }
 
+/* ---------------- Eiendomsmodus ---------------- */
+let EIENDOM = localStorage.getItem("bsEiendom") === "1";
+function syncEiendomUi() {
+  const b = document.getElementById("eiendomBtn");
+  if (b) {
+    b.classList.toggle("on", EIENDOM);
+    b.style.background = EIENDOM ? "linear-gradient(180deg, rgba(48,209,88,.4), rgba(48,209,88,.18))" : "";
+  }
+  const mb = document.getElementById("mbEiendom");
+  if (mb) mb.style.display = EIENDOM ? "inline-block" : "none";
+}
+function toggleEiendom() {
+  EIENDOM = !EIENDOM;
+  localStorage.setItem("bsEiendom", EIENDOM ? "1" : "0");
+  syncEiendomUi();
+  toast(EIENDOM ? "🏠" : "🗺", EIENDOM ? "Eiendomsmodus på" : "Eiendomsmodus av",
+    EIENDOM ? "Adresser åpnes nå som eiendomsprofiler med historikk og nøkkelinfo."
+            : "Tilbake til vanlig saksvisning.");
+  fireEvent("side", EIENDOM ? "eiendom-på" : "eiendom-av");
+  if (PANEL_CUR && PANEL_CUR.key.startsWith("poi:")) PANEL_CUR.thunk();
+}
+function toast(emoji, tittel, sub) {
+  const box = document.getElementById("toasts");
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.innerHTML = `<span class="emoji">${emoji}</span><div><div class="t-title">${esc(tittel)}</div><div class="t-sub">${esc(sub)}</div></div>`;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+const KOMMUNENR = "4204";
+async function renderEiendom(p) {
+  const alle = [...p.cases].sort((a, b) => (a.firstDate || a.casenr.slice(5)).localeCompare(b.firstDate || b.casenr.slice(5)));
+  const mtr = p.cases.find(c => c.matrikkel)?.matrikkel || null;
+  const nDok = alle.reduce((s, c) => s + (caseDocs(c) || 0), 0);
+  const aktive = alle.filter(c => /under behandling|venter|forhåndsvarsel|politisk/i.test(c.status || ""));
+  const ulov = alle.filter(c => c.type === "Ulovlighetssak" && !/avsluttet|trukket|avvist/i.test(c.status || ""));
+  const godkjente = [];   // siste godkjente tiltak per kategori
+  for (const c of alle) {
+    if (!INNVILGET_RE.test(c.status || "")) continue;
+    for (const k of (c.kategorier || [])) {
+      const eks = godkjente.find(g => g.kat === k);
+      const aar = (c.lastDate || "").slice(0, 4);
+      if (eks) { if (aar > eks.aar) { eks.aar = aar; eks.c = c; } }
+      else godkjente.push({ kat: k, aar, c });
+    }
+  }
+  const nybygg = alle.find(c => (c.kategorier || []).includes("bolig (nybygg)") && INNVILGET_RE.test(c.status || ""));
+  if (!KLAGER) { try { KLAGER = await fetch("data/klager.json", { cache: "no-cache" }).then(r => r.json()); } catch { KLAGER = []; } }
+  const nrSet = new Set(alle.map(c => c.casenr));
+  const klagerHer = (KLAGER || []).filter(k => nrSet.has(k.c));
+  const nabo = nabolag(p);
+  const [gnr, bnr] = (mtr || "/").split("/");
+  const seEiendom = mtr ? `https://seeiendom.kartverket.no/eiendom/${KOMMUNENR}/${gnr.trim()}/${bnr.trim()}/0/0` : null;
+  const streetview = `https://www.google.com/maps?q=&layer=c&cbll=${p.latlon[0]},${p.latlon[1]}`;
+
+  const tidslinje = alle.map(c => `
+    <div class="sg-step" data-eik="${esc(c.casenr)}" style="cursor:pointer">
+      <span class="sg-dot" style="border-color:${COLORS[c.type]};border-width:2px">${{ Byggesak: "🏗", Plansak: "📐", Henvendelse: "✉️", Ulovlighetssak: "🚨" }[c.type] || "📄"}</span>
+      <span class="sg-lbl"><b>${esc(c.description || c.casenr)}</b>${klagerHer.some(k => k.c === c.casenr) ? " 🗣" : ""}
+        <span class="sg-date">${c.firstDate ? fmtDate(c.firstDate) : caseYear(c) || ""} · ${esc(c.status || "")} · ${esc(c.casenr)}</span></span>
+    </div>`).join("");
+
+  const html = `
+    <div class="formbox" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <div style="flex:1;min-width:150px">
+        <b style="font-size:15px">🏠 ${esc(p.label)}</b>
+        <div style="font-size:12px;color:var(--ink2)">${mtr ? "Gnr/bnr " + esc(mtr) + " · " : ""}Kristiansand${nybygg ? ` · nybygg godkjent ${(nybygg.lastDate || "").slice(0, 4)}` : ""}</div>
+      </div>
+      ${seEiendom ? `<a class="btn sec" href="${seEiendom}" target="_blank" rel="noopener" style="text-decoration:none">🗺 Se eiendom</a>` : ""}
+      <a class="btn sec" href="${streetview}" target="_blank" rel="noopener" style="text-decoration:none">📷 Gatebilde</a>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="k-val">${alle.length}</div><div class="k-lbl">saker på eiendommen</div></div>
+      <div class="kpi"><div class="k-val">${godkjente.length}</div><div class="k-lbl">godkjente tiltakstyper</div></div>
+      <div class="kpi" ${aktive.length ? "" : ""}><div class="k-val">${aktive.length}</div><div class="k-lbl">under behandling nå</div></div>
+      <div class="kpi" ${ulov.length ? 'style="color:var(--red)"' : ""}><div class="k-val">${ulov.length}</div><div class="k-lbl">åpne ulovlighetssaker</div></div>
+    </div>
+    ${godkjente.length ? `<div class="sectionlabel">✅ Godkjente tiltak</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${godkjente.sort((a, b) => b.aar.localeCompare(a.aar))
+        .map(g => `<button class="entchip" data-eik="${esc(g.c.casenr)}">✅ ${esc(g.kat)}${g.aar ? " · " + g.aar : ""}</button>`).join("")}</div>` : ""}
+    ${klagerHer.length || ulov.length ? `<div class="sectionlabel">⚠️ Verdt å vite</div>
+      ${ulov.map(c => `<button class="admrow" data-eik="${esc(c.casenr)}"><span class="ar-t">🚨 <b>Ulovlighetssak:</b> ${esc(c.description || c.casenr)}<span class="ar-sub">${esc(c.status || "")}</span></span></button>`).join("")}
+      ${klagerHer.slice(0, 5).map(k => `<button class="admrow" data-eik="${esc(k.c)}"><span class="ar-t">🗣 <b>${esc(k.t || "Merknad")}:</b> ${esc((k.i || "").slice(0, 90))}<span class="ar-sub">${k.d ? fmtDate(k.d) : ""}${k.fra ? " · fra " + esc(k.fra) : ""}</span></span></button>`).join("")}` : ""}
+    <div class="sectionlabel">🏗 Eiendommens historikk (${alle.length} saker · ${nDok} dokumenter)</div>
+    <div class="sg">${tidslinje}</div>
+    <div class="sectionlabel">💰 Pris, eierskap og tilstand</div>
+    <div class="formbox" style="font-size:12.5px;line-height:1.5;color:var(--ink2)">
+      Omsetningshistorikk og hjemmelshavere ligger i grunnboken hos Kartverket –
+      ${seEiendom ? `<a href="${seEiendom}" target="_blank" rel="noopener" style="color:var(--blue)">slå opp gratis på Se eiendom ↗</a>.` : "søk opp adressen på seeiendom.kartverket.no."}
+      Tilstandsrapporter er private dokumenter og finnes ikke i offentlige registre.
+      Byggesakshistorikken over er ofte det nærmeste du kommer: godkjente tiltak, pålegg og ulovlighetssaker sier mye om eiendommens tilstand og verdi.
+    </div>
+    ${nabolagHtml(nabo)}
+    <div class="listnote">🏠 Eiendomsmodus er på – trykk 🏠-knappen for vanlig saksvisning.</div>`;
+
+  openPanel(p.label, `Eiendomsprofil${mtr ? " · gnr/bnr " + esc(mtr) : ""}`, html, p);
+  document.querySelectorAll("#panelBody [data-eik]").forEach(el => el.onclick = () => {
+    const c = DATA.cases.find(x => x.casenr === el.dataset.eik);
+    if (c) focusCase(c);
+  });
+  wireNabolag(p, nabo);
+  if (nabo) showNabolag(p, nabo.saker); else clearNabolag();
+  setPanelShare(`adresse=${encodeURIComponent(p.label)}@${p.latlon[0].toFixed(5)},${p.latlon[1].toFixed(5)},17`, p.label);
+  markSeenAddr(p);
+  fireEvent("poi", p.label);
+}
+
 function openPoi(p) { navOpen("poi:" + addrKey(p.label), () => renderPoi(p)); }
 
 /* ---------------- Nabolagsprofil: alt innen 500 m ---------------- */
@@ -1210,6 +1320,7 @@ function wireNabolag(p, n) {
 }
 
 function renderPoi(p) {
+  if (EIENDOM) return renderEiendom(p);
   const vis = p.cases.filter(caseVisible);
   const show = vis.length ? vis : p.cases;
   const ai = poiAi(p);
@@ -3123,6 +3234,8 @@ document.getElementById("followBtn").onclick = () => {
 };
 document.getElementById("newsBtn").onclick = openNews;
 document.getElementById("bellBtn").onclick = openVarsler;
+document.getElementById("eiendomBtn").onclick = toggleEiendom;
+syncEiendomUi();
 document.getElementById("ukaBtn").onclick = openUka;
 const menuSheet = document.getElementById("menuSheet");
 const IS_MOBILE_MQ = window.matchMedia("(max-width: 760px)");
@@ -3146,7 +3259,7 @@ document.addEventListener("click", e => {
 });
 document.querySelectorAll(".menu-item").forEach(b => b.addEventListener("click", () => {
   menuSheet.classList.remove("open");
-  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto, klager: openKlager, uka: openUka, varsler: openVarsler })[b.dataset.menu]();
+  ({ nytt: openNews, regulering: openRegulering, statistikk: openStats, folger: openFollowList, konto: openKonto, klager: openKlager, uka: openUka, varsler: openVarsler, eiendom: toggleEiendom })[b.dataset.menu]();
 }));
 document.getElementById("accountBtn").onclick = openKonto;
 document.getElementById("statsBtn").onclick = openStats;

@@ -4,6 +4,7 @@
     "tittel": "Varselsenter, ukesoppsummering, presedens og saksgang",
     "punkter": [
       "📊 Presedens: åpne en sak og se hvordan lignende søknader i nærområdet har gått – «22 av 24 boligsøknader innen 800 m ble innvilget» – med median behandlingstid og klikkbar liste",
+      "🏠 Eiendomsmodus: trykk hus-knappen og se adresser som eiendomsprofiler – godkjente tiltak, komplett historikk, ulovlighetssaker og klager, med direktelenke til grunnboken og gatebilde",
       "🏘 Nabolagsprofil: åpne en adresse og se alt innen 500 m – saker under behandling, ferske avgjørelser, plansaker på høring og åpne ulovlighetssaker",
       "⏱ Behandlingstid i statistikken: median dager per tiltakstype (tregest øverst) og utvikling per startår – alt klikkbart",
       "📅 Saksgang: hver sak viser nå en tidslinje med milepæler – søknad, nabovarsel, mangelbrev, vedtak, klage, ferdigattest",
