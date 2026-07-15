@@ -1,9 +1,10 @@
 [
   {
     "dato": "2026-07-15",
-    "tittel": "Områdeinnsikt og skarpere analyser",
+    "tittel": "Eiendomsmodus, områdeinnsikt og skarpere analyser",
     "punkter": [
-      "📊 Områdeinnsikt: trykk hvor som helst i kartet og se hva som skjer innen 300 m – antall saker, median behandlingstid, vanligste tiltak og åpne ulovlighetssaker",
+      "🏠 Eiendomsmodus er nå en egen kartvisning: alle eiendommer i Kristiansand vises som blå prikker – trykk én for eiendomsprofil med tomtegrense, matrikkelfakta og historikk. Den valgte eiendommen highlightes med blå puls",
+      "📊 Områdeinnsikt (byggesaksmodus): trykk hvor som helst i kartet og se hva som skjer innen 300 m – antall saker, median behandlingstid, vanligste tiltak og åpne ulovlighetssaker",
       "🎯 Bedre presedens: byggesaker i Kristiansand innvilges nesten alltid (~97 %), så vi leder nå med det som faktisk varierer – behandlingstid målt mot bysnittet og hvor ofte det kreves dispensasjon"
     ]
   },

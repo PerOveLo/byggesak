@@ -374,6 +374,17 @@
     box-shadow: 0 0 10px var(--c, #0a84ff);
     animation: nbblink 1.5s ease-in-out infinite; }
   @keyframes nbblink { 0%, 100% { opacity: .3; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.2); } }
+  /* Eiendomsmodus: puls kun på den valgte eiendommen (blå) */
+  .eiendom-sel { width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid #0a84ff; background: rgba(10,132,255,.14);
+    box-shadow: 0 0 0 3px rgba(10,132,255,.22), 0 0 20px rgba(10,132,255,.6);
+    animation: eiendomPuls 1.5s ease-out infinite; }
+  @keyframes eiendomPuls { 0% { transform: scale(.55); opacity: 1; } 70% { transform: scale(1.15); opacity: .5; } 100% { transform: scale(1.3); opacity: 0; } }
+  #eiendomHint { position: fixed; z-index: 1200; display: none; align-items: center; gap: 8px;
+    left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+    background: var(--glass-strong); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 999px; box-shadow: var(--shadow), var(--glass-inset);
+    padding: 9px 16px; font-size: 13px; font-weight: 600; color: var(--ink); pointer-events: none; }
   .cluster {
     background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.68));
     backdrop-filter: blur(6px) saturate(1.6); color: #1c1c1e;
@@ -649,6 +660,7 @@
 
 <div class="legend" id="legend"></div>
 <div id="toasts"></div>
+<div id="eiendomHint">🔍 Zoom inn for å se eiendommene</div>
 
 <!-- Avismodus: intro-overlay + guide-boble (demo for redaksjon/iframe) -->
 <div id="avisIntro">
@@ -1087,10 +1099,13 @@ function renderSeg(counts) {
   bb.onclick = () => { state.bbox = !state.bbox; render(); };
   seg.appendChild(bb);
 }
-map.on("moveend", () => { if (state.bbox) render(); });
-// Klikk på tom kartflate (ikke markør/klynge) -> områdeinnsikt for punktet
+map.on("moveend", () => {
+  if (state.bbox) render();
+  if (EIENDOM) renderEiendomDots();
+});
+// Byggesaksmodus: klikk på tom kartflate -> områdeinnsikt. (Eiendomsmodus bruker de blå prikkene.)
 map.on("click", e => {
-  if (AVIS.aktiv || map.getZoom() < 14) return;
+  if (EIENDOM || AVIS.aktiv || map.getZoom() < 14) return;
   if (e.originalEvent.target.closest(".leaflet-marker-icon, .leaflet-interactive, .leaflet-control")) return;
   openOmradeInnsikt(e.latlng);
 });
@@ -1208,14 +1223,26 @@ function syncEiendomUi() {
   const mb = document.getElementById("mbEiendom");
   if (mb) mb.style.display = EIENDOM ? "inline-block" : "none";
 }
-function toggleEiendom() {
-  EIENDOM = !EIENDOM;
+function toggleEiendom() { setEiendom(!EIENDOM); }
+function setEiendom(on, silent) {
+  EIENDOM = on;
   localStorage.setItem("bsEiendom", EIENDOM ? "1" : "0");
   syncEiendomUi();
-  toast(EIENDOM ? "🏠" : "🗺", EIENDOM ? "Eiendomsmodus på" : "Eiendomsmodus av",
-    EIENDOM ? "Adresser åpnes nå som eiendomsprofiler med historikk og nøkkelinfo."
-            : "Tilbake til vanlig saksvisning.");
-  fireEvent("side", EIENDOM ? "eiendom-på" : "eiendom-av");
+  if (EIENDOM) {
+    // Eiendomsmodus: skjul saksklyngene, vis blå prikker for ALLE adresser (eiendommer)
+    if (map.hasLayer(cluster)) map.removeLayer(cluster);
+    lastAlleAdresser();
+    renderEiendomDots();
+    if (!silent) toast("🏠", "Eiendomsmodus på", "Blå prikker viser alle eiendommer – trykk én for info og tomtegrense. Zoom inn for å se dem.");
+  } else {
+    // Byggesaksmodus: tilbake til saksklyngene
+    clearEiendomDots();
+    clearMapOverlays();
+    if (!map.hasLayer(cluster)) map.addLayer(cluster);
+    if (!silent) toast("🗺", "Byggesaksmodus", "Tilbake til saker, statistikk og analyser.");
+  }
+  oppdaterEiendomHint();
+  if (!silent) fireEvent("side", EIENDOM ? "eiendom-på" : "eiendom-av");
   if (PANEL_CUR && PANEL_CUR.key.startsWith("poi:")) PANEL_CUR.thunk();
 }
 function toast(emoji, tittel, sub) {
@@ -1305,7 +1332,7 @@ function startAvismodus() {
 function avisStart() {
   document.getElementById("avisIntro").style.display = "none";
   AVIS.aktiv = true;
-  if (!EIENDOM) { EIENDOM = true; localStorage.setItem("bsEiendom", "1"); syncEiendomUi(); }
+  if (!EIENDOM) setEiendom(true, true);
   // Velg en rik eksempeleiendom: flest saker, gjerne med historikk
   const kandidat = [...POIS].filter(p => p.cases.length >= 3 && p.cases.some(c => c.firstDate))
     .sort((a, b) => b.cases.length - a.cases.length)[0]
@@ -1564,7 +1591,9 @@ async function renderEiendom(p) {
     if (c) focusCase(c);
   });
   wireNabolag(p, nabo);
-  if (nabo) showNabolag(p, nabo.saker); else clearNabolag();
+  // Eiendomsmodus: KUN blå markering av den valgte eiendommen + tomtegrense.
+  // Ingen fargede nabolagspunkter (det hører til byggesaksmodus/analyse).
+  markerEiendomValgt(p.latlon);
   fyllEiendomFakta(p);
   setPanelShare(`adresse=${encodeURIComponent(p.label)}@${p.latlon[0].toFixed(5)},${p.latlon[1].toFixed(5)},17`, p.label);
   markSeenAddr(p);
@@ -1593,9 +1622,60 @@ function nabolag(p) {
 }
 let naboLayer = null;
 function clearNabolag() { if (naboLayer) { map.removeLayer(naboLayer); naboLayer = null; } }
-// Alle utvalgs-overlays (nabolagspunkter, eiendomsgrense, områdeinnsikt-ring) ryddes samlet,
-// så et nytt valg aldri arver forrige hus' blinkende punkter. Rød case-markør styres separat.
-function clearMapOverlays() { clearNabolag(); clearGrense(); clearInnsiktMark(); }
+// Alle utvalgs-overlays (nabolagspunkter, eiendomsgrense, områdeinnsikt-ring, eiendomsvalg) ryddes
+// samlet, så et nytt valg aldri arver forrige hus' overlays. Rød case-markør styres separat.
+function clearMapOverlays() { clearNabolag(); clearGrense(); clearInnsiktMark(); clearEiendomSel(); }
+
+/* ================= EIENDOMSMODUS: blå prikker for alle eiendommer =================
+   Egen, ren modus (adskilt fra byggesaksmodus): alle adresser vises som blå prikker;
+   trykk én for eiendomsprofil + tomtegrense. Den valgte eiendommen får en blå puls.
+   Ingen fargekoding, ingen konstant blinking – kun det valgte highlightes. */
+const EIENDOM_MIN_ZOOM = 15;
+let eiendomDotLayer = null, eiendomSelMark = null;
+function clearEiendomDots() { if (eiendomDotLayer) { map.removeLayer(eiendomDotLayer); eiendomDotLayer = null; } }
+function clearEiendomSel() { if (eiendomSelMark) { map.removeLayer(eiendomSelMark); eiendomSelMark = null; } }
+function markerEiendomValgt(latlon) {
+  clearEiendomSel();
+  eiendomSelMark = L.marker(latlon, { interactive: false, zIndexOffset: 1000, icon: L.divIcon({ className: "",
+    iconSize: [30, 30], iconAnchor: [15, 15], html: '<div class="eiendom-sel"></div>' }) }).addTo(map);
+}
+function alleEiendomsPunkter() {
+  // Adresser med saker (POIS) + adresser uten saker (ALLE_ADR) = alle eiendommer i kommunen
+  const ut = POIS.map(p => ({ label: p.label, latlon: p.latlon, poi: p }));
+  if (ALLE_ADR) for (const a of ALLE_ADR) ut.push({ label: a.adressetekst, latlon: [a.lat, a.lon], adr: a });
+  return ut;
+}
+function renderEiendomDots() {
+  if (!EIENDOM) return;
+  clearEiendomDots();
+  oppdaterEiendomHint();
+  if (map.getZoom() < EIENDOM_MIN_ZOOM) return;       // for mange på lav zoom – hint vises i stedet
+  const b = map.getBounds().pad(0.15);
+  const renderer = L.canvas({ padding: 0.4 });
+  const layer = L.layerGroup();
+  let n = 0;
+  for (const a of alleEiendomsPunkter()) {
+    if (!b.contains(a.latlon)) continue;
+    const mk = L.circleMarker(a.latlon, { renderer, radius: 5, weight: 1.2, color: "#fff",
+      fillColor: "#0a84ff", fillOpacity: 0.92 });
+    mk.on("click", () => openEiendomFraAdresse(a));
+    mk.bindTooltip(a.label, { direction: "top", offset: [0, -6] });
+    layer.addLayer(mk);
+    if (++n >= 3000) break;                            // tak: aldri drukne kartet
+  }
+  layer.addTo(map);
+  eiendomDotLayer = layer;
+}
+function openEiendomFraAdresse(a) {
+  const p = a.poi || { label: a.label, latlon: a.latlon, cases: [],
+    matrikkel: a.adr ? a.adr.gnr + "/" + a.adr.bnr : null, postnr: a.adr ? a.adr.postnr : null };
+  navOpen("poi:" + addrKey(p.label), () => renderEiendom(p));
+}
+function oppdaterEiendomHint() {
+  const h = document.getElementById("eiendomHint");
+  if (!h) return;
+  h.style.display = (EIENDOM && map.getZoom() < EIENDOM_MIN_ZOOM) ? "flex" : "none";
+}
 // Fargelegg punktet etter utfall – gir variasjon OG informasjon i stedet for et hav av blått.
 function dotColor(c) {
   if (c.type === "Ulovlighetssak") return "#ff453a";
@@ -1645,7 +1725,8 @@ function wireNabolag(p, n) {
   document.querySelectorAll("#panelBody [data-nabo]").forEach(b => b.onclick = () => {
     const [t, cs] = lists[b.dataset.nabo];
     if (!cs.length) return;
-    showNabolag(p, cs, true);   // blink akkurat disse sakene og zoom så hele ringen synes
+    // I byggesaksmodus highlightes de aktuelle sakene på kartet; i eiendomsmodus holder vi kartet rent (kun blå prikker).
+    if (!EIENDOM) showNabolag(p, cs, true);
     openCaseList(t, lbl, [...cs]);
   });
 }
@@ -3307,7 +3388,7 @@ function focusCase(c) {
   }
   // setView uten animasjon: robust ved oppstart (dyplenker) og skånsomt på mobil
   map.setView(c.latlon, 17, { animate: false });
-  highlightCase(c);
+  if (!EIENDOM) highlightCase(c);   // eiendomsmodus er rent blått – ingen rød case-puls
   setTimeout(() => {
     openPoi(p);
     const card = document.querySelector(`.case[data-nr="${CSS.escape(c.casenr)}"]`);
@@ -3333,6 +3414,7 @@ function lastAlleAdresser() {
     // oppdater åpne forslag med de nye treffene
     if (suggest.style.display === "block" && qInput.value.trim().length >= 2)
       drawSuggest(searchMatches(qInput.value));
+    if (EIENDOM) renderEiendomDots();   // fyll ut med alle eiendommer så snart lista er klar
   }).catch(() => { ALLE_ADR_LASTER = false; });
 }
 function virtuellPoi(a) {
@@ -3755,6 +3837,7 @@ setInterval(loadMeldinger, 5 * 60 * 1000);
     document.getElementById("updatedTag").textContent = "Klarte ikke laste data (" + e.message + ")";
   }
   render();
+  if (EIENDOM) setEiendom(true, true);   // gjenopprett eiendomsmodus etter at data er lastet
   showToasts();
   handleDeepLink();
   if (!location.hash && !sessionStorage.getItem("bsWelcomed")) {
