@@ -1105,17 +1105,25 @@ function render() {
   const caseUpd = new Set(), addrUpd = new Set();
   for (const u of followUpdates()) (u.kind === "case" ? caseUpd.add(u.c.casenr) : addrUpd.add(addrKey(u.label)));
   for (const c of DATA.cases) if (caseVisible(c)) counts[c.type]++;
-  for (const p of POIS) {
-    const vis = p.cases.filter(caseVisible);
-    if (!vis.length) continue;
-    const size = vis.length > 1 ? 30 : 24;
-    const hasNews = vis.some(c => caseUpd.has(c.casenr)) || addrUpd.has(addrKey(p.label));
-    const icon = L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
-      html: `<div class="poi ${hasNews ? "pulse" : ""}" style="position:relative;width:${size}px;height:${size}px;background:${poiColor(vis)}">${vis.length > 1 ? vis.length : ""}</div>` });
-    const mk = L.marker(p.latlon, { icon, title: p.label });
-    mk.bindTooltip(`<b>${esc(p.label)}</b><br>${vis.length} sak${vis.length > 1 ? "er" : ""}`, { direction: "top", offset: [0, -12] });
-    mk.on("click", () => openPoi(p));
-    cluster.addLayer(mk);
+  // Klyngen er kun synlig i byggesaksmodus. I eiendomsmodus (blå prikker) hopper vi over den
+  // tunge markørbyggingen helt; klyngen fylles på nytt når man går tilbake (setEiendom -> render).
+  if (!EIENDOM) {
+    // Samle alle markører og sett dem inn i klyngen SAMLET. cluster.addLayer én-og-én
+    // rebygger klyngetreet hver gang -> ~3,6 s for 9000 markører; addLayers (bulk) -> ~0,2 s.
+    const markers = [];
+    for (const p of POIS) {
+      const vis = p.cases.filter(caseVisible);
+      if (!vis.length) continue;
+      const size = vis.length > 1 ? 30 : 24;
+      const hasNews = vis.some(c => caseUpd.has(c.casenr)) || addrUpd.has(addrKey(p.label));
+      const icon = L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+        html: `<div class="poi ${hasNews ? "pulse" : ""}" style="position:relative;width:${size}px;height:${size}px;background:${poiColor(vis)}">${vis.length > 1 ? vis.length : ""}</div>` });
+      const mk = L.marker(p.latlon, { icon, title: p.label });
+      mk.bindTooltip(`<b>${esc(p.label)}</b><br>${vis.length} sak${vis.length > 1 ? "er" : ""}`, { direction: "top", offset: [0, -12] });
+      mk.on("click", () => openPoi(p));
+      markers.push(mk);
+    }
+    cluster.addLayers(markers);
   }
   renderSeg(counts);
   renderLegend(counts);
@@ -1287,6 +1295,7 @@ function setEiendom(on, silent) {
     clearEiendomDots();
     clearMapOverlays();
     if (!map.hasLayer(cluster)) map.addLayer(cluster);
+    render();   // fyll klyngen med gjeldende filtre (ble hoppet over i eiendomsmodus)
     if (!silent) toast("🗺", "Byggesaksmodus", "Tilbake til saker, statistikk og analyser.");
   }
   oppdaterEiendomHint();
