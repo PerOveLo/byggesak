@@ -1123,7 +1123,7 @@ function openPanel(title, sub, bodyHtml, followPoi) {
   }
   document.getElementById("panelBack").style.display = PANEL_STACK.length ? "flex" : "none";
   panel.classList.add("open");
-  panel.style.setProperty("--sheet", "60dvh");
+  if (IS_MOBILE_MQ.matches) setSheet(window.innerHeight * 0.6);
   document.getElementById("panelBody").scrollTop = 0;
   wireCards();
 }
@@ -3306,10 +3306,25 @@ function closeViewer() {
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(); });
 
 /* ---------------- Bunnark-drag (mobil) ---------------- */
+// Minimert = smal dokk nederst med grip + tittel; kartlag (grenser/markører) beholdes.
+// Kun ✕-knappen lukker panelet helt og rydder kartet.
+const SHEET_MIN_PX = 72;
+let SHEET_FRAC_ONSKET = 0.6;   // huskes så rotasjon/resize kan reposisjonere
+function setSheet(px) {
+  px = Math.min(Math.max(Math.round(px), SHEET_MIN_PX), Math.round(window.innerHeight * 0.92));
+  SHEET_FRAC_ONSKET = px / window.innerHeight;
+  panel.style.setProperty("--sheet", px + "px");
+}
+function minimizeSheet() { setSheet(SHEET_MIN_PX); }
+function sheetFrac() { return (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight; }
+window.addEventListener("resize", () => {
+  if (!IS_MOBILE_MQ.matches || !panel.classList.contains("open")) return;
+  setSheet(SHEET_FRAC_ONSKET <= 0.12 ? SHEET_MIN_PX : SHEET_FRAC_ONSKET * window.innerHeight);
+});
 (function () {
   const head = document.getElementById("panelHead");
   const grip = document.getElementById("grip");
-  let startY = 0, startH = 0, dragging = false, moved = false;
+  let startY = 0, startH = 0, dragging = false, moved = false, lastDrag = 0;
   let activePointers = 0;
   const down = e => {
     activePointers++;
@@ -3324,8 +3339,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(
     if (!dragging) return;
     if (Math.abs(e.clientY - startY) > 6) moved = true;
     if (!moved) return;
-    const h = Math.min(Math.max(startH + (startY - e.clientY), 90), window.innerHeight * 0.92);
-    panel.style.setProperty("--sheet", (h / window.innerHeight * 100) + "dvh");
+    const h = Math.max(startH + (startY - e.clientY), SHEET_MIN_PX);
+    setSheet(h);
   };
   const up = () => {
     activePointers = Math.max(0, activePointers - 1);
@@ -3333,10 +3348,11 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(
     dragging = false;
     panel.style.transition = "";
     if (!moved) return;
-    const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
-    if (frac < 0.22) closePanel();
-    else if (frac < 0.55) panel.style.setProperty("--sheet", "55dvh");
-    else panel.style.setProperty("--sheet", "92dvh");
+    lastDrag = Date.now();
+    const frac = sheetFrac();
+    if (frac < 0.22) minimizeSheet();               // dokk nederst – kartlagene beholdes
+    else if (frac < 0.55) setSheet(window.innerHeight * 0.55);
+    else setSheet(window.innerHeight * 0.92);
   };
   for (const el of [head, grip]) {
     el.addEventListener("pointerdown", down);
@@ -3344,12 +3360,18 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(
     el.addEventListener("pointerup", up);
     el.addEventListener("pointercancel", up);
   }
+  // Tapp på den minimerte dokken -> løft arket opp igjen
+  head.addEventListener("click", e => {
+    if (!IS_MOBILE_MQ.matches || Date.now() - lastDrag < 350) return;
+    if (e.target.closest("button, select, input, a")) return;
+    if (sheetFrac() < 0.15) setSheet(window.innerHeight * 0.55);
+  });
   // Scroller man i innholdet mens arket er halvåpent, løftes det til fullskjerm
   const pBody = document.getElementById("panelBody");
   pBody.addEventListener("scroll", function () {
     if (!IS_MOBILE_MQ.matches) return;
     const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
-    if (frac < 0.8 && this.scrollTop > 25) panel.style.setProperty("--sheet", "92dvh");
+    if (frac < 0.8 && this.scrollTop > 25) setSheet(window.innerHeight * 0.92);
   }, { passive: true });
 
   // Sveip hvor som helst i innholdet (ikke på skjema-felt): opp = maksimer, ned fra toppen = minimer/lukk
@@ -3370,11 +3392,11 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeViewer(
     if (Math.abs(dx) > Math.abs(dy)) return;            // sidelengs bevegelse = ikke sveip
     const frac = (window.innerHeight - panel.getBoundingClientRect().top) / window.innerHeight;
     if (dy < -26 && frac < 0.85) {                      // sveip opp -> fullskjerm
-      panel.style.setProperty("--sheet", "92dvh");
+      setSheet(window.innerHeight * 0.92);
       tHandled = true;
     } else if (dy > 48 && tScroll <= 2 && pBody.scrollTop <= 2) {  // sveip ned fra toppen (roligere terskel)
-      if (frac > 0.72) panel.style.setProperty("--sheet", "55dvh");
-      else closePanel();
+      if (frac > 0.72) setSheet(window.innerHeight * 0.55);
+      else minimizeSheet();                          // dokk – ✕ er eneste som lukker helt
       tHandled = true;
     }
   }, { passive: true });
